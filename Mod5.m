@@ -372,7 +372,7 @@ classdef Mod5
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2010, DPSS, CSIR $Author:$
+  % Copyright 2009-2011, DPSS, CSIR $Author$
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
@@ -408,6 +408,8 @@ classdef Mod5
             % 6 1976 US Standard.
             % 7 If a user-specified model atmosphere (e.g. radiosonde data) is to be read in; see
             %   instructions for CARDs 2C, 2C1, 2C2, 2C2X, and 2C3.
+    BINARY  % Flag to specify if main MODTRAN outputs are in binary or text format
+    LYMOLC  % '+' indicates inclusion of 16 auxiliary trace gas species
  
     ITYPE   % Type of atmospheric path
     IEMSCT  % MODTRAN computation mode - radiance, transmittance or direct solar irradiance
@@ -580,13 +582,14 @@ classdef Mod5
     tp8 = [];     % Radiant spectral fluxes, diffuse and total, unconvolved. There is no method to read this data yet.
     flx = [];     % Radiant spectral fluxes, convolved. 
     clr = [];     % Cooling rates. No method currently exists to read this data yet.
+    acd = [];     % Atmospheric correction data. No methods to read this data yet.
   end
   properties (Constant)
     Rev = '$Revision$';         % The revision of the class
-    MODTRANExe = 'MOD4v1r1.EXE'; % This is the version of MODTRAN used by this class
+    MODTRANExe = 'Mod5.2.0.0_cons.exe'; % This is the version of MODTRAN used by this class
   end
   properties (Hidden)
-    % There are a total of 40 possible card formats in MODTRAN 4
+    % There are a total of ? possible card formats in MODTRAN 5
     CardNames = {'1'  ,'1A' ,'1A1' ,'1A2','1A3','2'  ,'2A+','2A' ,'Alt2A','2B' ,'2C', ...
                 '2C1','2C2','2C2X','2C3', '2D','2D1','2D2','2E1','2E2'  ,'3'  ,'Alt3', ...
                 '3A1','3A2','3B1' ,'3B2','3C1','3C2','3C3','3C4','3C5'  ,'3C6','4', ...
@@ -638,7 +641,7 @@ classdef Mod5
     % if possible. That is, if a parameter is given in a column in the input file, then it is read into
     % a column vector. There may be exceptions to this rule.
                 
-    ParmNames = {{'MODTRN','SPEED','MODEL','ITYPE','IEMSCT','IMULT','M1','M2','M3','M4','M5','M6','MDEF','IM','NOPRNT','TPTEMP','SURREF'}, ... % 1
+    ParmNames = {{'MODTRN','SPEED','BINARY','LYMOLC','MODEL','ITYPE','IEMSCT','IMULT','M1','M2','M3','M4','M5','M6','MDEF','IM','NOPRNT','TPTEMP','SURREF'}, ... % 1
                 {'DIS','DISAZM','NSTR','LSUN','ISUN','CO2MX','H2OSTR','O3STR','LSUNFL','LBMNAM','LFLTNM','H2OAER','SOLCON'}, ... % 1A
                 {'SUNFL2'}, ... % 1A1
                 {'BMNAME'}, ... % 1A2
@@ -703,7 +706,7 @@ classdef Mod5
     %
     % See Also : Mod5.Write, Mod5.Run
     
-    ExpectedMODTRAN = 'MOD4v1r1.EXE';
+    ExpectedMODTRAN = 'Mod5.2.0.0_cons.exe';
     if ~exist('MODTRANExe', 'var') || isempty(MODTRANExe)
       [MODTRANExe, MODTRANPath] = uigetfile('*.exe','Select MODTRAN Executable. This is a once-off operation.');
       if ~ischar(MODTRANExe)
