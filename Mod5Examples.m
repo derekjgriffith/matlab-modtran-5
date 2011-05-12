@@ -1,6 +1,6 @@
-% MODTRANCase Examples
-% $Id$
-% Copyright 2009, D J Griffith
+% Mod5 MODTRAN 5 Case Examples
+% $Id:$
+% Copyright 2010, D J Griffith
 %
 % Each cell in this script contains a single example. Run examples
 % individually by clicking somewhere in the cell and then clicking on the
@@ -10,14 +10,14 @@
 %           will lose all workspace variables.
 disp('This script contains one cell per example. Run each cell individually.')
 return;
-%% Example 1 : Load a MODTRANCase from a tape5 format file, run it and plot
+%% Example 1 : Load a Mod5 from a tape5 format file, run it and plot
 % This example is a 5 km horizontal path just above sea level
 close all
 clear classes
-% Determine the directory in which the MODTRANCase archive was extracted
-MCDir = fileparts(which('MODTRANCase'));
+% Determine the directory in which the Mod5 archive was extracted
+MCDir = fileparts(which('Mod5'));
 % Load the case
-Ex1 = MODTRANCase([MCDir '\Ex1.ltn']);
+Ex1 = Mod5([MCDir '\Ex1.ltn']);
 % Run the case
 Ex1 = Ex1.Run;
 % Plot total transmission and water transmission
@@ -28,7 +28,7 @@ Ex1.PlotTp7({'TRANS', 'H2OTRANS'});
 close all
 clear classes
 % This case is visible/near-infared (VIS/NIR) wavelengths
-Sat1 = MODTRANCase;    % Get a completely empty case instance
+Sat1 = Mod5;    % Get a completely empty case instance
 % Set up name and short description
 Sat1 = Sat1.SetCaseName('Sat1'); % The SetCaseName method is the only way to set the CaseName property
 Sat1.CaseDescr = 'Example 2 : Simple EO Camera Case';
@@ -78,7 +78,7 @@ Sat1.SOLCON = -1;      % Unity scaling of TOA solar irradiance, but apply season
 
 % Deal with EO camera band filters
 % Create two bandpass filters with gaussian edges
-Sat1Flt = MODTRANCase.CreateFlt('N Synthetic Spectral Filters', ...
+Sat1Flt = Mod5.CreateFlt('N Synthetic Spectral Filters', ...
         {'Blue Filter', 'Green Filter'}, ... % Filter descriptions
         [450            550          ], ...  % Centre wavelengths (nm)
         [40             50           ], ...  % FWHMs
@@ -88,7 +88,7 @@ Sat1Flt = MODTRANCase.CreateFlt('N Synthetic Spectral Filters', ...
         [30             20], ...  % FlatTopWidth of 30 nm and 20 nm respectively
         [0.8            0.9]);    % Peak transmittance of 0.8 and 0.9 respectively
 % Plot the filters
-MODTRANCase.PlotFlt(Sat1Flt);
+Mod5.PlotFlt(Sat1Flt);
 % And attach the EO camera filters to the case
 Sat1 = Sat1.AttachFlt(Sat1Flt); % This will automatically set FILTNM (Card 1A3)
 
@@ -184,7 +184,7 @@ Sat1.PlotTp7({'SINGSCAT', 'DRCTRFLT', 'TOTALRAD'});
 close all
 clear classes
 % This case is visible/near-infared (VIS/NIR) wavelengths
-Sol1 = MODTRANCase;    % Get an empty case instance
+Sol1 = Mod5;    % Get an empty case instance
 % Set up name and short description
 Sol1 = Sol1.SetCaseName('Sol1'); % Must use SetCaseName method to set name
 Sol1.CaseDescr = 'Example 3 : Solar Irradiance Case';
@@ -252,10 +252,10 @@ Sol1.PlotSc7('SOLTR');
 % where the observer is also at a specific altitude (H1 = sea level). 
 close all
 clear classes
-% Determine the directory in which the MODTRANCase archive was extracted
-MCDir = fileparts(which('MODTRANCase'));
+% Determine the directory in which the Mod5 archive was extracted
+MCDir = fileparts(which('Mod5'));
 % Load the case
-Ex4 = MODTRANCase([MCDir '\Ex4.ltn']);
+Ex4 = Mod5([MCDir '\Ex4.ltn']);
 
 % Plot all user-defined atmospheric data for this case
 Ex4.PlotAtm('all');
@@ -281,10 +281,10 @@ Ex4.PlotTp7('TRANS');
 % Appendix A in the MODTRAN 4 User's Manual.
 close all
 clear classes
-% Determine the directory in which the MODTRANCase archive was extracted
-MCDir = fileparts(which('MODTRANCase'));
+% Determine the directory in which the Mod5 archive was extracted
+MCDir = fileparts(which('Mod5'));
 % Load the case
-Ex5 = MODTRANCase([MCDir '\CaseUSS.ltn']);
+Ex5 = Mod5([MCDir '\CaseUSS.ltn']);
 % Run the case
 Ex5 = Ex5.Run;
 % Plot transmittance
@@ -295,10 +295,10 @@ Ex5.PlotTp7('TRANS');
 % filter definitions for a set of MERIS channels
 close all
 clear classes
-% Determine the directory in which the MODTRANCase archive was extracted
-MCDir = fileparts(which('MODTRANCase'));
+% Determine the directory in which the Mod5 archive was extracted
+MCDir = fileparts(which('Mod5'));
 % This case is visible/near-infared (VIS/NIR) wavelengths
-Sat2 = MODTRANCase;    % Get a completely empty case instance
+Sat2 = Mod5;    % Get a completely empty case instance
 % Set up name and short description
 Sat2 = Sat2.SetCaseName('Sat2');
 Sat2.CaseDescr = 'Example 6 : EO Camera Case';
@@ -316,14 +316,14 @@ Sat2 = Sat2.Set('DIS', 'f', 'DISAZM', 'f', 'NSTR', 2, 'LSUN', 'f', 'ISUN', 0, 'C
               
 % Deal with MERIS camera band filters
 % Read the filters from the SensorML description of MERIS
-Sat2Flt = MODTRANCase.ReadFltFromSensorML([MCDir '\CalVal_ENVISAT_MERIS_v01.xml']);
+Sat2Flt = Mod5.ReadFltFromSensorML([MCDir '\CalVal_ENVISAT_MERIS_v01.xml']);
 % Only want the first 15 filters for camera 1
 Sat2Flt.FilterHeaders = Sat2Flt.FilterHeaders(1:15);
 % Display the channel descriptions
 disp(strvcat(Sat2Flt.FilterHeaders));
 Sat2Flt.Filters = Sat2Flt.Filters(1:15); % Extract the filters
 % Plot the filters
-MODTRANCase.PlotFlt(Sat2Flt);
+Mod5.PlotFlt(Sat2Flt);
 
 % And attach the EO camera filters to the case
 Sat2 = Sat2.AttachFlt(Sat2Flt); % This will automatically set FILTNM (Card 1A3)
@@ -368,22 +368,22 @@ Sat2.NSURF = 1; % See MODTRAN manual for explanation
 Sat2.AATEMP = 0; % Not used
 
 % Read open ocean albedo from USGS splib06a
-OceanAlb = MODTRANCase.ReadAlbFromUSGS([MCDir '\seawater_open_ocean_sw2.27262.asc']);
+OceanAlb = Mod5.ReadAlbFromUSGS([MCDir '\seawater_open_ocean_sw2.27262.asc']);
 % Reduce the ocean albedo curve to 30 points in the 0.4 micron to 1 micron spectral region
-OceanAlbSparse = MODTRANCase.InterpAlb(OceanAlb, [0.4 1], 30);
+OceanAlbSparse = Mod5.InterpAlb(OceanAlb, [0.4 1], 30);
 % Plot original and sparse data
-MODTRANCase.PlotAlb([OceanAlb; OceanAlbSparse], [0.4 1 0 0.05]);
+Mod5.PlotAlb([OceanAlb; OceanAlbSparse], [0.4 1 0 0.05]);
 % Read a tree leaf reflectance from ASD data
-TreeAlb = MODTRANCase.ReadAlbFromASD([MCDir '\tree100001.asd.ref.txt']);
+TreeAlb = Mod5.ReadAlbFromASD([MCDir '\tree100001.asd.ref.txt']);
 % Reduce tree albedo to 49 points
-TreeAlbSparse = MODTRANCase.InterpAlb(TreeAlb, [0.4 1], 49);
+TreeAlbSparse = Mod5.InterpAlb(TreeAlb, [0.4 1], 49);
 % Plot tree albedo to see any difference in reduced set
-MODTRANCase.PlotAlb([TreeAlb; TreeAlbSparse], [0.4 1 0 0.6]);
+Mod5.PlotAlb([TreeAlb; TreeAlbSparse], [0.4 1 0 0.6]);
 
 % Combine the two albedo curves into one structure
 OcTreeAlb = [OceanAlbSparse; TreeAlbSparse];
 % Plot the albedo data in the 350 nm to 1000 nm range
-MODTRANCase.PlotAlb(OcTreeAlb, [0.4 1 0 0.6]);
+Mod5.PlotAlb(OcTreeAlb, [0.4 1 0 0.6]);
 
 % Replicate the case to make two identical sub-cases
 Sat2 = Sat2.Replicate([1 2]); % Row vector of two cases
