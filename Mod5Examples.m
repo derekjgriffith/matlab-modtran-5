@@ -1,5 +1,5 @@
 % Mod5 MODTRAN 5 Case Examples
-% $Id:$
+% $Id$
 % Copyright 2010, D J Griffith
 %
 % Each cell in this script contains a single example. Run examples
