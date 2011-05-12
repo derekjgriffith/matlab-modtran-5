@@ -1,10 +1,10 @@
-classdef MODTRANCase
-% MODTRANCase - A class for working with MODTRAN4 atmospheric model cases
+classdef Mod5
+% Mod5 - A class for working with MODTRAN 5 atmospheric model cases
 % 
 % This class is a functional wrapper and does not include a GUI. For
 % MODTRAN GUIs, see PcModWin (Ontar Corporation), MODO (Rese), or MIG. 
 %
-% The class includes methods to read and write MODTRAN4 case files. Once
+% The class includes methods to read and write MODTRAN5 case files. Once
 % a case has been read in, it is possible to adjust the parameters and
 % write the modified .ltn or .tp5 file.
 %
@@ -12,10 +12,10 @@ classdef MODTRANCase
 % into the class instance. For a full list of methods, see below the
 % property listing.
 %
-% For this version of MODTRANCase, the canonical reference for MODTRAN
-% parameters is the MODTRAN4 User's Manual dated 1 June 1999.
+% For this version of Mod5, the canonical reference for MODTRAN
+% parameters is the MODTRAN 5.1a User's Manual dated July 2008.
 %
-% The class MODTRANCase has the following properties:
+% The class Mod5 has the following properties:
 % 
 %            CaseName: Name of the case. Defaults to the filename (no extension)
 %           CaseIndex: The sub-case index number. This is a cross-check.
@@ -25,160 +25,160 @@ classdef MODTRANCase
 %           MODStatus: Status flag produced when MODTRAN is run on the case.
 %             MODSays: Console output from MODTRAN produced when case is run.
 %    The following properties with names that are all in upper case are 
-%    MODTRAN4 case input parameters. These are the parameters read from
+%    MODTRAN5 case input parameters. These are the parameters read from
 %    a .ltn or .tp5 (or tape5) file. For definitions of these parameters
-%    see the MODTRAN4 User's Manual.
-%              MODTRN: See MODTRAN4 User's Manual Card 1 Series, Main Radiation Transport
-%               SPEED: See MODTRAN4 User's Manual, Algorithm control
-%               MODEL: See MODTRAN4 User's Manual, Canned Atmospheric Model
-%               ITYPE: See MODTRAN4 User's Manual, Type of atmospheric path
-%              IEMSCT: See MODTRAN4 User's Manual, Mode of execution, Rad/Trans etc.
-%               IMULT: See MODTRAN4 User's Manual, Controls multiple scattering
-%                  M1: See MODTRAN4 User's Manual
-%                  M2: See MODTRAN4 User's Manual
-%                  M3: See MODTRAN4 User's Manual
-%                  M4: See MODTRAN4 User's Manual
-%                  M5: See MODTRAN4 User's Manual
-%                  M6: See MODTRAN4 User's Manual
-%                MDEF: See MODTRAN4 User's Manual
-%                  IM: See MODTRAN4 User's Manual
-%              NOPRNT: See MODTRAN4 User's Manual, Controls .tp8 and .clr output.
-%              TPTEMP: See MODTRAN4 User's Manual
-%              SURREF: See MODTRAN4 User's Manual
-%                 DIS: See MODTRAN4 User's Manual
-%              DISAZM: See MODTRAN4 User's Manual
-%                NSTR: See MODTRAN4 User's Manual
-%                LSUN: See MODTRAN4 User's Manual
-%                ISUN: See MODTRAN4 User's Manual
-%               CO2MX: See MODTRAN4 User's Manual
-%              H2OSTR: See MODTRAN4 User's Manual
-%               O3STR: See MODTRAN4 User's Manual
-%              LSUNFL: See MODTRAN4 User's Manual
-%              LBMNAM: See MODTRAN4 User's Manual
-%              LFLTNM: See MODTRAN4 User's Manual
-%              H2OAER: See MODTRAN4 User's Manual
-%              SOLCON: See MODTRAN4 User's Manual
-%              SUNFL2: See MODTRAN4 User's Manual
-%              BMNAME: See MODTRAN4 User's Manual
-%              FILTNM: See MODTRAN4 User's Manual
-%               APLUS: See MODTRAN4 User's Manual Card 2 Series
-%               IHAZE: See MODTRAN4 User's Manual
-%              CNOVAM: See MODTRAN4 User's Manual
-%              ISEASN: See MODTRAN4 User's Manual
-%               ARUSS: See MODTRAN4 User's Manual
-%              IVULCN: See MODTRAN4 User's Manual
-%               ICSTL: See MODTRAN4 User's Manual
-%                ICLD: See MODTRAN4 User's Manual
-%                IVSA: See MODTRAN4 User's Manual
-%                 VIS: See MODTRAN4 User's Manual
-%                 WSS: See MODTRAN4 User's Manual
-%                 WHH: See MODTRAN4 User's Manual
-%              RAINRT: See MODTRAN4 User's Manual
-%              GNDALT: See MODTRAN4 User's Manual
-%              ZAER11: See MODTRAN4 User's Manual
-%              ZAER12: See MODTRAN4 User's Manual
-%              SCALE1: See MODTRAN4 User's Manual
-%              ZAER21: See MODTRAN4 User's Manual
-%              ZAER22: See MODTRAN4 User's Manual
-%              SCALE2: See MODTRAN4 User's Manual
-%              ZAER31: See MODTRAN4 User's Manual
-%              ZAER32: See MODTRAN4 User's Manual
-%              SCALE3: See MODTRAN4 User's Manual
-%              ZAER41: See MODTRAN4 User's Manual
-%              ZAER42: See MODTRAN4 User's Manual
-%              SCALE4: See MODTRAN4 User's Manual
-%               CTHIK: See MODTRAN4 User's Manual
-%                CALT: See MODTRAN4 User's Manual
-%                CEXT: See MODTRAN4 User's Manual
-%              NCRALT: See MODTRAN4 User's Manual
-%              NCRSPC: See MODTRAN4 User's Manual
-%              CWAVLN: See MODTRAN4 User's Manual
-%              CCOLWD: See MODTRAN4 User's Manual
-%              CCOLIP: See MODTRAN4 User's Manual
-%              CHUMID: See MODTRAN4 User's Manual
-%              ASYMWD: See MODTRAN4 User's Manual
-%              ASYMIP: See MODTRAN4 User's Manual
-%               ZCVSA: See MODTRAN4 User's Manual
-%               ZTVSA: See MODTRAN4 User's Manual
-%              ZINVSA: See MODTRAN4 User's Manual
-%                  ML: See MODTRAN4 User's Manual
-%                IRD1: See MODTRAN4 User's Manual
-%                IRD2: See MODTRAN4 User's Manual
-%              HMODEL: See MODTRAN4 User's Manual
-%                  ZM: See MODTRAN4 User's Manual
-%                   P: See MODTRAN4 User's Manual
-%                   T: See MODTRAN4 User's Manual
-%               JCHAR: See MODTRAN4 User's Manual
-%              JCHARX: See MODTRAN4 User's Manual
-%                WMOL: See MODTRAN4 User's Manual
-%               WMOLX: See MODTRAN4 User's Manual
-%               AHAZE: See MODTRAN4 User's Manual
-%              EQLWCZ: See MODTRAN4 User's Manual
-%               RRATZ: See MODTRAN4 User's Manual
-%                IHA1: See MODTRAN4 User's Manual
-%               ICLD1: See MODTRAN4 User's Manual
-%               IVUL1: See MODTRAN4 User's Manual
-%               ISEA1: See MODTRAN4 User's Manual
-%               ICHR1: See MODTRAN4 User's Manual
-%                IREG: See MODTRAN4 User's Manual
-%              AWCCON: See MODTRAN4 User's Manual
-%               TITLE: See MODTRAN4 User's Manual
-%              VARSPC: See MODTRAN4 User's Manual
-%                EXTC: See MODTRAN4 User's Manual
-%                ABSC: See MODTRAN4 User's Manual
-%                ASYM: See MODTRAN4 User's Manual
-%                ZCLD: See MODTRAN4 User's Manual
-%                 CLD: See MODTRAN4 User's Manual
-%              CLDICE: See MODTRAN4 User's Manual
-%                  RR: See MODTRAN4 User's Manual
-%              WAVLEN: See MODTRAN4 User's Manual
-%                  H1: See MODTRAN4 User's Manual Card 3 Series
-%                  H2: See MODTRAN4 User's Manual
-%               ANGLE: See MODTRAN4 User's Manual
-%               RANGE: See MODTRAN4 User's Manual
-%                BETA: See MODTRAN4 User's Manual
-%                  RO: See MODTRAN4 User's Manual
-%                LENN: See MODTRAN4 User's Manual
-%                 PHI: See MODTRAN4 User's Manual
-%                IDAY: See MODTRAN4 User's Manual
-%              ISOURC: See MODTRAN4 User's Manual
-%              ANGLEM: See MODTRAN4 User's Manual
-%               IPARM: See MODTRAN4 User's Manual
-%                 IPH: See MODTRAN4 User's Manual
-%               PARM1: See MODTRAN4 User's Manual
-%               PARM2: See MODTRAN4 User's Manual
-%               PARM3: See MODTRAN4 User's Manual
-%               PARM4: See MODTRAN4 User's Manual
-%                TIME: See MODTRAN4 User's Manual
-%               PSIPO: See MODTRAN4 User's Manual
-%                   G: See MODTRAN4 User's Manual
-%              NANGLS: See MODTRAN4 User's Manual
-%                NWLF: See MODTRAN4 User's Manual
-%                ANGF: See MODTRAN4 User's Manual
-%                   F: See MODTRAN4 User's Manual
-%                 WLF: See MODTRAN4 User's Manual
-%                  V1: See MODTRAN4 User's Manual Card 4 Series, start wavlength/number
-%                  V2: See MODTRAN4 User's Manual, Finishing wavelength/number
-%                  DV: See MODTRAN4 User's Manual, Wavlength/number increment
-%                FWHM: See MODTRAN4 User's Manual, filter width for convolution
-%               YFLAG: See MODTRAN4 User's Manual, Data output to .plt
-%               XFLAG: See MODTRAN4 User's Manual, Units for .plt (plot file)
-%              DLIMIT: See MODTRAN4 User's Manual, Plot file delimiter
-%               FLAGS: See MODTRAN4 User's Manual, V1/V2 Units and convolution control
-%               NSURF: See MODTRAN4 User's Manual
-%              AATEMP: See MODTRAN4 User's Manual
-%               CBRDF: See MODTRAN4 User's Manual
-%              NWVSRF: See MODTRAN4 User's Manual
-%              SURFZN: See MODTRAN4 User's Manual
-%              SURFAZ: See MODTRAN4 User's Manual
-%              WVSURF: See MODTRAN4 User's Manual
-%             PARAMS1: See MODTRAN4 User's Manual
-%             PARAMS2: See MODTRAN4 User's Manual
-%             PARAMS3: See MODTRAN4 User's Manual
-%             PARAMS4: See MODTRAN4 User's Manual
-%              SALBFL: See MODTRAN4 User's Manual
-%               CSALB: See MODTRAN4 User's Manual
-%                IRPT: See MODTRAN4 User's Manual Card 5,
+%    see the MODTRAN5 User's Manual.
+%              MODTRN: See MODTRAN5 User's Manual Card 1 Series, Main Radiation Transport
+%               SPEED: See MODTRAN5 User's Manual, Algorithm control
+%               MODEL: See MODTRAN5 User's Manual, Canned Atmospheric Model
+%               ITYPE: See MODTRAN5 User's Manual, Type of atmospheric path
+%              IEMSCT: See MODTRAN5 User's Manual, Mode of execution, Rad/Trans etc.
+%               IMULT: See MODTRAN5 User's Manual, Controls multiple scattering
+%                  M1: See MODTRAN5 User's Manual
+%                  M2: See MODTRAN5 User's Manual
+%                  M3: See MODTRAN5 User's Manual
+%                  M4: See MODTRAN5 User's Manual
+%                  M5: See MODTRAN5 User's Manual
+%                  M6: See MODTRAN5 User's Manual
+%                MDEF: See MODTRAN5 User's Manual
+%                  IM: See MODTRAN5 User's Manual
+%              NOPRNT: See MODTRAN5 User's Manual, Controls .tp8 and .clr output.
+%              TPTEMP: See MODTRAN5 User's Manual
+%              SURREF: See MODTRAN5 User's Manual
+%                 DIS: See MODTRAN5 User's Manual
+%              DISAZM: See MODTRAN5 User's Manual
+%                NSTR: See MODTRAN5 User's Manual
+%                LSUN: See MODTRAN5 User's Manual
+%                ISUN: See MODTRAN5 User's Manual
+%               CO2MX: See MODTRAN5 User's Manual
+%              H2OSTR: See MODTRAN5 User's Manual
+%               O3STR: See MODTRAN5 User's Manual
+%              LSUNFL: See MODTRAN5 User's Manual
+%              LBMNAM: See MODTRAN5 User's Manual
+%              LFLTNM: See MODTRAN5 User's Manual
+%              H2OAER: See MODTRAN5 User's Manual
+%              SOLCON: See MODTRAN5 User's Manual
+%              SUNFL2: See MODTRAN5 User's Manual
+%              BMNAME: See MODTRAN5 User's Manual
+%              FILTNM: See MODTRAN5 User's Manual
+%               APLUS: See MODTRAN5 User's Manual Card 2 Series
+%               IHAZE: See MODTRAN5 User's Manual
+%              CNOVAM: See MODTRAN5 User's Manual
+%              ISEASN: See MODTRAN5 User's Manual
+%               ARUSS: See MODTRAN5 User's Manual
+%              IVULCN: See MODTRAN5 User's Manual
+%               ICSTL: See MODTRAN5 User's Manual
+%                ICLD: See MODTRAN5 User's Manual
+%                IVSA: See MODTRAN5 User's Manual
+%                 VIS: See MODTRAN5 User's Manual
+%                 WSS: See MODTRAN5 User's Manual
+%                 WHH: See MODTRAN5 User's Manual
+%              RAINRT: See MODTRAN5 User's Manual
+%              GNDALT: See MODTRAN5 User's Manual
+%              ZAER11: See MODTRAN5 User's Manual
+%              ZAER12: See MODTRAN5 User's Manual
+%              SCALE1: See MODTRAN5 User's Manual
+%              ZAER21: See MODTRAN5 User's Manual
+%              ZAER22: See MODTRAN5 User's Manual
+%              SCALE2: See MODTRAN5 User's Manual
+%              ZAER31: See MODTRAN5 User's Manual
+%              ZAER32: See MODTRAN5 User's Manual
+%              SCALE3: See MODTRAN5 User's Manual
+%              ZAER41: See MODTRAN5 User's Manual
+%              ZAER42: See MODTRAN5 User's Manual
+%              SCALE4: See MODTRAN5 User's Manual
+%               CTHIK: See MODTRAN5 User's Manual
+%                CALT: See MODTRAN5 User's Manual
+%                CEXT: See MODTRAN5 User's Manual
+%              NCRALT: See MODTRAN5 User's Manual
+%              NCRSPC: See MODTRAN5 User's Manual
+%              CWAVLN: See MODTRAN5 User's Manual
+%              CCOLWD: See MODTRAN5 User's Manual
+%              CCOLIP: See MODTRAN5 User's Manual
+%              CHUMID: See MODTRAN5 User's Manual
+%              ASYMWD: See MODTRAN5 User's Manual
+%              ASYMIP: See MODTRAN5 User's Manual
+%               ZCVSA: See MODTRAN5 User's Manual
+%               ZTVSA: See MODTRAN5 User's Manual
+%              ZINVSA: See MODTRAN5 User's Manual
+%                  ML: See MODTRAN5 User's Manual
+%                IRD1: See MODTRAN5 User's Manual
+%                IRD2: See MODTRAN5 User's Manual
+%              HMODEL: See MODTRAN5 User's Manual
+%                  ZM: See MODTRAN5 User's Manual
+%                   P: See MODTRAN5 User's Manual
+%                   T: See MODTRAN5 User's Manual
+%               JCHAR: See MODTRAN5 User's Manual
+%              JCHARX: See MODTRAN5 User's Manual
+%                WMOL: See MODTRAN5 User's Manual
+%               WMOLX: See MODTRAN5 User's Manual
+%               AHAZE: See MODTRAN5 User's Manual
+%              EQLWCZ: See MODTRAN5 User's Manual
+%               RRATZ: See MODTRAN5 User's Manual
+%                IHA1: See MODTRAN5 User's Manual
+%               ICLD1: See MODTRAN5 User's Manual
+%               IVUL1: See MODTRAN5 User's Manual
+%               ISEA1: See MODTRAN5 User's Manual
+%               ICHR1: See MODTRAN5 User's Manual
+%                IREG: See MODTRAN5 User's Manual
+%              AWCCON: See MODTRAN5 User's Manual
+%               TITLE: See MODTRAN5 User's Manual
+%              VARSPC: See MODTRAN5 User's Manual
+%                EXTC: See MODTRAN5 User's Manual
+%                ABSC: See MODTRAN5 User's Manual
+%                ASYM: See MODTRAN5 User's Manual
+%                ZCLD: See MODTRAN5 User's Manual
+%                 CLD: See MODTRAN5 User's Manual
+%              CLDICE: See MODTRAN5 User's Manual
+%                  RR: See MODTRAN5 User's Manual
+%              WAVLEN: See MODTRAN5 User's Manual
+%                  H1: See MODTRAN5 User's Manual Card 3 Series
+%                  H2: See MODTRAN5 User's Manual
+%               ANGLE: See MODTRAN5 User's Manual
+%               RANGE: See MODTRAN5 User's Manual
+%                BETA: See MODTRAN5 User's Manual
+%                  RO: See MODTRAN5 User's Manual
+%                LENN: See MODTRAN5 User's Manual
+%                 PHI: See MODTRAN5 User's Manual
+%                IDAY: See MODTRAN5 User's Manual
+%              ISOURC: See MODTRAN5 User's Manual
+%              ANGLEM: See MODTRAN5 User's Manual
+%               IPARM: See MODTRAN5 User's Manual
+%                 IPH: See MODTRAN5 User's Manual
+%               PARM1: See MODTRAN5 User's Manual
+%               PARM2: See MODTRAN5 User's Manual
+%               PARM3: See MODTRAN5 User's Manual
+%               PARM4: See MODTRAN5 User's Manual
+%                TIME: See MODTRAN5 User's Manual
+%               PSIPO: See MODTRAN5 User's Manual
+%                   G: See MODTRAN5 User's Manual
+%              NANGLS: See MODTRAN5 User's Manual
+%                NWLF: See MODTRAN5 User's Manual
+%                ANGF: See MODTRAN5 User's Manual
+%                   F: See MODTRAN5 User's Manual
+%                 WLF: See MODTRAN5 User's Manual
+%                  V1: See MODTRAN4 User's Manual Card 4 Series, start wavelength/number
+%                  V2: See MODTRAN5 User's Manual, Finishing wavelength/number
+%                  DV: See MODTRAN5 User's Manual, Wavlength/number increment
+%                FWHM: See MODTRAN5 User's Manual, filter width for convolution
+%               YFLAG: See MODTRAN5 User's Manual, Data output to .plt
+%               XFLAG: See MODTRAN5 User's Manual, Units for .plt (plot file)
+%              DLIMIT: See MODTRAN5 User's Manual, Plot file delimiter
+%               FLAGS: See MODTRAN5 User's Manual, V1/V2 Units and convolution control
+%               NSURF: See MODTRAN5 User's Manual
+%              AATEMP: See MODTRAN5 User's Manual
+%               CBRDF: See MODTRAN5 User's Manual
+%              NWVSRF: See MODTRAN5 User's Manual
+%              SURFZN: See MODTRAN5 User's Manual
+%              SURFAZ: See MODTRAN5 User's Manual
+%              WVSURF: See MODTRAN5 User's Manual
+%             PARAMS1: See MODTRAN5 User's Manual
+%             PARAMS2: See MODTRAN5 User's Manual
+%             PARAMS3: See MODTRAN5 User's Manual
+%             PARAMS4: See MODTRAN5 User's Manual
+%              SALBFL: See MODTRAN5 User's Manual
+%               CSALB: See MODTRAN5 User's Manual
+%                IRPT: See MODTRAN5 User's Manual Card 5,
 %                      Determines whether there are more sub-cases in the file.
 %        RunStartTime: Date and time at which MODTRAN run was started on this case.
 %          RunEndTime: Date and time at which MODTRAN terminated.
@@ -199,17 +199,17 @@ classdef MODTRANCase
 %                 flx: Radiant fluxes, convolved (not yet implemented).
 %                 clr: Cooling rates (not yet implemented).
 % The following 2 properties are constant for this revision of the class.
-%                 Rev: The revision of this class definition (MODTRANCase)
+%                 Rev: The revision of this class definition (Mod5)
 %          MODTRANExe: The name of the MODTRAN excutable that this class was
 %                      tested with.
 %
 % Methods:
 % Constructor methods to create cases:
-%  MyEmptyCase = MODTRANCase;   % Returns empty instance of the class
+%  MyEmptyCase = Mod5;   % Returns empty instance of the class
 %
-%  CaseM01 = MODTRANCase('CaseM01.ltn'); % Read case from .ltn file in current directory
+%  CaseM01 = Mod5('CaseM01.ltn'); % Read case from .ltn file in current directory
 %
-%  MyCase = MODTRANCase(''); % Open file dialog to read case from .ltn or .tp5 file
+%  MyCase = Mod5(''); % Open file dialog to read case from .ltn or .tp5 file
 %
 % To run a MODTRAN case and retrieve results into the class instance
 %  MyCase = MyCase.Run;     % Run case and obtain results
@@ -225,7 +225,7 @@ classdef MODTRANCase
 %
 %
 %  To merge several cases into a single case:
-%   SuperCase = MODTRANCase.Merge(MODCase1, MODCase2);
+%   SuperCase = Mod5.Merge(MODCase1, MODCase2);
 %     or, equivalently,
 %   SuperCase = MODCase1.Merge(ModCase2);
 %
@@ -238,29 +238,29 @@ classdef MODTRANCase
 %   MyCase.PlotChn  - plots channel (.chn) MODTRAN outputs
 %
 % Utility and Static Methods:
-%   MODTRANCase.SetMODTRANExe   - Set MODTRAN executable location
-%   MODTRANCase.SetCasePath     - Set default directory for MODTRAN cases
-%   MODTRANCase.WhereIsMODTRAN  - Get MODTRAN executable location
-%   MODTRANCase.Read7           - Read .tp7, tape7, tape7.scn or .7sc files
-%   MODTRANCase.ReadPlt         - Read .plt, .psc plot files (plotout and plotout.scn also)
-%   MODTRANCase.ReadChn         - Read .chn outputs from MODTRAN
+%   Mod5.SetMODTRANExe   - Set MODTRAN executable location
+%   Mod5.SetCasePath     - Set default directory for MODTRAN cases
+%   Mod5.WhereIsMODTRAN  - Get MODTRAN executable location
+%   Mod5.Read7           - Read .tp7, tape7, tape7.scn or .7sc files
+%   Mod5.ReadPlt         - Read .plt, .psc plot files (plotout and plotout.scn also)
+%   Mod5.ReadChn         - Read .chn outputs from MODTRAN
 %
 % Functions for working with sensor spectral band (channel) response filters
-%   MODTRANCase.CreateFlt       - Create synthetic spectral response filter(s)
-%   MODTRANCase.ReadFlt         - Read a spectral response filter set file
-%   MODTRANCase.ReadFltFromSensorML - Read spectral response data from a SensorML (.xml) file 
-%   MODTRANCase.WriteFlt        - Write a spectral response filter set file
+%   Mod5.CreateFlt       - Create synthetic spectral response filter(s)
+%   Mod5.ReadFlt         - Read a spectral response filter set file
+%   Mod5.ReadFltFromSensorML - Read spectral response data from a SensorML (.xml) file 
+%   Mod5.WriteFlt        - Write a spectral response filter set file
 %   MyCase.AttachFlt            - Attach a spectral response filter set to a case
-%   MODTRANCase.PlotFlt         - Plot a spectral response filter set
+%   Mod5.PlotFlt         - Plot a spectral response filter set
 %
 % Functions for working with spectral albedo (reflectance) data
-%   MODTRANCase.CreateAlb       - Create spectral albedo data structure
-%   MODTRANCase.ReadAlb         - Read albedo data from MODTRAN spec_alb.dat format file
-%   MODTRANCase.WriteAlb        - Write albedo data in MODTRAN format
-%   MODTRANCase.ReadAlbFromUSGS - Read reflectance data from USGS splib06a file
-%   MODTRANCase.ReadAlbFromASD  - Read reflectance data from ASD spectroradiometer file
-%   MODTRANCase.InterpAlb       - Interpolate albedo to new set of wavelengths
-%   MODTRANCase.MixAlb          - Mix weighted reflectance data
+%   Mod5.CreateAlb       - Create spectral albedo data structure
+%   Mod5.ReadAlb         - Read albedo data from MODTRAN spec_alb.dat format file
+%   Mod5.WriteAlb        - Write albedo data in MODTRAN format
+%   Mod5.ReadAlbFromUSGS - Read reflectance data from USGS splib06a file
+%   Mod5.ReadAlbFromASD  - Read reflectance data from ASD spectroradiometer file
+%   Mod5.InterpAlb       - Interpolate albedo to new set of wavelengths
+%   Mod5.MixAlb          - Mix weighted reflectance data
 %   MyCase.AttachAlb            - Attach albedo data to a MODTRAN (radiance) case
 %
 % Scripting and Description of Cases
@@ -299,10 +299,10 @@ classdef MODTRANCase
 % A useful tool for debugging a card deck is to read the deck with the
 % debug flag set. e.g.
 %
-% MyMODTRANCase = MODTRANCase('MyBuggyMODTRANCaseFile.ltn', 1);
+% MyMod5Case = Mod5('MyBuggyMODTRANCaseFile.ltn', 1);
 %
 % Bugs and Limitations :
-%  1) The format of the MODTRAN 4 case file is complex, and exhaustive testing
+%  1) The format of the MODTRAN 5 case file is complex, and exhaustive testing
 %  on this class has not been performed. Most of the test cases appear to
 %  read and write correctly.
 %
@@ -317,7 +317,7 @@ classdef MODTRANCase
 %  for all the test cases run so far. The process is only applied if 
 %  running on the Windows platform.
 %
-%  3) MODTRANCase class has only been tested on the PC under Windows XP (TM).
+%  3) Mod5 class has only been tested on the PC under Windows XP (TM).
 %  The class may or may not work on Unix-like systems.
 %
 %  4) There is almost no integrity checking and if the user changes MODTRAN
@@ -360,7 +360,7 @@ classdef MODTRANCase
 %  fairly easy, but the latter might require substantial rewrites of
 %  the WriteCard private methods.
 %
-% For examples of use, see the script file MODTRANCaseExamples.m
+% For examples of use, see the script file Mod5Examples.m
 % Note that properties that are also MODTRAN inputs are fully in 
 % upper case.
 %
@@ -372,14 +372,14 @@ classdef MODTRANCase
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2010, DPSS, CSIR and Derek J. Griffith
+  % Copyright 2009-2010, DPSS, CSIR $Author:$
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
   % $Id$
   properties (GetAccess = public, SetAccess = private)
     CaseName = 'Matlab'; % The name of the super-case, must be the same across all sub-cases    
-    CaseIndex = 1; % This is the sub-case index. Must run from 1 to numel(MODTRANCaseInstance).    
+    CaseIndex = 1; % This is the sub-case index. Must run from 1 to numel(Mod5Instance).    
   end
   properties
     SubCaseName = ''; % Name of the sub-case, can be changed per sub-case
@@ -688,9 +688,9 @@ classdef MODTRANCase
     % SetMODTRANExe : Set the name of the MODTRAN executable file
     % 
     % Usage :
-    %    MODTRANCase.SetMODTRANExe(MODTRANExe);
+    %    Mod5.SetMODTRANExe(MODTRANExe);
     %        Or
-    %    MODTRANCase.SetMODTRANExe;
+    %    Mod5.SetMODTRANExe;
     %
     % Where MODTRANExe is the full pathname of the MODTRAN executable
     % If the parameter MODTRANExe is omitted or empty, a directory
@@ -698,10 +698,10 @@ classdef MODTRANCase
     %
     % MODTRANExe is saved in the file MODTRANExe.mat, and is read whenever
     % MODTRAN-related functions need to know where MODTRAN is. It is used
-    % particularly by MODTRANCase.Run. It only needs to be set once after MODTRAN
+    % particularly by Mod5.Run. It only needs to be set once after MODTRAN
     % installation, or if you move or reinstall MODTRAN somewhere else.
     %
-    % See Also : MODTRANCase.Write, MODTRANCase.Run
+    % See Also : Mod5.Write, Mod5.Run
     
     ExpectedMODTRAN = 'MOD4v1r1.EXE';
     if ~exist('MODTRANExe', 'var') || isempty(MODTRANExe)
@@ -721,8 +721,8 @@ classdef MODTRANCase
     if ~exist(MODTRANExe, 'file')
       error('MODTRANExe must be an existing MODTRAN executable file.')
     end
-    Direc = fileparts(which('MODTRANCase.m'));
-    % Save the root directory to a file for later use by other MODTRANCase functions
+    Direc = fileparts(which('Mod5.m'));
+    % Save the root directory to a file for later use by other Mod5 functions
     save([Direc '\MODTRANExe.mat'], 'MODTRANPath', 'MODTRANExe');   
     
     end % function SetMODTRANExe
@@ -731,11 +731,11 @@ classdef MODTRANCase
     %
     % Usage :
     %
-    %  MODTRANCase.SetCasePath(CaseDirectory)
+    %  Mod5.SetCasePath(CaseDirectory)
     %    Or
-    %  MODTRANCase.SetCasePath;  % Opens directory browse dialog
+    %  Mod5.SetCasePath;  % Opens directory browse dialog
     %
-    % Sets the default case directory used by MODTRANCase.
+    % Sets the default case directory used by Mod5.
     %
     if ~exist('CaseDirectory', 'var') || isempty(CaseDirectory)
       CaseDirectory = uigetdir(pwd,'Select Case Directory');
@@ -747,16 +747,16 @@ classdef MODTRANCase
       assert(ischar(CaseDirectory) && exist(CaseDirectory, 'dir'), 'Input CaseDirectory must be a string and a valid, existing directory.')
     end
     CasePath = CaseDirectory; % it exists !
-    % Save the root directory to a file for later use by other MODTRANCase functions
-    Direc = fileparts(which('MODTRANCase.m'));
-    save([Direc '\MODTRANCaseDir.mat'], 'CaseDirectory');   
+    % Save the root directory to a file for later use by other Mod5 functions
+    Direc = fileparts(which('Mod5.m'));
+    save([Direc '\Mod5Dir.mat'], 'CaseDirectory');   
       
     end % SetCasePath
     function [MODExe, MODPath] = WhereIsMODTRAN
       % WhereIsMODTRAN : Displays the location of your MODTRAN executable
       %
       % Usage:
-      %   MODTRANCase.WhereIsMODTRAN
+      %   Mod5.WhereIsMODTRAN
       %
       % To set the location of your MODTRAN executable use SetMODTRANExe.
       % If you have not set your MODTRAN executable location, then
@@ -768,20 +768,20 @@ classdef MODTRANCase
       MODExe = 'Unknown';
       MODPath = 'Unknown';
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('MODTRANCase.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
             fprintf(1, 'The MODTRAN executable file location has been previously set, but the executable file does not exist.\n');
-            fprintf(1, 'Set the location of the MODTRAN executable using MODTRANCase.SetMODTRANExe.\n');
+            fprintf(1, 'Set the location of the MODTRAN executable using Mod5.SetMODTRANExe.\n');
           else
             MODExe = MODTRANExe;
             MODPath = MODTRANPath;
           end          
         else
           fprintf(1, 'The MODTRAN executable file has not been set.\n');
-          fprintf(1, 'Set the location of the executable using MODTRANCase.SetMODTRANExe.\n');
-          % [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;
+          fprintf(1, 'Set the location of the executable using Mod5.SetMODTRANExe.\n');
+          % [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
       end
       
@@ -790,7 +790,7 @@ classdef MODTRANCase
       % isValidFilename : Check that a string is a valid filename (Windows)
       %
       % Usage :
-      %  Valid = MODTRANCase.isValidFilename(fn)
+      %  Valid = Mod5.isValidFilename(fn)
       % 
       % The valid filenames are contrained by Windows requirements, which
       %   are usually more restrictive than Unix-style filename.
@@ -824,7 +824,7 @@ classdef MODTRANCase
     function FixedHeaders = FixHeaders(Headers)
       % FixHeaders : Corrects some of the problems with column headers in MODTRAN output
       % Both input and output are cell arrays of strings.
-      assert(iscellstr(Headers), 'MODTRANCase_FixHeaders:BadInput','Input parameter Headers must be a cell array of strings.');
+      assert(iscellstr(Headers), 'Mod5_FixHeaders:BadInput','Input parameter Headers must be a cell array of strings.');
       FixedHeaders = Headers;
       for iHead = 1:numel(Headers)
         switch Headers{iHead}
@@ -854,7 +854,7 @@ classdef MODTRANCase
       if isempty(Headers)
         return;
       end
-      assert(ischar(Headers) || iscellstr(Headers), 'MODTRANCase:LookupHeaders:BadHeaders', ...
+      assert(ischar(Headers) || iscellstr(Headers), 'Mod5:LookupHeaders:BadHeaders', ...
         'Input Headers must be a string or cell array of strings');
       if isempty(Description)
         OutputDescr = {'TRANS','Total Transmittance'; 'SOLTR','Transmitted Solar Irradiance'; 'SOLAR','Incident Solar Irradiance'; ...
@@ -896,7 +896,7 @@ classdef MODTRANCase
       end
       if isempty(Descr)
         disp(Headers);
-        warning('MODTRANCase:LookupHeaders:NotFount','Above header not found in data.')
+        warning('Mod5:LookupHeaders:NotFount','Above header not found in data.')
       end
     end % LookupHeaders
     function Alb = CreateAlb(Header, title, wv, refl)
@@ -904,7 +904,7 @@ classdef MODTRANCase
       %
       % Usage :
       %
-      %  Alb = MODTRANCase.CreateAlb(Header, title, wv, refl);
+      %  Alb = Mod5.CreateAlb(Header, title, wv, refl);
       %
       % Where :
       %  Header is a string array or cell array of strings giving a
@@ -931,11 +931,11 @@ classdef MODTRANCase
       %   required, together with concatenation into a single vector.
       %
       % Example :
-      %   MyAlb = MODTRANCase.CreateAlb({'Albedo data for green slime.', 'Created by Schrek.'}, ...
+      %   MyAlb = Mod5.CreateAlb({'Albedo data for green slime.', 'Created by Schrek.'}, ...
       %                      '  1  Green Slime ! Sample A', [0.4 0.45 0.5 0.55 0.6 0.65], ...
       %                      [0.1 0.3 0.7 0.9 0.5 0.1]);
-      %   MODTRANCase.PlotAlb(MyAlb);  % Plot the albedo
-      %   MODTRANCase.WriteAlb(MyAlb, 'GreenSlime.alb'); % Write albedo file in MODTRAN spec_alb format.
+      %   Mod5.PlotAlb(MyAlb);  % Plot the albedo
+      %   Mod5.WriteAlb(MyAlb, 'GreenSlime.alb'); % Write albedo file in MODTRAN spec_alb format.
       %
       % See Also : ReadAlb, WriteAlb, PlotAlb, ReadAlbFromUSGS, ReadAlbFromASD
       %            AttachAlb
@@ -944,23 +944,23 @@ classdef MODTRANCase
       % Create empty structure
       Alb = struct('Filename', {}, 'Header', {}, 'title', {}, 'wv', {}, 'refl', {});
       % Validate inputs
-      assert(ischar(Header) || iscellstr(Header), 'MODTRANCase:CreateAlb:BadHeader', ...
+      assert(ischar(Header) || iscellstr(Header), 'Mod5:CreateAlb:BadHeader', ...
         'Input Header must be a char array (string) or cell array of strings.');
       if iscellstr(Header)
         Alb(1).Header = strvcat(Header);
       else
         Alb(1).Header = Header;
       end
-      assert(ischar(title) && ~isempty(title), 'MODTRANCase:CreateAlb:Badtitle', ...
+      assert(ischar(title) && ~isempty(title), 'Mod5:CreateAlb:Badtitle', ...
         'Input title must be a string with a numeric tag and a text name, seperated by one or more spaces e.g. '' 1  Black Tar''');
-      [AlbName, AlbIndex] = MODTRANCase.AlbedoName(title);
-      assert(~isempty(AlbIndex) && ~isnan(AlbIndex), 'MODTRANCase:CreateAlb:Badtitle', ...
+      [AlbName, AlbIndex] = Mod5.AlbedoName(title);
+      assert(~isempty(AlbIndex) && ~isnan(AlbIndex), 'Mod5:CreateAlb:Badtitle', ...
         'Input title must be a string with a numeric tag and a text name, seperated by one or more spaces e.g. '' 1  Black Tar''');
-      assert(~isempty(AlbName) && ~any(AlbName == '.'), 'MODTRANCase:CreateAlb:Badtitle', ...
+      assert(~isempty(AlbName) && ~any(AlbName == '.'), 'Mod5:CreateAlb:Badtitle', ...
         'There is no valid text name in the title input. There may not be decimal points in the title before the comment.');
-      assert(isnumeric(wv) && isvector(wv) && all(wv > 0), 'MODTRANCase:CreateAlb:Badwv', ...
+      assert(isnumeric(wv) && isvector(wv) && all(wv > 0), 'Mod5:CreateAlb:Badwv', ...
         'Input wv must be a positive numeric vector of wavelengths in microns.');
-      assert(isnumeric(refl) && isvector(refl) && all(refl >= 0) && all(refl <= 1) && numel(wv)==numel(refl), 'MODTRANCase:CreateAlb:Badrefl', ...
+      assert(isnumeric(refl) && isvector(refl) && all(refl >= 0) && all(refl <= 1) && numel(wv)==numel(refl), 'Mod5:CreateAlb:Badrefl', ...
         'Input refl must be a numeric vector of length identical to input wv, with elements having values from 0 to 1.');
       Alb(1).title = title;
       Alb(1).wv = reshape(wv, numel(wv), 1);  % Make it a column vector
@@ -971,7 +971,7 @@ classdef MODTRANCase
       %
       % Usage:
       %
-      %  Alb = MODTRANCase.ReadAlb(Filename)
+      %  Alb = Mod5.ReadAlb(Filename)
       %
       % Where Filename is the name of the file from which to read MODTRAN
       %   format spectral albedo data. If the Filename is not given or
@@ -1013,7 +1013,7 @@ classdef MODTRANCase
       if ~exist('Filename', 'var') || isempty(Filename)
         MODTRANPath = '';
         % Check for default case directory
-        Direc = fileparts(which('MODTRANCase.m'));
+        Direc = fileparts(which('Mod5.m'));
         if exist([Direc '\MODTRANExe.mat'], 'file');
           load([Direc '\MODTRANExe.mat']);
         end
@@ -1034,9 +1034,9 @@ classdef MODTRANCase
           return;
         end
       else % Filename is not empty, meaning that an explicit filename was given
-        assert(ischar(Filename), 'MODTRANCase:ReadFlt:FilenameNotString', 'Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5:ReadFlt:FilenameNotString', 'Input Filename must be a string.');
         if ~exist(Filename, 'file')
-          error('MODTRANCase:ReadFlt:FileDoesNotExist', ...
+          error('Mod5:ReadFlt:FileDoesNotExist', ...
             'The file %s does not seem to exist. Provide full path if not in current directory.', Filename);
         end
       end
@@ -1075,7 +1075,7 @@ classdef MODTRANCase
       % ReadAlbFromUSGS : Read spectral reflectance data from USGS splib06a ascii file
       %
       % Usage :
-      %  Alb = MODTRANCase.ReadAlbFromUSGS(Filename);
+      %  Alb = Mod5.ReadAlbFromUSGS(Filename);
       %
       % Where Filename is a string or cell array giving the Filename or names
       %  of the USGS spectral library (splib06a) files(s) to read. These files must
@@ -1100,9 +1100,9 @@ classdef MODTRANCase
       Alb = struct('Filename', {}, 'Header', {}, 'title', {}, 'wv', {}, 'refl', {});      
       % Get the data from the USGS files
       if exist('Filename', 'var') && ~isempty(Filename)
-        SData = MODTRANCase.ReadUSGSsplib06a(Filename);
+        SData = Mod5.ReadUSGSsplib06a(Filename);
       else
-        SData = MODTRANCase.ReadUSGSsplib06a;
+        SData = Mod5.ReadUSGSsplib06a;
       end
       % Unpack the spectral data into the Alb structure
       for iAlb = 1:numel(SData)
@@ -1134,7 +1134,7 @@ classdef MODTRANCase
         % Now check for any bad data in between
         iGoodData = ~isnan(refl) & refl >= 0;
         if any(~iGoodData) % If there are bad points in between, issue a warning, because there could be big gaps in the data
-          warning('MODTRANCase:ReadAlbFromUSGS:DeletedData', ...
+          warning('Mod5:ReadAlbFromUSGS:DeletedData', ...
             'Spectral data titled "%s" from file "%s" is not contiguous (internal deleted points). Check the data before using.', ...
             SData(iAlb).title, SData(iAlb).Filename);
         end
@@ -1146,7 +1146,7 @@ classdef MODTRANCase
     function SpectralData = ReadUSGSsplib06a(Filename)
       % ReadUSGSsplib06a : Read spectral reflectance data from the USGS splib06a database
       % Usage :
-      %  SpectralData = MODTRANCase.ReadUSGSsplib06a(Filename)
+      %  SpectralData = Mod5.ReadUSGSsplib06a(Filename)
       %
       %  Where Filename is the splib text data file. Filename can also be a
       %  cell array of strings with multiple files.
@@ -1179,7 +1179,7 @@ classdef MODTRANCase
       SpectralData = [];
       Pathname = '';
       if exist('Filename', 'var') && ~isempty(Filename)
-        assert(ischar(Filename) || iscellstr(Filename), 'MODTRANCase:ReadUSGSsplib06a:BadFilename', ...
+        assert(ischar(Filename) || iscellstr(Filename), 'Mod5:ReadUSGSsplib06a:BadFilename', ...
           'Input Filename must be a string or cell array of strings.');
       else
         if isempty(USGSPath)
@@ -1198,7 +1198,7 @@ classdef MODTRANCase
       
       for iFile = 1:numel(Filename)
         if ~exist([Pathname Filename{iFile}], 'file')
-          error(['MODTRANCase:ReadUSGSsplib06a:Filename ' Filename{iFile} ' not found.']);
+          error(['Mod5:ReadUSGSsplib06a:Filename ' Filename{iFile} ' not found.']);
         end
       end
       
@@ -1211,7 +1211,7 @@ classdef MODTRANCase
         if count == 1
           SpectralData(iFile).Version = char(A);
         else
-          warning('MODTRANCase:ReadUSGSspeclib06a:FileFormatSuspect', ...
+          warning('Mod5:ReadUSGSspeclib06a:FileFormatSuspect', ...
             'This file may not be the correct format. Ensure you have the individual .asc spectral files.')
         end
         
@@ -1264,7 +1264,7 @@ classdef MODTRANCase
           end
           if ilin == startline - 1 % Scan the data using textscan
             if nCol ~= 3
-              warning('MODTRANCase:ReadUSGSspeclib06a:nColProblem', ...
+              warning('Mod5:ReadUSGSspeclib06a:nColProblem', ...
                 'There should be three columns of data in the speclib file %s. There may only be %i.', Filename{iFile}, nCol);
             end
             specdata = textscan(fid, '%f %f %f');
@@ -1278,7 +1278,7 @@ classdef MODTRANCase
               SpectralData(iFile).refl(SpectralData(iFile).refl == deletednumber) = NaN;
               SpectralData(iFile).stddev(SpectralData(iFile).stddev == deletednumber) = NaN;
             else
-              warning('MODTRANCase:ReadUSGSsplib06a:FormatSuspect',...
+              warning('Mod5:ReadUSGSsplib06a:FormatSuspect',...
                 'There could be a format problem with file %s.', Filename{iFile});
             end
             % Replace unmeasured standard deviations with NaN as well
@@ -1303,9 +1303,9 @@ classdef MODTRANCase
       % reflectance data exported with full headers.
       %
       % Usage :
-      %  Alb = MODTRANCase.ReadAlbFromASD(Filename);
+      %  Alb = Mod5.ReadAlbFromASD(Filename);
       %    Or just ..
-      %  Alb = MODTRANCase.ReadAlbFromASD; % Get file/open dialog
+      %  Alb = Mod5.ReadAlbFromASD; % Get file/open dialog
       %
       % Where :
       %  Filename is the file from which to read the ASD text data.
@@ -1329,9 +1329,9 @@ classdef MODTRANCase
       Alb = struct('Filename', {}, 'Header', {}, 'title', {}, 'wv', {}, 'refl', {});      
       % Get the data from the ASD files
       if exist('Filename', 'var') && ~isempty(Filename)
-        SData = MODTRANCase.ReadASDtxtMulti(Filename);
+        SData = Mod5.ReadASDtxtMulti(Filename);
       else
-        SData = MODTRANCase.ReadASDtxtMulti;
+        SData = Mod5.ReadASDtxtMulti;
       end
       % Unpack the ASD data into an Alb structure
       for iAlb = 1:numel(SData)
@@ -1354,7 +1354,7 @@ classdef MODTRANCase
       % file. The wavelengths must be exported rather than spectral bin numbers.
       %
       % Usage :
-      %  >> ASDData = MODTRANCase.ReadASDtxt(Filename)
+      %  >> ASDData = Mod5.ReadASDtxt(Filename)
       %
       % Where :
       %   Filename is the name of the text file from which to read the data. If
@@ -1601,7 +1601,7 @@ classdef MODTRANCase
           
         end
       else
-        error('MODTRANCase:ReadASDtxt:FileDoesNotExist', 'Given File does not exist')
+        error('Mod5:ReadASDtxt:FileDoesNotExist', 'Given File does not exist')
       end
       fclose(fid);
     end   % ReadASDtxt 
@@ -1610,7 +1610,7 @@ classdef MODTRANCase
       %
       % Usage :
       %
-      % ASDData = MODTRANCase.ReadASDtxtMulti(Filename)
+      % ASDData = Mod5.ReadASDtxtMulti(Filename)
       %
       % Usage is nearly identical to use of ReadASDtxt, except that multiple files
       % can be selected, and a vector of ASDData structures is returned, with
@@ -1647,10 +1647,10 @@ classdef MODTRANCase
         end
       else
         if ischar(Filename)
-          assert(logical(exist(Filename, 'file')), 'MODTRANCase:ReadASDtxtMulti:BadFilename', ...
+          assert(logical(exist(Filename, 'file')), 'Mod5:ReadASDtxtMulti:BadFilename', ...
             'Input Filename must be the name of an existing file. If not in the current directory, include the full path.')
         else
-          assert(iscellstr(Filename), 'MODTRANCase:ReadASDtxtMulti:BadFilename', ...
+          assert(iscellstr(Filename), 'Mod5:ReadASDtxtMulti:BadFilename', ...
             'Input Filename must be a string or a cell array of strings.')
         end
       end
@@ -1658,10 +1658,10 @@ classdef MODTRANCase
       %% Read the ASD file(s)
       if iscellstr(Filename)
         for iFile = 1:numel(Filename)
-          ASDData(iFile) = MODTRANCase.ReadASDtxt(Filename{iFile});
+          ASDData(iFile) = Mod5.ReadASDtxt(Filename{iFile});
         end
       else
-        ASDData = MODTRANCase.ReadASDtxt(Filename);
+        ASDData = Mod5.ReadASDtxt(Filename);
       end
       
     end % ReadASDtxtMulti
@@ -1670,7 +1670,7 @@ classdef MODTRANCase
       %
       % Usage :
       %
-      %  AlbOut = MODTRANCase.MixAlb(AlbIn, Weights, Title);
+      %  AlbOut = Mod5.MixAlb(AlbIn, Weights, Title);
       %
       % Where :
       %   AlbIn is the input spectral albedo data, AlbIn is a structure
@@ -1713,11 +1713,11 @@ classdef MODTRANCase
       %            CreateAlb, AttachAlb, PlotAlb
       
       % Do a little input checking
-      assert(isstruct(AlbIn) && all(isfield(AlbIn, {'Header','title','wv','refl'})), 'MODTRANCase:MixAlb:BadAlbIn', ...
+      assert(isstruct(AlbIn) && all(isfield(AlbIn, {'Header','title','wv','refl'})), 'Mod5:MixAlb:BadAlbIn', ...
         'The input spectral albedo structure AlbIn must have the fields Header, title, wv, and refl.');
-      assert(isnumeric(Weights) && isvector(Weights) && numel(Weights) <= numel(AlbIn) && all(Weights >= 0), 'MODTRANCase:MixAlb:BadWeights', ...
+      assert(isnumeric(Weights) && isvector(Weights) && numel(Weights) <= numel(AlbIn) && all(Weights >= 0), 'Mod5:MixAlb:BadWeights', ...
         'Input Weights must be a positive, numeric vector of length less or equal to the number of elements in the input AlbIn.');
-      assert(ischar(Title) && isvector(Title), 'MODTRANCase:MixAlb:BadTitle', ...
+      assert(ischar(Title) && isvector(Title), 'Mod5:MixAlb:BadTitle', ...
         'Input Title must be a string (char array).');
       AlbOut = struct('Filename', {}, 'Header', {}, 'title', {}, 'wv', {}, 'refl', {}); 
       
@@ -1731,7 +1731,7 @@ classdef MODTRANCase
       Wv = unique(Wv);
       Refl = zeros(numel(Wv), numel(Weights));
       % Interpolate albedo/reflectance data onto unique and sorted wavelength list
-      AlbOut(1).Header = '=== Mixture of reflectance components, created with MODTRANCase.MixAlb';
+      AlbOut(1).Header = '=== Mixture of reflectance components, created with Mod5.MixAlb';
       for iAlb = 1:numel(Weights)
         Refl(:, iAlb) = interp1(AlbIn(iAlb).wv, AlbIn(iAlb).refl, Wv, 'linear');
         % Might as well accumulate the header data while in this loop
@@ -1761,11 +1761,11 @@ classdef MODTRANCase
       %   adequate before using the data in MODTRAN.
       %
       % Usage:
-      %   AlbOut = MODTRANCase.InterpAlb(Alb, WavelengthRange, NumberOfWavelengths);
+      %   AlbOut = Mod5.InterpAlb(Alb, WavelengthRange, NumberOfWavelengths);
       %     Or
-      %   AlbOut = MODTRANCase.InterpAlb(Alb, WavelengthRange, NumberOfWavelengths, Optimize);
+      %   AlbOut = Mod5.InterpAlb(Alb, WavelengthRange, NumberOfWavelengths, Optimize);
       %     Or
-      %   AlbOut = MODTRANCase.InterpAlb(Alb, WavelengthRange, NumberOfWavelengths, Optimize, InterpParams...);
+      %   AlbOut = Mod5.InterpAlb(Alb, WavelengthRange, NumberOfWavelengths, Optimize, InterpParams...);
       %
       % Where:
       %   Alb is an input albedo structure having the following fields
@@ -1812,16 +1812,16 @@ classdef MODTRANCase
       % Do some input parameter checking      
       % The input Alb must have the Header, titles, wavelengths, reflectances
 
-      assert(isstruct(Alb) && all(isfield(Alb, {'Header','title','wv','refl'})), 'MODTRANCase:InterpAlb:BadAlb', ...
+      assert(isstruct(Alb) && all(isfield(Alb, {'Header','title','wv','refl'})), 'Mod5:InterpAlb:BadAlb', ...
         'The input structure Alb must have the fields Header, title, wv, and refl.');
-      assert(isnumeric(WavelengthRange) && numel(WavelengthRange) == 2 && all(WavelengthRange > 0), 'MODTRANCase:InterpAlb:BadWvRange', ...
+      assert(isnumeric(WavelengthRange) && numel(WavelengthRange) == 2 && all(WavelengthRange > 0), 'Mod5:InterpAlb:BadWvRange', ...
         'Input WavelengthRange must be a two-element numeric vector, giving the desired wavelength range in microns.');
-      assert(isscalar(NumberOfWavelengths) && isnumeric(NumberOfWavelengths) && NumberOfWavelengths >= 3, 'MODTRANCase:InterpAlb:BadNumberWv', ...
+      assert(isscalar(NumberOfWavelengths) && isnumeric(NumberOfWavelengths) && NumberOfWavelengths >= 3, 'Mod5:InterpAlb:BadNumberWv', ...
         'Input NumberOfWavelengths must be scalar, numeric and greater than 3.');
       WavelengthRange = sort(WavelengthRange);
       NumberOfWavelengths = round(NumberOfWavelengths);
       if exist('Optimize','var') && ~isempty(Optimize)
-        assert(isnumeric(Optimize) && any(numel(Optimize)==[1 2]), 'MODTRANCase:InterpAlb:BadOptimize', ...
+        assert(isnumeric(Optimize) && any(numel(Optimize)==[1 2]), 'Mod5:InterpAlb:BadOptimize', ...
           'Input Optimize must be numeric with one or two elements.');
         if Optimize(1) ~= 1
           SmoothingParameter = 1 - Optimize(1)./1e9;
@@ -1842,11 +1842,11 @@ classdef MODTRANCase
         % Check that the data in Alb spans the requested wavelength range
         if WavelengthRange(1) < Alb(iAlb).wv(1) || WavelengthRange(2) > Alb(iAlb).wv(end)
           if WavelengthRange(1) >= Alb(iAlb).wv(end) || WavelengthRange(2) <= Alb(iAlb).wv(1)
-            warning('MODTRANCase:InterpAlb:WvSpan', ...
+            warning('Mod5:InterpAlb:WvSpan', ...
               'The requested WavelengthRange does not overlap the data in input Alb(%i) at all. Skipped.', iAlb);
             continue;
           end
-          warning('MODTRANCase:InterpAlb:WvSpan', 'The requested WavelengthRange is not spanned by the data in input Alb(%i).', iAlb);          
+          warning('Mod5:InterpAlb:WvSpan', 'The requested WavelengthRange is not spanned by the data in input Alb(%i).', iAlb);          
         end
         Wv = Alb(iAlb).wv;
         Refl = Alb(iAlb).refl;
@@ -1855,7 +1855,7 @@ classdef MODTRANCase
           NewWv = linspace(WavelengthRange(1), WavelengthRange(2), NumberOfWavelengths);
         else
           if isempty(which('csaps')) % no spline toolbox presumably
-            warning('MODTRANCase:InterpAlb:NoSplines','The Spline Toolbox is required for wavelength optimisation. Optimize input ignored.');
+            warning('Mod5:InterpAlb:NoSplines','The Spline Toolbox is required for wavelength optimisation. Optimize input ignored.');
             NewWv = linspace(WavelengthRange(1), WavelengthRange(2), NumberOfWavelengths);
             
           else
@@ -1895,11 +1895,11 @@ classdef MODTRANCase
           NewRefl = interp1(Wv, Refl, NewWv, varargin{:});
         end
         if any(isnan(NewRefl))
-          warning('MODTRANCase:InterpAlb:NaNsFound','NaNs were encountered interpolating Alb(%i). Skipped.', iAlb);
+          warning('Mod5:InterpAlb:NaNsFound','NaNs were encountered interpolating Alb(%i). Skipped.', iAlb);
         end
         % Attempt an optimisation
         %options.MaxIter = 100;
-        %NewWv = fminsearch(@(xNewWv) MODTRANCase.GoodFit(xNewWv), NewWv, options);
+        %NewWv = fminsearch(@(xNewWv) Mod5.GoodFit(xNewWv), NewWv, options);
         
         % And populate the output structure
         AlbOut(iAlb).wv = reshape(NewWv, numel(NewWv), 1);
@@ -1911,11 +1911,11 @@ classdef MODTRANCase
       %
       % Usage :
       %
-      %    plothandles = MODTRANCase.PlotAlb(Alb, AxisLimits);
+      %    plothandles = Mod5.PlotAlb(Alb, AxisLimits);
       %
       %     Or
       %
-      %    plothandles = MODTRANCase.PlotAlb(Alb);
+      %    plothandles = Mod5.PlotAlb(Alb);
       %
       % Where Alb is spectral reflectance (albedo) structure data read using
       %  ReadAlb, ReadAlbFromASD, ReadAlbFromUSGS or created using
@@ -1944,7 +1944,7 @@ classdef MODTRANCase
       %
       
       % The input must have the titles, wavelengths, reflectances
-      assert(isstruct(Alb) && all(isfield(Alb, {'title','wv','refl'})), 'MODTRANCase:PlotAlb:BadAlb', ...
+      assert(isstruct(Alb) && all(isfield(Alb, {'title','wv','refl'})), 'Mod5:PlotAlb:BadAlb', ...
         'The input structure Alb must have the fields title, wv, and refl.');
       
       for iCol = 1:size(Alb, 2)
@@ -1977,11 +1977,11 @@ classdef MODTRANCase
       %
       % Usage :
       %
-      %  Success = MODTRANCase.WriteAlb(Alb, Filename);
+      %  Success = Mod5.WriteAlb(Alb, Filename);
       %
       %    Or
       %
-      %  Sucess = MODTRANCase.WriteAlb(alb);
+      %  Sucess = Mod5.WriteAlb(alb);
       %
       % Where Alb is a spectral albedo data structure read using
       %  ReadAlb, ReadAlbFromASD, ReadAlbFromUSGS or CreateAlb.
@@ -2003,13 +2003,13 @@ classdef MODTRANCase
       %            AttachAlb, MixAlb
       
       Success = 0;
-      assert(isstruct(Alb) && all(isfield(Alb, {'Header','title','wv','refl'})), 'MODTRANCase:WriteAlb:BadAlb', ...
+      assert(isstruct(Alb) && all(isfield(Alb, {'Header','title','wv','refl'})), 'Mod5:WriteAlb:BadAlb', ...
         'The input structure Alb must have the fields Header, title, wv, and refl.');
       
       if ~exist('Filename', 'var') || isempty(Filename)
         MODTRANPath = '';
         % Check for default case directory
-        Direc = fileparts(which('MODTRANCase.m'));
+        Direc = fileparts(which('Mod5.m'));
         if exist([Direc '\MODTRANExe.mat'], 'file');
           load([Direc '\MODTRANExe.mat']);
         end
@@ -2040,12 +2040,12 @@ classdef MODTRANCase
         TextTags{iAlb} = strtrim(TextTag);
       end
       if numel(NumTags) ~= numel(unique(NumTags)) % There are duplicate numeric tags
-        warning('MODTRANCase:WriteAlb:DuplicateNumTags',...
+        warning('Mod5:WriteAlb:DuplicateNumTags',...
           'There are duplicate numeric albedo curve tags. Check the Alb input structure. This does not matter if the text tags are used.');
       end
       % Also check the text tags
       if numel(TextTags) ~= numel(unique(TextTags)) % There are duplicate text tags
-        warning('MODTRANCase:WriteAlb:DuplicateTextTags',...
+        warning('Mod5:WriteAlb:DuplicateTextTags',...
           'There are duplicate textual albedo curve tags. Check the Alb input structure. This does not matter if the numeric tags are used.');        
       end
       try % to write the albedo file
@@ -2075,9 +2075,9 @@ classdef MODTRANCase
       % manual Card 1A3.
       %
       % Usage :
-      %   Flt = MODTRANCase.ReadFlt(Filename);
+      %   Flt = Mod5.ReadFlt(Filename);
       %     Or
-      %   Flt = MODTRANCase.ReadFlt;   % Presents file/open dialog
+      %   Flt = Mod5.ReadFlt;   % Presents file/open dialog
       %
       % Where Filename is the name of the .flt format file from which to read
       % the data. Filename must have the full path as well if not present in
@@ -2115,7 +2115,7 @@ classdef MODTRANCase
       if ~exist('Filename', 'var') || isempty(Filename)
         MODTRANPath = '';
         % Check for default case directory
-        Direc = fileparts(which('MODTRANCase.m'));
+        Direc = fileparts(which('Mod5.m'));
         if exist([Direc '\MODTRANExe.mat'], 'file');
           load([Direc '\MODTRANExe.mat']);
         end
@@ -2134,9 +2134,9 @@ classdef MODTRANCase
           return;
         end
       else % Filename is not empty, meaning that an explicit filename was given
-        assert(ischar(Filename), 'MODTRANCase:ReadFlt:FilenameNotString', 'Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5:ReadFlt:FilenameNotString', 'Input Filename must be a string.');
         if ~exist(Filename, 'file')
-          error('MODTRANCase:ReadFlt:FileDoesNotExist', ...
+          error('Mod5:ReadFlt:FileDoesNotExist', ...
             'The file %s does not seem to exist. Provide full path if not in current directory.', Filename);
         end
       end
@@ -2148,7 +2148,7 @@ classdef MODTRANCase
         if ~isempty(UHeader) && any(UHeader(1) == 'WNM')
           Flt.UnitsHeader = UHeader(1);
         else
-          error('MODTRANCase:ReadFlt:BadHeader', ...
+          error('Mod5:ReadFlt:BadHeader', ...
             'The file %s has an invalid first header character (W, M or N) for a .flt file.', Filename);
         end
         % set the Units field
@@ -2181,7 +2181,7 @@ classdef MODTRANCase
             FilterData = textscan(fid, TheFormat);
             Flt.Filters{iFilter} = cell2mat(FilterData);
           else
-            error('MODTRANCase:ReadFlt:BadFilterData', ...
+            error('Mod5:ReadFlt:BadFilterData', ...
               'There seems to be missing filter data in the file %s.flt', Filename);
           end
           iFilter = iFilter + 1;
@@ -2201,13 +2201,13 @@ classdef MODTRANCase
       % computation of band radiance, band irradiance or attenuation.
       %
       % Usage :
-      %   Flt = MODTRANCase.CreateFlt(Name, FilterDescr, Centre, FWHM, ...
+      %   Flt = Mod5.CreateFlt(Name, FilterDescr, Centre, FWHM, ...
       %              Shape, nSamples, EdgeVal, FlatTopWidth, PeakTrans)
       %
       % This function can generate a set of filters having different shapes
       % widths and centre wavelengths. The resulting filter structure can
-      % be attached to a MODTRANCase, written to file using
-      % MODTRANCase.WriteFlt or plotted using MODTRANCase.PlotFlt.
+      % be attached to a Mod5, written to file using
+      % Mod5.WriteFlt or plotted using Mod5.PlotFlt.
       %
       % The shapes of the filters are generated using Jason Brazile's 
       % srf_generate function.
@@ -2275,7 +2275,7 @@ classdef MODTRANCase
       %
       % Example :
       % Define a blue and a green filter in wavelength (nm) domain.
-      %   MyFlt = MODTRANCase.CreateFlt('N Synthetic Spectral Filters', ...
+      %   MyFlt = Mod5.CreateFlt('N Synthetic Spectral Filters', ...
       %           {'Blue Filter', 'Green Filter'}, ... % Filter descriptions
       %           [450            550          ], ... % Centre wavelengths (nm)
       %           [40             50           ], ... % FWHMs
@@ -2285,39 +2285,39 @@ classdef MODTRANCase
       %           [30             20]);  % FlatTopWidth of 30 and 20 respec.
       %           
       %
-      % See Also : (MODTRANCase.) ReadFlt, WriteFlt, AttachFlt, PlotFlt, ReadFltFromSensorML
+      % See Also : (Mod5.) ReadFlt, WriteFlt, AttachFlt, PlotFlt, ReadFltFromSensorML
       %
       Flt = [];
       %% Verify inputs
       % Verify the "Name" input
-      assert(exist('Name', 'var') && ischar(Name) && any(Name(1) == 'WNM'), 'MODTRANCase:CreateFlt:BadName', ...
+      assert(exist('Name', 'var') && ischar(Name) && any(Name(1) == 'WNM'), 'Mod5:CreateFlt:BadName', ...
         'Input Name (mandatory) must be a string starting with W (for wavenumber), N (for nanometres) or M (for microns).');
       % Verify the "Centre" wavelength/number input
-      assert(exist('Centre', 'var') && ~isempty(Centre) && isnumeric(Centre) && min(Centre(:)) > 0, 'MODTRANCase:CreateFlt:BadCentre', ...
+      assert(exist('Centre', 'var') && ~isempty(Centre) && isnumeric(Centre) && min(Centre(:)) > 0, 'Mod5:CreateFlt:BadCentre', ...
         'Input Centre (mandatory) must be positive, numeric centre wavelength or wavenumber.');
       nFilters = numel(Centre); % This is the number of filters in the set.
       % Verify the "FilterDescr" input
       assert(exist('FilterDescr','var') && ~isempty(FilterDescr) && iscellstr(FilterDescr) && ...
              (isscalar(FilterDescr) || numel(FilterDescr) == nFilters), ...
-        'MODTRANCase:CreateFlt:BadFilterDescr','Input FilterDescr (mandatory) must be a cell array of strings describing filters.');
+        'Mod5:CreateFlt:BadFilterDescr','Input FilterDescr (mandatory) must be a cell array of strings describing filters.');
       if numel(FilterDescr) ~= nFilters
         FilterDescr = repmat(FilterDescr, 1, nFilters);
       end
       % Verify the "FWHM" input
       assert(exist('FWHM', 'var') && isnumeric(FWHM) && (isscalar(FWHM) || numel(FWHM) == nFilters) && min(FWHM(:)) > 0, ...
-        'MODTRANCase:CreateFlt:BadFWHM','Input FWHM (mandatory) must be positive numeric and have the same number of elements as Centre.');
+        'Mod5:CreateFlt:BadFWHM','Input FWHM (mandatory) must be positive numeric and have the same number of elements as Centre.');
       if numel(FWHM) ~= nFilters
         FWHM = repmat(FWHM(1), 1, nFilters);
       end
       % Verify the "Shape" input
       if exist('Shape', 'var')
-        assert(iscellstr(Shape) && any(numel(Shape) == [1 nFilters]), 'MODTRANCase:CreateFlt:BadShape', ...
+        assert(iscellstr(Shape) && any(numel(Shape) == [1 nFilters]), 'Mod5:CreateFlt:BadShape', ...
           'Input Shape must be a cell array of strings with a single entry or the same number of entries as Centre');
         Shape = lower(Shape);
         ShapeMatch = sort([strmatch('gauss',Shape,'exact') strmatch('bartlett',Shape,'exact') ...
                            strmatch('welch',Shape,'exact') strmatch('cosine',  Shape,'exact')]);
         if ~all(ShapeMatch(:) == 1:numel(ShapeMatch))
-          error('MODTRANCase:CreateFlt:BadShape', ...
+          error('Mod5:CreateFlt:BadShape', ...
                 'Input Shape must be a cell array of strings limited to ''gauss'' ''bartlett'' ''welch'' and ''cosine''');
         end
       else
@@ -2329,7 +2329,7 @@ classdef MODTRANCase
       % Verify the nSamples input
       if exist('nSamples', 'var') && ~isempty(nSamples)
         assert(isnumeric(nSamples) && all(round(nSamples) == nSamples) && any(numel(nSamples) == [1 nFilters]) && all(nSamples >= 5), ...
-          'MODTRANCase:CreateFlt:BadnSamples', ...
+          'Mod5:CreateFlt:BadnSamples', ...
           'Input nSamples must be integer > 5 and either scalar or have the same number of elements at input Centre.');
       else
         nSamples = 64;
@@ -2340,7 +2340,7 @@ classdef MODTRANCase
       % Verify EdgeVal input
       if exist('EdgeVal', 'var') && ~isempty(EdgeVal)
         assert(isnumeric(EdgeVal) && all(EdgeVal > 0) && all(EdgeVal < 0.1) && any(numel(EdgeVal) == [1 nFilters]), ...
-          'MODTRANCase:CreateFlt:BadEdgeVal', ...
+          'Mod5:CreateFlt:BadEdgeVal', ...
           'Input EdgeVal must be positive, < 0.1, and either be scalar or have the same number of elements as input Centre.');
       else
         EdgeVal = 0.001;
@@ -2351,7 +2351,7 @@ classdef MODTRANCase
       % Verify FlatTopWidth
       if exist('FlatTopWidth', 'var') && ~isempty(FlatTopWidth)
         assert(isnumeric(FlatTopWidth) && all(FlatTopWidth >= 0) && any(numel(FlatTopWidth) == [1 nFilters]), ...
-          'MODTRANCase:CreateFlt:BadFlatTopWidth',...
+          'Mod5:CreateFlt:BadFlatTopWidth',...
           'Input FlatTopWidth must be >= 0 and be scalar or have the same number of elements as input Centre.');
         if numel(FlatTopWidth) ~= nFilters
           FlatTopWidth = repmat(FlatTopWidth, 1, nFilters);
@@ -2363,7 +2363,7 @@ classdef MODTRANCase
       % Verify PeakTrans
       if exist('PeakTrans', 'var') && ~isempty(PeakTrans)
         assert(isnumeric(PeakTrans) && all(PeakTrans > 0) && all(PeakTrans <= 1) && any(numel(PeakTrans) == [1 nFilters]), ...
-          'MODTRANCase:CreateFlt:BadPeakTrans',...
+          'Mod5:CreateFlt:BadPeakTrans',...
           'Input PeakTrans must be > 0, <= 1 and be scalar or have the same number of elements as input Centre.'); 
       else
         PeakTrans = 1;
@@ -2386,7 +2386,7 @@ classdef MODTRANCase
       for iFilter = 1:nFilters
         Flt.FilterHeaders{iFilter} = FilterDescr{iFilter};
         
-        [FilterX, FilterY, FilterW] = MODTRANCase.srf_generate(Centre(iFilter), FWHM(iFilter), Shape{iFilter}, ...
+        [FilterX, FilterY, FilterW] = Mod5.srf_generate(Centre(iFilter), FWHM(iFilter), Shape{iFilter}, ...
                                                                nSamples(iFilter), EdgeVal(iFilter));
         % Scale to PeakTrans
         FilterY = FilterY .* PeakTrans(iFilter);
@@ -2455,7 +2455,7 @@ classdef MODTRANCase
       if ~exist('Filename', 'var') || isempty(Filename)
         MODTRANPath = '';
         % Check for default case directory
-        Direc = fileparts(which('MODTRANCase.m'));
+        Direc = fileparts(which('Mod5.m'));
         if exist([Direc '\MODTRANExe.mat'], 'file');
           load([Direc '\MODTRANExe.mat']);
         end
@@ -2474,9 +2474,9 @@ classdef MODTRANCase
           return;
         end
       else % Filename is not empty, meaning that an explicit filename was given
-        assert(ischar(Filename), 'MODTRANCase:ReadFltFromSensorML:FilenameNotString', 'Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5:ReadFltFromSensorML:FilenameNotString', 'Input Filename must be a string.');
         if ~exist(Filename, 'file')
-          error('MODTRANCase:ReadFltFromSensorML:FileDoesNotExist', ...
+          error('Mod5:ReadFltFromSensorML:FileDoesNotExist', ...
             'The file %s does not seem to exist. Provide full path if not in current directory.', Filename);
         end
       end
@@ -2486,7 +2486,7 @@ classdef MODTRANCase
       CompList = ML.getElementsByTagName('sml:component');
       nComps = CompList.getLength;
       if nComps == 0
-        error('MODTRANCase:ReadFltFromSensorML', ...
+        error('Mod5:ReadFltFromSensorML', ...
           'No components nodes found. This .xml file may not be SensorML, or may not have the requisite information.');
       end
       Flt.UnitsHeader = 'N'; % ASSUMING nm data - should really check the uom in the SensorML file
@@ -2521,7 +2521,7 @@ classdef MODTRANCase
           RespData = sscanf(RespData, '%f');
           Wv = RespData(1:2:end);
           if any(Wv < 100)
-            warning('MODTRANCase:ReadFltFromSensorML:WavelengthsSuspect',...
+            warning('Mod5:ReadFltFromSensorML:WavelengthsSuspect',...
               'Wavelength data in SensorML file assumed units of nanometres, but values less than 100 were encountered. Check SensorML file.');
             Wv = Wv*1000; % Presume conversion to nm
           end
@@ -2530,14 +2530,14 @@ classdef MODTRANCase
         end        
       end
       if ~isfield(Flt, 'Filters')
-          warning('MODTRANCase:ReadFltFromSensorML:NoSpectralResponse', ...
+          warning('Mod5:ReadFltFromSensorML:NoSpectralResponse', ...
             'This SensorML file does not seem to contain any spectral response curves.')
       end        
     end % ReadFltFromSensorML
     function [wl, y, wn] = srf_generate(center, fwhm, shape, n, yedge)
       % SRF_GENERATE Generate a MODTRAN-compatible spectral response function
       %
-      % [wl, y, wn] = MODTRANCase.srf_generate(center, fwhm, shape, n, yedge)
+      % [wl, y, wn] = Mod5.srf_generate(center, fwhm, shape, n, yedge)
       %
       % Inputs:
       %   center    center wavelength
@@ -2553,7 +2553,7 @@ classdef MODTRANCase
       %
       % Example:
       %
-      %    [wl, y, wn] = MODTRANCase.srf_generate(380.10, 9.9);
+      %    [wl, y, wn] = Mod5.srf_generate(380.10, 9.9);
       %    plot(wl, y);
       %    plot(wn, y);
       %
@@ -2609,7 +2609,7 @@ classdef MODTRANCase
           y(2*n2+1:end) = realmin;
           nfwhm = trapz(y);
         otherwise
-          error('MODTRANCase:srf_generate:UnknownFilterShape', ...
+          error('Mod5:srf_generate:UnknownFilterShape', ...
             'Input "shape" must be one of: gauss, bartlett, welch or cosine.');
       end
       
@@ -2623,7 +2623,7 @@ classdef MODTRANCase
       %
       % Usage :
       %
-      %  Success = MODTRANCase.WriteFlt(Flt, Filename);
+      %  Success = Mod5.WriteFlt(Flt, Filename);
       %
       % Where Flt is a structure defining a filter set having the
       % following fields:
@@ -2649,7 +2649,7 @@ classdef MODTRANCase
       %                 the first column (see AVIRIS.flt).
       %
       % The Flt filter structure can be read from an existing .flt file,
-      % or created using MODTRANCase.CreateFlt.
+      % or created using Mod5.CreateFlt.
       %
       % Filename is the name of the file to which the filter definition must
       % be written. The format is as for a MODTRAN .flt file. See the
@@ -2661,31 +2661,31 @@ classdef MODTRANCase
       
       Success = 0;
       %% Perform some input parameter checking
-      assert(isstruct(Flt), 'MODTRANCase:WriteFlt:FltNotStruct', ...
+      assert(isstruct(Flt), 'Mod5:WriteFlt:FltNotStruct', ...
         'Input Flt must be structure with fields FileHeader, UnitsHeader, Units, FilterHeader and Filters.');
-      assert(isscalar(Flt),'MODTRANCase:WriteFlt:MustBeScalar','Input Flt to WriteFlt must be scalar.');      
+      assert(isscalar(Flt),'Mod5:WriteFlt:MustBeScalar','Input Flt to WriteFlt must be scalar.');      
       if ~all(isfield(Flt, {'FileHeader','UnitsHeader', 'Units', 'FilterHeaders', 'Filters'}))
-        error('MODTRANCase:WriteFlt:BadFlt', ...
+        error('Mod5:WriteFlt:BadFlt', ...
           'The Flt structure input does not have all the correct fields. ')
       end
       % Check the units thingy
       if ~any(Flt.UnitsHeader == 'WNM')
-        error('MODTRANCase:WriteFlt:BadUnitsHeader', ...
+        error('Mod5:WriteFlt:BadUnitsHeader', ...
           'The UnitsHeader field in input structure Flt must be one of ''W'', ''N'' or ''M''.')
       end
       UHeader = strtrim(Flt.FileHeader);
       if ~any(UHeader(1) == 'WNM')
-        error('MODTRANCase:WriteFlt:BadFileHeader', ...
+        error('Mod5:WriteFlt:BadFileHeader', ...
           'The first character in the FileHeader of Flt must be one of ''W'', ''N'' or ''M''.')        
       end
       if UHeader(1) ~= Flt.UnitsHeader
-        error('MODTRANCase:WriteFlt:UnitsInconsistent', ...
+        error('Mod5:WriteFlt:UnitsInconsistent', ...
           'The first character of the FileHeader must be the same as the UnitsHeader in input Flt.')                
       end
       if ~exist('Filename', 'var') || isempty(Filename)
         MODTRANPath = '';
         % Check for default case directory
-        Direc = fileparts(which('MODTRANCase.m'));
+        Direc = fileparts(which('Mod5.m'));
         if exist([Direc '\MODTRANExe.mat'], 'file');
           load([Direc '\MODTRANExe.mat']);
         end
@@ -2703,7 +2703,7 @@ classdef MODTRANCase
           return;
         end
       end
-      assert(ischar(Filename), 'MODTRANCase:WritePlt:FilenameNotString', 'Input Filename must be a string.');
+      assert(ischar(Filename), 'Mod5:WritePlt:FilenameNotString', 'Input Filename must be a string.');
       try % to write the file
         % First determine the format with which to write the file
         switch Flt.UnitsHeader
@@ -2745,7 +2745,7 @@ classdef MODTRANCase
                   FinalFormat = [TheFormat ' %9.2f\n'];
               end
             otherwise
-              error('MODTRANCase:WriteFlt:BadFilterData', ...
+              error('Mod5:WriteFlt:BadFilterData', ...
                 'Filter transmittance data with other than 2 or 3 columns was encountered.');
           end
           fprintf(fid, FinalFormat, Flt.Filters{iFilter}');
@@ -2763,11 +2763,11 @@ classdef MODTRANCase
       %
       % Usage:
       %
-      %  plothandle = MODTRANCase.PlotFlt(Flt);
+      %  plothandle = Mod5.PlotFlt(Flt);
       %    Or
-      %  plothandle = MODTRANCase.PlotFlt(Flt, iFilters)
+      %  plothandle = Mod5.PlotFlt(Flt, iFilters)
       % 
-      % Where Flt is a filter structure as returned by MODTRANCase.ReadFlt.
+      % Where Flt is a filter structure as returned by Mod5.ReadFlt.
       % iFilters is a vector list of filter numbers to include in the plot
       % If iFilters is missing or empty, all filters are plotted.
       %
@@ -2781,18 +2781,18 @@ classdef MODTRANCase
         return; % silly person - nothing to chow
       end
       % Little bit of input checking
-      assert(isstruct(Flt), 'MODTRANCase:PlotFlt:FltNotStruct', ...
+      assert(isstruct(Flt), 'Mod5:PlotFlt:FltNotStruct', ...
         'Input Flt must be structure with fields FileHeader, UnitsHeader, Units, FilterHeader and Filters.');      
-      assert(isscalar(Flt),'MODTRANCase:PlotFlt:MustBeScalar','Input Flt to PlotFlt must be scalar.');
+      assert(isscalar(Flt),'Mod5:PlotFlt:MustBeScalar','Input Flt to PlotFlt must be scalar.');
       if ~all(isfield(Flt, {'FileHeader','UnitsHeader', 'Units', 'FilterHeaders', 'Filters'}))
-        error('MODTRANCase:PlotFlt:BadFlt', ...
+        error('Mod5:PlotFlt:BadFlt', ...
           'The Flt structure input does not have all the correct fields. ')
       end
       if ~exist('iFilters', 'var')
         iFilters = 1:length(Flt.Filters);
       else
         assert(isnumeric(iFilters) && isvector(iFilters) && all(round(iFilters) == iFilters) && ...
-          min(iFilters) >= 1 && max(iFilters) <=  length(Flt.Filters), 'MODTRANCase:PlotFlt:BadiFilters', ...
+          min(iFilters) >= 1 && max(iFilters) <=  length(Flt.Filters), 'Mod5:PlotFlt:BadiFilters', ...
           'Input iFilters to PlotFlt must be numeric, integer vector limited to number of filters in input Flt');
       end
       % There will only be a single figure
@@ -2811,7 +2811,7 @@ classdef MODTRANCase
         case 'M'
           xlabel(['Wavelength (' char(181) 'm)']);
         otherwise
-          warning('MODTRANCase:PlotFlt:BadUnitsHeader','An invalid UnitsHeader was encountered in the Flt input');
+          warning('Mod5:PlotFlt:BadUnitsHeader','An invalid UnitsHeader was encountered in the Flt input');
           xlabel('Unknown')
       end
       ylabel('Filter Transmittance');
@@ -2826,7 +2826,7 @@ classdef MODTRANCase
       % Read7 : Read MODTRAN Tape 7 format outputs
       %
       %  Usage :
-      %    [Data, Heads] = MODTRANCase.Read7(Filename);
+      %    [Data, Heads] = Mod5.Read7(Filename);
       % 
       % Reads a multiblock MODTRAN output file in the .tp7 or .7sc file
       % formats. MODTRAN writes one block of data for each sub-case in
@@ -2850,12 +2850,12 @@ classdef MODTRANCase
       % in the tape7 file in all cases. Note that indexing of Head is 
       % different to indexing of the Data cell array.
       %
-      % MODTRANCase.Read7 is somewhat similar to the older ReadMODTRANfl7.m
+      % Mod5.Read7 is somewhat similar to the older ReadMODTRANfl7.m
       % except that all data is returned and it is not possible to select
       % particular columns. Like ReadMODTRANfl7, this function returns
       % unsanitised headers. The calling function must sanitise the 
       % headers if required. The function to do this is called
-      %  MODTRANCase.FixHeaders. This function removes blanks, non alphabetic
+      %  Mod5.FixHeaders. This function removes blanks, non alphabetic
       %  characters and provides translation to a more consistent set of
       %  headers. Look at the source code of FixHeaders to see what 
       %  translations are performed.
@@ -2865,7 +2865,7 @@ classdef MODTRANCase
       %  and this causes the headers to be identified incorrectly. This is
       %  so particularly for tape7 files output from runs in the direct
       %  solar/lunar irradiance mode (IEMSCT = 3). The current version
-      %  of MODTRANCase.FixHeaders corrects some of these problems.
+      %  of Mod5.FixHeaders corrects some of these problems.
       %
       
       % The strategy is similar to ReadMODTRANfl7.m, except that the numeric
@@ -2887,7 +2887,7 @@ classdef MODTRANCase
       if ~exist('Filename', 'var') || isempty(Filename)
         MODTRANPath = '';
         % Check for default case directory
-        Direc = fileparts(which('MODTRANCase.m'));
+        Direc = fileparts(which('Mod5.m'));
         if exist([Direc '\MODTRANExe.mat'], 'file');
           load([Direc '\MODTRANExe.mat']);
         end
@@ -2906,9 +2906,9 @@ classdef MODTRANCase
           return;
         end
       else % Filename is not empty, meaning that an explicit filename was given
-        assert(ischar(Filename), 'MODTRANCase:Read7:FilenameNotString', 'Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5:Read7:FilenameNotString', 'Input Filename must be a string.');
         if ~exist(Filename, 'file')
-          error('MODTRANCase:Read7:FileDoesNotExist', ...
+          error('Mod5:Read7:FileDoesNotExist', ...
             'The file %s does not seem to exist. Provide full path if not in current directory.', Filename);
         end
       end
@@ -2966,7 +2966,7 @@ classdef MODTRANCase
             % Seek back to the end of header line 2
             SeekStatus = fseek(fid, EndHeaderLine2, 'bof');
             if SeekStatus
-                error('MODTRANCase_Read7:SeekError','Error seeking to start of tape7 data block.')
+                error('Mod5_Read7:SeekError','Error seeking to start of tape7 data block.')
             end
             
           else % The headers were on one line e.g. caseM18
@@ -2989,7 +2989,7 @@ classdef MODTRANCase
             % Seek back to the end of header line 1
             SeekStatus = fseek(fid, EndHeaderLine1, 'bof');
             if SeekStatus
-                error('MODTRANCase:Read7:SeekError','Error seeking to start of tape7 data block.')
+                error('Mod5:Read7:SeekError','Error seeking to start of tape7 data block.')
             end
           end
           Heads{dblock,1} = headers;  % Put the headers for this block into the output cell array
@@ -3098,7 +3098,7 @@ classdef MODTRANCase
         %               function. Use the BN2ASC utility to convert binary
         %               files to ascii.
         %
-        % See Also : MODTRANCase.PlotFlx, MODTRANCase.PlotFlxImg
+        % See Also : Mod5.PlotFlx, Mod5.PlotFlxImg
         
         Flx = struct('Spectral', [], 'SpectralUnits', '', 'SpectralLabel', '', 'IrradUnits', '', 'UpDiff', [], 'DownDiff', [], ...
                      'DirectSol', [], 'nAltitudes', [], 'Altitudes', [], 'AltitudeUnits', 'km', 'SlitShape', '', ...
@@ -3113,7 +3113,7 @@ classdef MODTRANCase
       if ~exist('Filename', 'var') || isempty(Filename)
         MODTRANPath = '';
         % Check for default case directory
-        Direc = fileparts(which('MODTRANCase.m'));
+        Direc = fileparts(which('Mod5.m'));
         if exist([Direc '\MODTRANExe.mat'], 'file');
           load([Direc '\MODTRANExe.mat']);
         end
@@ -3132,9 +3132,9 @@ classdef MODTRANCase
           return;
         end
       else % Filename is not empty, meaning that an explicit filename was given
-        assert(ischar(Filename), 'MODTRANCase:ReadFlx:FilenameNotString', 'Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5:ReadFlx:FilenameNotString', 'Input Filename must be a string.');
         if ~exist(Filename, 'file')
-          error('MODTRANCase:ReadFlx:FileDoesNotExist', ...
+          error('Mod5:ReadFlx:FileDoesNotExist', ...
             'The file %s does not seem to exist. Provide full path if not in current directory.', Filename);
         end
       end
@@ -3203,14 +3203,14 @@ classdef MODTRANCase
                   % Look for start of spectral irradiance data
                   if strcmp(strtok(lin), '-------') % crude and fragile ?
                       if TabCols == 0
-                          error('MODTRANCase:ReadFlx:NoTabCols', 'Flux table read has failed. Check file header.')
+                          error('Mod5:ReadFlx:NoTabCols', 'Flux table read has failed. Check file header.')
                       end
                       % Read all the spectral flux data
                       FlxData = textscan(fid, ' %f', 'WhiteSpace', ' \b\t\r\n');
                       FlxData = FlxData{1};
                       iSpectral = numel(FlxData) / TabCols; % number of spectral points
                       if iSpectral ~= round(iSpectral);
-                          error('MODTRANCase:ReadFlx:DataMissing','Flux data misalignment or partial file encountered. Check flux file.')
+                          error('Mod5:ReadFlx:DataMissing','Flux data misalignment or partial file encountered. Check flux file.')
                       end
                       FlxData = reshape(FlxData, TabCols, iSpectral)';
                       % Put flux data into output structure
@@ -3260,9 +3260,9 @@ classdef MODTRANCase
         % PlotFlx : Plot MODTRAN fluxes (horizontal irradiances)
         %
         % Usage :
-        %   plothandle = MODTRANCase.PlotFlx(Flx)
+        %   plothandle = Mod5.PlotFlx(Flx)
         %      or
-        %   plothandle = MODTRANCase.PlotFlx(Flx, iAltitudes)        
+        %   plothandle = Mod5.PlotFlx(Flx, iAltitudes)        
         %
         % The input structure Flx must be produced by the function ReadFlx.
         %
@@ -3287,14 +3287,14 @@ classdef MODTRANCase
                      'DirectSol', 'nAltitudes', 'Altitudes', 'AltitudeUnits',  'SlitShape', ...
                      'SlitFWHM', 'SlitFWHMUnits', 'UpTotal', 'DownTotal', ...
                      'DirectSolTotal', 'TotalIrradUnits', 'Filename', 'Label'};
-        assert(all(isfield(Flx, TheFields)), 'MODTRANCase:PlotFlx:MissingFields', ...
-            'The input Flx does not have the required fields. It must be read using MODTRANCase.ReadFlx.');
+        assert(all(isfield(Flx, TheFields)), 'Mod5:PlotFlx:MissingFields', ...
+            'The input Flx does not have the required fields. It must be read using Mod5.ReadFlx.');
         
         iPlot = 0;
         plothandle = [];
         for iFlx = 1:numel(Flx)
             if exist('iAltitudes', 'var') && ~isempty(iAltitudes) && isnumeric(iAltitudes)
-              assert(all(iAltitudes) <= Flx(iFlx).nAltitudes, 'MODTRANCase:PlotFlx:BadiAltitudes', ...
+              assert(all(iAltitudes) <= Flx(iFlx).nAltitudes, 'Mod5:PlotFlx:BadiAltitudes', ...
                   'Elements of iAltitudes must all be less than the number of elements in Flx.Altitudes.');
             else
                 iAltitudes = 1:Flx(iFlx).nAltitudes;
@@ -3400,8 +3400,8 @@ classdef MODTRANCase
         %                the colormap function.
         %
         % Example :
-        %    Irrad = MODTRANCase.ReadFlx('ExampleA.flx'); % read the fluxes
-        %    MODTRANCase.PlotFlxImg(Irrad, 1:1:100, 'pchip', bone(256));
+        %    Irrad = Mod5.ReadFlx('ExampleA.flx'); % read the fluxes
+        %    Mod5.PlotFlxImg(Irrad, 1:1:100, 'pchip', bone(256));
         %
         % The above example reads the irradiances from the specified file
         % and plots interpolated fluxes on the altitude grid 0 to 100 km in
@@ -3413,27 +3413,27 @@ classdef MODTRANCase
                      'DirectSol', 'nAltitudes', 'Altitudes', 'AltitudeUnits',  'SlitShape', ...
                      'SlitFWHM', 'SlitFWHMUnits', 'UpTotal', 'DownTotal', ...
                      'DirectSolTotal', 'TotalIrradUnits', 'Filename', 'Label'};
-        assert(all(isfield(Flx, TheFields)), 'MODTRANCase:PlotFlxImg:MissingFields', ...
-            'The input Flx does not have the required fields. It must be read using MODTRANCase.ReadFlx.');
+        assert(all(isfield(Flx, TheFields)), 'Mod5:PlotFlxImg:MissingFields', ...
+            'The input Flx does not have the required fields. It must be read using Mod5.ReadFlx.');
         % Check and default the Altitudes input
         if exist('Altitudes', 'var') && ~isempty(Altitudes)
             assert(isnumeric(Altitudes) && isvector(Altitudes) && all(Altitudes >= 0) && all(Altitudes <= 100), ...
-                'MODTRANCase:PlotFlxImg:BadAltitudes', ...
+                'Mod5:PlotFlxImg:BadAltitudes', ...
                 'Input Altitudes to PlotFluxImg must be a numeric vector with values >= 0 and <= 100 km.');
         else
-            warning('MODTRANCase:PlotFlxImg:AltIrreg', 'Recommended to provide Altitudes input on a regular spacing.');
+            warning('Mod5:PlotFlxImg:AltIrreg', 'Recommended to provide Altitudes input on a regular spacing.');
             Altitudes = [];
         end
         % Check and default the InterpMethod input
         if exist('InterpMethod', 'var') && ~isempty(InterpMethod)
-            assert(ischar(InterpMethod), 'MODTRANCase:PlotFlxImg:BadBadInterpMethod', ...
+            assert(ischar(InterpMethod), 'Mod5:PlotFlxImg:BadBadInterpMethod', ...
                 'Input InterpMethod to PlotFlxImg must be char, and valid as for interp1.');
         else
             InterpMethod = 'linear';
         end
         % Check and default the colormap
         if exist('TheColorMap', 'var') && ~isempty(TheColorMap)
-            assert(isnumeric(TheColorMap) && size(TheColorMap, 2) == 3, 'MODTRANCase:PlotFlxImg:BadColorMap', ...
+            assert(isnumeric(TheColorMap) && size(TheColorMap, 2) == 3, 'Mod5:PlotFlxImg:BadColorMap', ...
                 'Input TheColorMap must be a three column numeric matrix or other valid input to colormap function.');
         else
             TheColorMap = jet(256); % Use 256 colours in the palette 
@@ -3509,7 +3509,7 @@ classdef MODTRANCase
       %
       % Usage
       %
-      %   [Data, FiltDescr] = MODTRANCase.ReadChn(Filename)
+      %   [Data, FiltDescr] = Mod5.ReadChn(Filename)
       %
       % If the filename is not given or is empty, a file open dialog will
       % be presented.
@@ -3536,7 +3536,7 @@ classdef MODTRANCase
       if ~exist('Filename', 'var') || isempty(Filename)
         MODTRANPath = '';
         % Check for default case directory
-        Direc = fileparts(which('MODTRANCase.m'));
+        Direc = fileparts(which('Mod5.m'));
         if exist([Direc '\MODTRANExe.mat'], 'file');
           load([Direc '\MODTRANExe.mat']);
         end
@@ -3555,9 +3555,9 @@ classdef MODTRANCase
           return;
         end
       else % Filename is not empty, meaning that an explicit filename was given
-        assert(ischar(Filename), 'MODTRANCase:ReadChn:FilenameNotString', 'Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5:ReadChn:FilenameNotString', 'Input Filename must be a string.');
         if ~exist(Filename, 'file')
-          error('MODTRANCase:ReadChn:FileDoesNotExist', ...
+          error('Mod5:ReadChn:FileDoesNotExist', ...
             'The file %s does not seem to exist. Provide full path if not in current directory.', Filename);
         end
       end
@@ -3611,7 +3611,7 @@ classdef MODTRANCase
       % ReadPlt : Read MODTRAN plot data (.plt, .psc, plotout, plotout.scn)
       %
       % Usage :
-      %   [PlotData, SepLin] = MODTRANCase.ReadPlt(Filename);
+      %   [PlotData, SepLin] = Mod5.ReadPlt(Filename);
       % 
       % Filename is the .plt, .psc, plotout or plotout.scn file output
       % by MODTRAN. If the Filename parameter is empty or omitted, a
@@ -3646,12 +3646,12 @@ classdef MODTRANCase
         end
         Filename = [Pathname Filename];
       else
-        assert(ischar(Filename), 'MODTRANCase:ReadPlt:BadFilename','Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5:ReadPlt:BadFilename','Input Filename must be a string.');
       end
       [pathstr, name] = fileparts(Filename);
       
       if ~exist(Filename, 'file')
-        error('MODTRANCase:ReadPlt:FileDoesNotExist',...
+        error('Mod5:ReadPlt:FileDoesNotExist',...
           ['The file ' Filename ' does not seem to exist. Give full pathname if not in current directory.'])
       end
       SepLin = {}; % Seperator lines may not be present
@@ -3720,7 +3720,7 @@ classdef MODTRANCase
     end % GoodFit            
     function [Data, Heads] = Read7a(Filename)
       % Deprecated - this is a somewhat broken version of Read7
-      % MODTRANCase.Read7 : Read MODTRAN Tape 7 format outputs
+      % Mod5.Read7 : Read MODTRAN Tape 7 format outputs
       % 
       % Reads a multiblock MODTRAN output file in the .tp7 or .7sc file
       % formats. MODTRAN writes one block of data for each sub-case in
@@ -3744,12 +3744,12 @@ classdef MODTRANCase
       % in the tape7 file in all cases. Note that indexing of Head is 
       % different to indexing of the Data cell array.
       %
-      % MODTRANCase.Read7 is somewhat similar to the older ReadMODTRANfl7.m
+      % Mod5.Read7 is somewhat similar to the older ReadMODTRANfl7.m
       % except that all data is returned and it is not possible to select
       % particular columns. Like ReadMODTRANfl7, this function returns
       % unsanitised headers. The calling function must sanitise the 
       % headers if required. The function to do this is called
-      %  MODTRANCase.FixHeaders. This function removes blanks, non alphabetic
+      %  Mod5.FixHeaders. This function removes blanks, non alphabetic
       %  characters and provides translation to a more consistent set of
       %  headers. Look at the source code of FixHeaders to see what 
       %  translations are performed.
@@ -3759,7 +3759,7 @@ classdef MODTRANCase
       %  and this causes the headers to be identified incorrectly. This is
       %  so particularly for tape7 files output from runs in the direct
       %  solar/lunar irradiance mode (IEMSCT = 3). The current version
-      %  of MODTRANCase.FixHeaders corrects some of these problems.
+      %  of Mod5.FixHeaders corrects some of these problems.
       
       % The strategy is similar to ReadMODTRANfl7.m, except that the numeric
       % data is tokenised, then the starting and ending column numbers of the 
@@ -3789,12 +3789,12 @@ classdef MODTRANCase
         end
         Filename = [Pathname Filename];
       else
-        assert(ischar(Filename), 'MODTRANCase_Read7:BadFilename','Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5_Read7:BadFilename','Input Filename must be a string.');
       end
       [pathstr, name] = fileparts(Filename);
       
       if ~exist(Filename, 'file')
-        error('MODTRANCase_Read7:FileDoesNotExist',...
+        error('Mod5_Read7:FileDoesNotExist',...
           ['The file ' Filename ' does not seem to exist. Give full pathname if not in current directory.'])
       end
       
@@ -3869,7 +3869,7 @@ classdef MODTRANCase
             % Seek back to the end of header line 2
             SeekStatus = fseek(fid, EndHeaderLine2, 'bof');
             if SeekStatus
-                error('MODTRANCase_Read7:SeekError','Error seeking to start of tape7 data block.')
+                error('Mod5_Read7:SeekError','Error seeking to start of tape7 data block.')
             end
             
           else % The headers were on one line e.g. caseM18
@@ -3902,7 +3902,7 @@ classdef MODTRANCase
             % Seek back to the end of header line 1
             SeekStatus = fseek(fid, EndHeaderLine1, 'bof');
             if SeekStatus
-                error('MODTRANCase_Read7:SeekError','Error seeking to start of tape7 data block.')
+                error('Mod5_Read7:SeekError','Error seeking to start of tape7 data block.')
             end
           end
           Heads{dblock,1} = headers;  % Put the headers for this block into the output cell array
@@ -3968,22 +3968,22 @@ classdef MODTRANCase
     end % AlbedoName        
   end % Private static methods
   methods (Access = public)  
-    function MC = MODTRANCase(Filename, DebugFlag)
-      % MODTRANCase Constructor - reads a .ltn or .tp5 case into the class instance
+    function MC = Mod5(Filename, DebugFlag)
+      % Mod5 Constructor - reads a .ltn or .tp5 case into the class instance
       %
       % Usage :
-      %   MC = MODTRANCase(Filename) % Read MODTRAN case from .ltn file
+      %   MC = Mod5(Filename) % Read MODTRAN case from .ltn file
       %      Or
-      %   MC = MODTRANCase(Filename, DebugFlag)   % Read .ltn file and display
+      %   MC = Mod5(Filename, DebugFlag)   % Read .ltn file and display
       %                                           % debug information.
       %      Or
-      %   MC = MODTRANCase    % Obtain empty instance
+      %   MC = Mod5    % Obtain empty instance
       %
       % Where :
       %   Filename is the full filename of the MODTRAN case (.ltn) to read.
       %   If Filename is the empty string '', a file open dialog is presented.
       %   The default directory for this dialog can be set using the static
-      %   method MODTRANCase.SetCasePath. 
+      %   method Mod5.SetCasePath. 
       %
       
 
@@ -3991,13 +3991,13 @@ classdef MODTRANCase
       if ~exist('Filename', 'var')
         return;
       else
-        assert(ischar(Filename), 'MODTRANCase:FilenameNotString', 'Input Filename must be a string.');
+        assert(ischar(Filename), 'Mod5:FilenameNotString', 'Input Filename must be a string.');
         if isempty(Filename)
           CaseDirectory = '';
           % Check for default case directory
-          Direc = fileparts(which('MODTRANCase.m'));
-          if exist([Direc '\MODTRANCaseDir.mat'], 'file');
-            load([Direc '\MODTRANCaseDir.mat']);
+          Direc = fileparts(which('Mod5.m'));
+          if exist([Direc '\Mod5Dir.mat'], 'file');
+            load([Direc '\Mod5Dir.mat']);
           end
           
           % Use dialog
@@ -4016,11 +4016,11 @@ classdef MODTRANCase
         end
       end
       if exist('DebugFlag','var')
-        assert(isnumeric(DebugFlag), 'MODTRANCase:DebugFlagNumeric','Input DebugFlag must be numeric flag.')
+        assert(isnumeric(DebugFlag), 'Mod5:DebugFlagNumeric','Input DebugFlag must be numeric flag.')
       else
         DebugFlag = 0;
       end
-      assert(logical(exist(Filename, 'file')), 'MODTRANCase:FileNotFound','The file %s does not appear to exist.', Filename);
+      assert(logical(exist(Filename, 'file')), 'Mod5:FileNotFound','The file %s does not appear to exist.', Filename);
       [p, theCaseName] = fileparts(Filename);
       fid = fopen(Filename, 'rt');
       iCase = 1; % Count the cases in the file
@@ -4127,7 +4127,7 @@ classdef MODTRANCase
               MC(iCase) = MC(iCase).ReadCard4(fid); % Read card 4 as well
               MC(iCase) = MC(iCase).ReadCard4Ato4L2(fid);
             otherwise
-            error('MODTRANCase:BadIRPT','Invalid value of IRPT encountered at end of case. File read format is probably out of alignment.')
+            error('Mod5:BadIRPT','Invalid value of IRPT encountered at end of case. File read format is probably out of alignment.')
           end
           MC(iCase) = MC(iCase).ReadCard5(fid); % Read Card 5 again
           FileFinished = (isempty(MC(iCase).IRPT) || MC(iCase).IRPT == 0);          
@@ -4148,28 +4148,28 @@ classdef MODTRANCase
          rethrow(FileReadFailed);
       end
 
-    end % function MODTRANCase (Constructor)
+    end % function Mod5 (Constructor)
     function Success = Write(MC, Filename)
     % Write : Writes a MODTRAN case to a .ltn or .tp5 case file
     %
     % Usage :
-    %   Success = MyMODTRANCase.Write(Filename)
+    %   Success = MyMod5.Write(Filename)
     %
-    %   The case MyMODTRANCase is written to the file Filename. If the
+    %   The case MyMod5 is written to the file Filename. If the
     %   parameter Filename is omitted or empty, a file/save dialog is
     %   presented.
     %
     % Success is a flag that is returned as 1 if the file was written
     % successfuly.
     %
-    % See Also : MODTRANCase (constructor function to read .tp5 or .ltn)
+    % See Also : Mod5 (constructor function to read .tp5 or .ltn)
     %
     
       %% Check output filename and open
       if ~exist('Filename', 'var') || isempty(Filename)
           MODTRANPath = '';
           % Check for default case directory
-          Direc = fileparts(which('MODTRANCase.m'));
+          Direc = fileparts(which('Mod5.m'));
           if exist([Direc '\MODTRANExe.mat'], 'file');
             load([Direc '\MODTRANExe.mat']);
           end
@@ -4190,7 +4190,7 @@ classdef MODTRANCase
             return;
           end  
       end
-     assert(ischar(Filename), 'MODTRANCase:FilenameNotString', 'Input Filename must be a string.');
+     assert(ischar(Filename), 'Mod5:FilenameNotString', 'Input Filename must be a string.');
      fid = fopen(Filename, 'wt');
      % Write the cards in batches, very much as they were read. The logic
      % for reading is essentially the same as for writing, except the WriteCard ...
@@ -4295,7 +4295,7 @@ classdef MODTRANCase
               MC(iCase) = MC(iCase).WriteCard4(fid); % Write card 4 as well
               MC(iCase) = MC(iCase).WriteCard4Ato4L2(fid);
             otherwise
-            error('MODTRANCase:BadIRPT','Invalid value of IRPT encountered at end of case. File read format is probably out of alignment.')
+            error('Mod5:BadIRPT','Invalid value of IRPT encountered at end of case. File read format is probably out of alignment.')
           end
           MC(iCase) = MC(iCase).WriteCard5(fid); % WRITE Card 5 again
           FileFinished = (isempty(MC(iCase).IRPT) || MC(iCase).IRPT == 0);
@@ -4312,11 +4312,11 @@ classdef MODTRANCase
     
     end % Write MODTRAN Case
     function Success = Describe(MC, Filename)
-      % Describe : Produce a description of the MODTRANCase for various purposes
+      % Describe : Produce a description of the Mod5 for various purposes
       %
       % This function is not yet completed and requires much work.
       % It does not work on multiple cases. For now, pass in a
-      % scalar MODTRANCase.
+      % scalar Mod5.
       %
       %  Usage :
       %   MC = MC.Describe(Filename);
@@ -4333,13 +4333,13 @@ classdef MODTRANCase
       
       %% Input Checking
       Success = 0;
-      assert(isscalar(MC), 'MODTRANCase:Describe:OnlyScalarMODTRANCase',...
-        'The Describe function (method) currently only works with scalar MODTRANCase''s ');
+      assert(isscalar(MC), 'Mod5:Describe:OnlyScalarMod5',...
+        'The Describe function (method) currently only works with scalar Mod5''s ');
       % Check output filename and open
       if ~exist('Filename', 'var') || isempty(Filename)
           MODTRANPath = '';
           % Check for default case directory
-          Direc = fileparts(which('MODTRANCase.m'));
+          Direc = fileparts(which('Mod5.m'));
           if exist([Direc '\MODTRANExe.mat'], 'file');
             load([Direc '\MODTRANExe.mat']);
           end
@@ -4363,7 +4363,7 @@ classdef MODTRANCase
        fid = 1;
        OFormat = 'm';
      else
-       assert(ischar(Filename), 'MODTRANCase:Describe:FilenameNotString', 'Input Filename must be a string.');
+       assert(ischar(Filename), 'Mod5:Describe:FilenameNotString', 'Input Filename must be a string.');
        fid = fopen(Filename, 'wt');
        [pathstr, name, Ext] = fileparts(Filename);
        switch Ext
@@ -4376,7 +4376,7 @@ classdef MODTRANCase
          case '.m'
            OFormat = 'm';
          otherwise
-           error('MODTRANCase:Describe:BadFormat', 'Unknown format %s was specified. Known formats are .m .txt .htm .html and .tex.', Ext);
+           error('Mod5:Describe:BadFormat', 'Unknown format %s was specified. Known formats are .m .txt .htm .html and .tex.', Ext);
        end
      end
       
@@ -4489,7 +4489,7 @@ classdef MODTRANCase
               % MC(iCase) = MC(iCase).DescribeCard4Ato4L2(fid);
               
             otherwise
-            error('MODTRANCase:BadIRPT','Invalid value of IRPT encountered at end of case. File read format is probably out of alignment.')
+            error('Mod5:BadIRPT','Invalid value of IRPT encountered at end of case. File read format is probably out of alignment.')
           end
           % MC(iCase) = MC(iCase).DescribeCard5(fid); % WRITE Card 5 again  
         end
@@ -4510,10 +4510,10 @@ classdef MODTRANCase
     
     end % Describe
     function Success = Script(MC, Filename, PrintEmpty)
-      % Script : Create a crude script describing a MODTRANCase
+      % Script : Create a crude script describing a Mod5
       %
       % This function generates a very crude .m file containing
-      % a MODTRANCase definition in Matlab script format.
+      % a Mod5 definition in Matlab script format.
       %
       % Usage :
       %
@@ -4544,7 +4544,7 @@ classdef MODTRANCase
       if ~exist('Filename', 'var') || isempty(Filename)
           MODTRANPath = '';
           % Check for default case directory
-          Direc = fileparts(which('MODTRANCase.m'));
+          Direc = fileparts(which('Mod5.m'));
           if exist([Direc '\MODTRANExe.mat'], 'file');
             load([Direc '\MODTRANExe.mat']);
           end
@@ -4567,20 +4567,20 @@ classdef MODTRANCase
      if isnumeric(Filename) && Filename == 1
        fid = 1;
      else
-       assert(ischar(Filename), 'MODTRANCase:Script:FilenameNotString', 'Input Filename must be a string.');
+       assert(ischar(Filename), 'Mod5:Script:FilenameNotString', 'Input Filename must be a string.');
        fid = fopen(Filename, 'wt');
      end
      if ~exist('PrintEmpty', 'var')
        PrintEmpty = 0;
      else
-       assert(isscalar(PrintEmpty) && isnumeric(PrintEmpty), 'MODTRANCase:Script:BadPrintEmpty', ...
+       assert(isscalar(PrintEmpty) && isnumeric(PrintEmpty), 'Mod5:Script:BadPrintEmpty', ...
          'Input PrintEmpty must be a scalar logical (numeric).');
      end
      try
        for iC = 1:numel(MC)
          MC(iC).printPreCase(fid, 'm'); % Put in some header stuff
-         % Get an empty MODTRANCase
-         fprintf(fid, '%s(%d) = MODTRANCase;\n', genvarname(MC(iC).CaseName), iC);
+         % Get an empty Mod5
+         fprintf(fid, '%s(%d) = Mod5;\n', genvarname(MC(iC).CaseName), iC);
          fprintf(fid, '%s(%d).CaseName = ''%s'';\n', genvarname(MC(iC).CaseName), iC, MC(iC).CaseName);
          fprintf(fid, '%s(%d).CaseIndex = %i;\n', genvarname(MC(iC).CaseName), iC, iC);
          % Obtain a display text version of the case
@@ -4650,13 +4650,13 @@ classdef MODTRANCase
       %
       % Where :
       %   MODCase is the class instance read from a .ltn file using the
-      %   MODTRANCase constructor (or created from scratch).
+      %   Mod5 constructor (or created from scratch).
       %
       %   MODTRAN can be made to write plot data to .plt and .psc files
       %   by setting YFLAG and XFLAG on Card 4. See the MODTRAN manual
       %   for details. This is not necessary to obtain plots. Plotting
       %   is possible of all outputs after the run has been completed.
-      %   See methods such as MODTRANCase.Plot and MODTRANCase.PlotChn.
+      %   See methods such as Mod5.Plot and Mod5.PlotChn.
       %
       %   PlotFlag determines whether or not the plot data for the run is
       %   plotted. If PlotFlag is set to zero, no plot data is read. If
@@ -4670,11 +4670,11 @@ classdef MODTRANCase
       %   The subcase description is used as the plot title if not empty, 
       %   otherwise the sub-case name is used for the title.
       %
-      %   Executing the method Run on a MODTRANCase writes out a .tp5 case
+      %   Executing the method Run on a Mod5 writes out a .tp5 case
       %   to the directory containing the MODTRAN executable (see method
       %   SetMODTRANExe) and runs MODTRAN. Once MODTRAN terminates, several
       %   of the MODTRAN output files are processed, and the results
-      %   incorporated into the case instance. The fields in the MODTRANCase
+      %   incorporated into the case instance. The fields in the Mod5
       %   that are populated include the following:
       %       .tp7 - These are fields read from the .tp7 (tape7) file.
       %       .sc7 - These are fields read from the .7sc (tape7.scn) file.
@@ -4695,26 +4695,26 @@ classdef MODTRANCase
       %  or zero, subsequent cases will not be run.
       %
       %  Results from the file7 output will be distributed to the cases in
-      %  the same order as in the class instance. If the MODTRANCase is a
+      %  the same order as in the class instance. If the Mod5 is a
       %  matrix, the sub-cases are run in columnwise order.
       %
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('MODTRANCase.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
-            [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;            
+            [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;            
           end
         else
-          [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;
+          [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
       end
       
       if exist('PlotFlag', 'var')
         assert((isnumeric(PlotFlag) && isscalar(PlotFlag) && any(PlotFlag == [0 1 2 3 4])), ...
-          'MODTRANCase:Run:BadPlotFlag','Input PlotFlag must be 0, 1 or 2.');
+          'Mod5:Run:BadPlotFlag','Input PlotFlag must be 0, 1 or 2.');
       else
         PlotFlag = 1; % Plot data is read but not plotted
       end
@@ -4732,7 +4732,7 @@ classdef MODTRANCase
       try % to delete all output files associated with this run
         delete([MODTRANPath MODCase(1).CaseName '.*']);
       catch
-        warning('MODTRANCase:Run:PurgeFailed', ...
+        warning('Mod5:Run:PurgeFailed', ...
           'Unable to purge all MODTRAN output files (%s.*) associated with this case. Check status of these files.', ...
           [MODTRANPath MODCase(1).CaseName]);
       end
@@ -4746,9 +4746,9 @@ classdef MODTRANCase
           % Look at sub-cases and write the filter file if attached
           for iCase = 1:numel(MODCase)
             if ~isempty(MODCase(iCase).flt)
-              Success = MODTRANCase.WriteFlt(MODCase(iCase).flt, MODCase(iCase).FILTNM);
+              Success = Mod5.WriteFlt(MODCase(iCase).flt, MODCase(iCase).FILTNM);
               if ~Success % Issue a warning that the filter write operation might have failed
-                warning('MODTRANCase:Run:WriteFltFailed', ...
+                warning('Mod5:Run:WriteFltFailed', ...
                   'Writing of channel filter file %s seems to have failed.', MODCase(iCase).FILTNM);
               end
             end
@@ -4756,9 +4756,9 @@ classdef MODTRANCase
           % Look at sub-cases and write the albedo file if there is albedo data
           for iCase = 1:numel(MODCase)
             if ~isempty(MODCase(iCase).alb)
-              Success = MODTRANCase.WriteAlb(MODCase(iCase).alb, MODCase(iCase).SALBFL);
+              Success = Mod5.WriteAlb(MODCase(iCase).alb, MODCase(iCase).SALBFL);
               if ~Success % Issue a warning that the albedo write operation might have failed
-                warning('MODTRANCase:Run:WriteAlbFailed', ...
+                warning('Mod5:Run:WriteAlbFailed', ...
                   'Writing of albedo data to file %s seems to have failed.', MODCase(iCase).SALBFL);
               end
             end
@@ -4773,7 +4773,7 @@ classdef MODTRANCase
           MODCase(1).RunEndTime = datestr(MODCase(1).RunEndSerTime);
           % Check result string - there should be the characters '100.0 %' in the last few
           if ~isempty(tMODSays) && isempty(strfind(tMODSays(end-25:end), 'Completed:'))
-            warning('MODTRANCase:Run:MODTRANTerminationSuspect', 'MODTRAN may have terminated abnormally.\n%s', tMODSays);
+            warning('Mod5:Run:MODTRANTerminationSuspect', 'MODTRAN may have terminated abnormally.\n%s', tMODSays);
           end
           % Presumably all cases completed, not sure how to verify this besides analysing tape6
           for iCase = 1:numel(MODCase) % This needs rethinking - what really is the status of the individual cases
@@ -4805,7 +4805,7 @@ classdef MODTRANCase
           % ignores that and uses the file root in modroot.in instead.
           [MoveSuccess, MoveMessage, MoveMessageID] = movefile([MODTRANPath 'modroot.in'],[MODTRANPath 'Lastmodroot.in'],'f');
           if ~MoveSuccess && exist([MODTRANPath 'modroot.in'], 'file')
-            warning('MODTRANCase_Run:modrootFileExists', ...
+            warning('Mod5_Run:modrootFileExists', ...
               'The file %smodroot.in exists and this will cause PcModWin (if in use) to run the wrong case.', MODTRANPath);
           end
           %% Read MODTRAN results
@@ -4837,11 +4837,11 @@ classdef MODTRANCase
           rethrow(MODTRANError);
         end
       else
-        error('MODTRANCase:Run:CaseFileProblem','Unable to write the case file. Check .tp5 status and permissions.');
+        error('Mod5:Run:CaseFileProblem','Unable to write the case file. Check .tp5 status and permissions.');
       end
-    end % function MODTRANCase.Run
+    end % function Mod5.Run
     function MC = SetCaseName(MC, NewCaseName)
-      % SetCaseName : Set the name of a MODTRANCase, or rename a MODTRANCase
+      % SetCaseName : Set the name of a Mod5, or rename a Mod5
       %
       % Usage :
       %
@@ -4856,7 +4856,7 @@ classdef MODTRANCase
       
       for iC = 1:numel(MC)
         if MC(iC).CaseIndex ~= iC
-          warning('MODTRANCase:SetCaseName:IndexError', ...
+          warning('Mod5:SetCaseName:IndexError', ...
             'The CaseIndex property is out of sync with the element index. You may be attempting to rename a sub-case or the super-case may need ReIndex.');
         end
         MC(iC).CaseName = NewCaseName;
@@ -4864,7 +4864,7 @@ classdef MODTRANCase
       
     end % SetCaseName
     function MCOut = Extract(MC, iSubCases, NewCaseName)
-      % Extract: Extract selected subcases from a MODTRANCase
+      % Extract: Extract selected subcases from a Mod5
       %
       % Usage :
       %
@@ -4879,7 +4879,7 @@ classdef MODTRANCase
       
       % Check input
       assert(isnumeric(iSubCases) && all(iSubCases == round(iSubCases)) && all(iSubCases >=1 & iSubCases <= numel(MC)), ...
-        'MODTRANCase:Extract:BadIndex','Input indices iSubCases must be numeric, positive, integer and within the number of sub-cases.'); 
+        'Mod5:Extract:BadIndex','Input indices iSubCases must be numeric, positive, integer and within the number of sub-cases.'); 
       % First extract the sub-cases
       iOut = 1;
       for iC = iSubCases 
@@ -4919,14 +4919,14 @@ classdef MODTRANCase
       end
     end % Merge
     function MC = Replicate(MC, TheSize, NewCaseName)
-      % Replicate : Replicate a scalar MODTRANCase to a vector or matrix of sub-cases
+      % Replicate : Replicate a scalar Mod5 to a vector or matrix of sub-cases
       %
       % Usage :
       %   MCReplicated = MC.Replicate(TheSize);
       %     Or
       %   MCReplicated = MC.Replicate(TheSize, NewCaseName);
       %
-      % Where the input MC is a MODTRANCase.
+      % Where the input MC is a Mod5.
       % TheSize is a vector of integers giving the total size of the matrix
       %   of sub-cases to create. The total number of sub-cases that result
       %   will be prod(TheSize).
@@ -4935,7 +4935,7 @@ classdef MODTRANCase
       %  The new case name must be less than 75 characters in length and must
       %  also be a valid Windows filename.
       %
-      % Warning : Use Replicate rather than repmat on MODTRANCase instances.
+      % Warning : Use Replicate rather than repmat on Mod5 instances.
       %   Replicate does some housekeeping that is not done by repmat. The
       %   housekeeping required is to re-index the replicated case, and to
       %   set the IRPT property correctly. Note also that, as with repmat
@@ -4943,21 +4943,21 @@ classdef MODTRANCase
       %   5 elements use MC.Replicate([5 1]);
       %
       % Example :
-      %   MyScalarCase = MODTRANCase;  % Get an empty case
+      %   MyScalarCase = Mod5;  % Get an empty case
       %   % Set up the case by setting the properties of the case
-      %   % See MODTRANCaseExamples for how to do this.
+      %   % See Mod5Examples for how to do this.
       %   % Then replicate to a 4 by 4 matrix of sub-cases.
       %   MyReplicatedCase = MyScalarCase.Replicate([4 4]);
       % 
       % See Also : ReIndex
       
       %% Do some input checking
-      assert(isnumeric(TheSize) && isvector(TheSize) && all(round(TheSize) == TheSize) && all(TheSize) >= 1, 'MODTRANCase:Replicate:BadSize', ...
+      assert(isnumeric(TheSize) && isvector(TheSize) && all(round(TheSize) == TheSize) && all(TheSize) >= 1, 'Mod5:Replicate:BadSize', ...
         'Input TheSize must be a positive integer or vector of positive integers.');
       
       % Seems OK, now do the replication - don't want to 
       MC = repmat(MC, TheSize);
-      % Re-index the MODTRANCase
+      % Re-index the Mod5
       if exist('NewCaseName', 'var') && ~isempty(NewCaseName)
         MC = MC.ReIndex(NewCaseName);      
       else
@@ -4966,7 +4966,7 @@ classdef MODTRANCase
       
     end % Replicate
     function MC = ReIndex(MC, NewCaseName, IRPTFlag)
-      % ReIndex : Re-index or rename a MODTRANCase and set up IRPT property
+      % ReIndex : Re-index or rename a Mod5 and set up IRPT property
       %
       % Usage :
       %  MC = MC.ReIndex;
@@ -4990,7 +4990,7 @@ classdef MODTRANCase
       %   is set to the NewCaseName, otherwise the CaseName property of
       %   all sub-cases is set to the CaseName of sub-case 1. Rules for
       %   valid Windows filenames can be discovered by consulting
-      %   the source code for the function MODTRANCase.isValidFilename or
+      %   the source code for the function Mod5.isValidFilename or
       %   by Google.      
       %
       % If the input IRPTFlag is given, the IRPT property of all sub-
@@ -5000,19 +5000,19 @@ classdef MODTRANCase
       %
       %
       % Warning : Do not rename a case after AttachFlt or AttachAlb has
-      %  been used on the MODTRANCase.
+      %  been used on the Mod5.
       %
       % See Also : Replicate, isValidFilename
       
       
       if exist('IRPTFlag', 'var') && ~isempty(IRPTFlag)
-        assert(isnumeric(IRPTFlag) && isscalar (IRPTFlag) && any(abs(IRPTFlag) == [1 2 3]), 'MODTRANCase:ReIndex:BadIRPTFlag',...
+        assert(isnumeric(IRPTFlag) && isscalar (IRPTFlag) && any(abs(IRPTFlag) == [1 2 3]), 'Mod5:ReIndex:BadIRPTFlag',...
           'Input IRPTFlag must be a scalar integer of value -3, -2, -1, 1, 2 or 3.');
       else
         IRPTFlag = 1;
       end
       if exist('NewCaseName', 'var') && ~isempty(NewCaseName)
-        assert(ischar(NewCaseName) && numel(NewCaseName) < 75 && MODTRANCase.isValidFilename(NewCaseName), 'MODTRANCase:ReIndex:BadCaseName', ...
+        assert(ischar(NewCaseName) && numel(NewCaseName) < 75 && Mod5.isValidFilename(NewCaseName), 'Mod5:ReIndex:BadCaseName', ...
           'Input NewCaseName must be a string of less than 75 characters, that is also a valid filename.')
       else
         NewCaseName = MC(1).CaseName;
@@ -5025,15 +5025,15 @@ classdef MODTRANCase
       MC(end).IRPT = 0;
     end % ReIndex
     function Success = Save(MC, Directory)
-      % Save : Save MODTRAN run files and MODTRANCase instance
+      % Save : Save MODTRAN run files and Mod5 instance
       %
       % MODTRAN input and output files are written (when the Run method
       %  is executed) to the same directory in which the MODTRAN
       %  executable is located. The Save method described here can
       %  be used to move all the files to another directory.
       %
-      % Save will also save a .mat file containing the MODTRANCase
-      %  instance. The saved MODTRANCase will always have the name 'MC'.
+      % Save will also save a .mat file containing the Mod5
+      %  instance. The saved Mod5 will always have the name 'MC'.
       % 
       % Usage :
       %
@@ -5052,7 +5052,7 @@ classdef MODTRANCase
       Success = 0;
       % Deal with the inputs
       if exist('Directory', 'var')
-        assert(ischar(Directory), 'MODTRANCase:Save:BadDir','Input Directory must be class char (a string).');
+        assert(ischar(Directory), 'Mod5:Save:BadDir','Input Directory must be class char (a string).');
         if isempty(Directory)
           Directory = uigetdir;
           if ~ischar(Directory)
@@ -5061,9 +5061,9 @@ classdef MODTRANCase
         end
       else
         if isempty(CaseDirectory)
-          Direc = fileparts(which('MODTRANCase.m'));
-          if exist([Direc '\MODTRANCaseDir.mat'], 'file');
-            load([Direc '\MODTRANCaseDir.mat']);
+          Direc = fileparts(which('Mod5.m'));
+          if exist([Direc '\Mod5Dir.mat'], 'file');
+            load([Direc '\Mod5Dir.mat']);
             Directory = CaseDirectory;
           else
             Directory = pwd; % Use working directory
@@ -5075,14 +5075,14 @@ classdef MODTRANCase
       % OK, should have a directory after all that
       % Obtain the MODTRAN executable directory
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('MODTRANCase.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
-            [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;            
+            [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;            
           end
         else
-          [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;
+          [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
       end
       
@@ -5099,7 +5099,7 @@ classdef MODTRANCase
         save([Directory '\' MC(1).CaseName '.mat'], 'MC');
         Success = 1;
       catch MoveFailed
-        warning('MODTRANCase:Save:SaveFailed','Saving of files for case %s seems to have failed.', MC(1).CaseName);
+        warning('Mod5:Save:SaveFailed','Saving of files for case %s seems to have failed.', MC(1).CaseName);
         Success = 0;
         rethrow(MoveFailed);
       end
@@ -5121,14 +5121,14 @@ classdef MODTRANCase
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('MODTRANCase.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
-            [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;            
+            [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;            
           end
         else
-          [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;
+          [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
       end
       
@@ -5140,7 +5140,7 @@ classdef MODTRANCase
       end
     end % Purge
     function plothandle = Plot(MODCase, PlotFlag)
-      % MODTRANCase.Plot : Plot the data (.psc and .plt) for all sub-cases
+      % Mod5.Plot : Plot the data (.psc and .plt) for all sub-cases
       iFig = 0; % Count the number of figures
       plothandle = [];
       if ~exist('PlotFlag', 'var')
@@ -5192,12 +5192,12 @@ classdef MODTRANCase
       %   plothandle = MODCase.PlotTp7(PlotWhat)
       %
       % Where:
-      %   MODCase is the MODTRANCase from which to plot the data.
+      %   MODCase is the Mod5 from which to plot the data.
       %
       %   PlotWhat is a cell array of strings giving the (fixed) header names
       %     of the data columns in the tp7 structure to plot. To
       %     determine which header names are available for a specific case,
-      %     look at the property MyMODTRANCase(iSubCase).tp7.Headers.
+      %     look at the property MyMod5(iSubCase).tp7.Headers.
       %     If PlotWhat is a string (rather than a cell array of strings)
       %     all sub-cases are plotted on a single plot, otherwise each
       %     sub-case will have a seperate plot. If PlotWhat is omitted
@@ -5219,12 +5219,12 @@ classdef MODTRANCase
       if exist('SubCases', 'var') && ~isempty(SubCases)
         assert(isnumeric(SubCases) && isvector(SubCases) && all(round(SubCases) == SubCases) && ...
                min(SubCases) >= 1 && max(SubCases) <= numel(MODCase), ...
-        'MODTRANCase:PlotTp7:BadCaseIndices','Input SubCases must be vector, integer and within range of the size of the MODTRANCase.');
+        'Mod5:PlotTp7:BadCaseIndices','Input SubCases must be vector, integer and within range of the size of the Mod5.');
       else
         SubCases = 1:numel(MODCase); % row vector -> seperate plots for every sub-case
       end
       if exist('PlotWhat', 'var') && ~isempty(PlotWhat)
-        assert(ischar(PlotWhat) || iscellstr(PlotWhat), 'MODTRANCase:PlotTp7:BadPlotReq','Input PlotWhat must be a string or cell array of string headers.');
+        assert(ischar(PlotWhat) || iscellstr(PlotWhat), 'Mod5:PlotTp7:BadPlotReq','Input PlotWhat must be a string or cell array of string headers.');
       else
         PlotWhat = {'ALL'};  % Plot the whole shebang
       end
@@ -5244,11 +5244,11 @@ classdef MODTRANCase
       %   plothandle = MODCase.PlotSc7(PlotWhat)
       %
       % Where:
-      %   MODCase is the MODTRANCase from which to plot the data.
+      %   MODCase is the Mod5 from which to plot the data.
       %   PlotWhat is a cell array of strings giving the (fixed) header names
       %     of the data columns in the sc7 structure to plot. To
       %     determine which header names are available for a specific case,
-      %     look at the property MyMODTRANCase(iSubCase).sc7.Headers.
+      %     look at the property MyMod5(iSubCase).sc7.Headers.
       %     If PlotWhat is a string (rather than a cell array of strings)
       %     all sub-cases are plotted on a single plot, otherwise each
       %     sub-case will have a seperate plot. If PlotWhat is omitted
@@ -5272,12 +5272,12 @@ classdef MODTRANCase
       % Verify inputs
       if exist('SubCases', 'var') && ~isempty(SubCases)
         assert(isnumeric(SubCases) && all(round(SubCases(:)) == SubCases(:)) && min(SubCases(:)) >= 1 && max(SubCases(:) <= numel(MODCase)), ...
-        'MODTRANCase:PlotSc7:BadCaseIndices','Input SubCases must be integer and within range of the size of the MODTRANCase.');
+        'Mod5:PlotSc7:BadCaseIndices','Input SubCases must be integer and within range of the size of the Mod5.');
       else
         SubCases = 1:numel(MODCase);
       end
       if exist('PlotWhat', 'var') && ~isempty(PlotWhat)
-        assert(ischar(PlotWhat) || iscellstr(PlotWhat), 'MODTRANCase:PlotSc7:BadPlotReq','Input PlotWhat must be a string or cell array of string headers.');
+        assert(ischar(PlotWhat) || iscellstr(PlotWhat), 'Mod5:PlotSc7:BadPlotReq','Input PlotWhat must be a string or cell array of string headers.');
       else
         PlotWhat = {'ALL'};  % Plot the whole shebang
       end
@@ -5308,7 +5308,7 @@ classdef MODTRANCase
       end
      
       assert(isnumeric(SubCases) && all(round(SubCases(:)) == SubCases(:)) && all(SubCases(:) >= 1) && all(SubCases(:) <= numel(MODCase)), ...
-        'MODTRANCase:PlotChn:BadSubCases','Input SubCases to PlotChn must be integral, less than number of elements in the MODTRANCase.');
+        'Mod5:PlotChn:BadSubCases','Input SubCases to PlotChn must be integral, less than number of elements in the Mod5.');
       plothandle = [];
       Channels = [];
       ChanRads = [];
@@ -5368,7 +5368,7 @@ classdef MODTRANCase
       % Usage :
       %  plothandles = MODCase.PlotAtm(PlotWhat);
       %
-      % Where MODCase is a MODTRANCase (or vector of cases) that have
+      % Where MODCase is a Mod5 (or vector of cases) that have
       % user-defined atmospheres (MODEL = 0 or 7 and IM = 1).
       %
       % PlotWhat is a cell array of strings indicating which data should
@@ -5407,7 +5407,7 @@ classdef MODTRANCase
       
       iPlot = 0;
       plothandles = [];
-      assert(ischar(PlotWhat) || iscellstr(PlotWhat), 'MODTRANCase:PlotAtm:BadPlotWhat', ...
+      assert(ischar(PlotWhat) || iscellstr(PlotWhat), 'Mod5:PlotAtm:BadPlotWhat', ...
         'Input PlotWhat must be a string or cell array of strings.');
       
       LightSpecies = {'H2O', 'CO2', 'O3', 'N2O', 'CO', 'CH4', 'O2', 'NO', 'SO2', 'NO2', 'NH3', 'HNO3'};
@@ -5463,7 +5463,7 @@ classdef MODTRANCase
           end
           % Make sure all non-canned quantities have the same (or default) units for all layers
           if numel(JChar) ~= numel(strmatch(JChar{1}, JChar, 'exact')) || ~all(JCharX(1) == JCharX)
-            error('MODTRANCase:PlotAtm:UnitInconsistency', 'Units are inconsistent across atmospheric layers. PlotAtm cannot handle that.')
+            error('Mod5:PlotAtm:UnitInconsistency', 'Units are inconsistent across atmospheric layers. PlotAtm cannot handle that.')
           end
           JChar = JChar{1};
           % Do Pressure
@@ -5600,7 +5600,7 @@ classdef MODTRANCase
         end
       end
       if isempty(plothandles)
-        warning('MODTRANCase:PlotAtm:NoData','There is no user-defined atmospheric data conforming to the plot request.')
+        warning('Mod5:PlotAtm:NoData','There is no user-defined atmospheric data conforming to the plot request.')
       end
     end % PlotAtm 
     function plothandles = PlotIrrad(MODCase, varargin)
@@ -5610,11 +5610,11 @@ classdef MODTRANCase
         % FLAGS(7) property is set to 't' or 'f'. 
         % 
         % Usage :
-        %   plothandle = MyMODTRANCase.PlotIrrad;
+        %   plothandle = MyMod5.PlotIrrad;
         %      or
-        %   plothandle = MyMODTRANCase.PlotIrrad(iAltitudes)        
+        %   plothandle = MyMod5.PlotIrrad(iAltitudes)        
         %
-        % Plots four graphs for each element of the input MyMODTRANCase.
+        % Plots four graphs for each element of the input MyMod5.
         % The first three are plots of upward diffuse, downward diffuse and
         % direct solar irradiance versus the spectral variable (wavelength
         % or wavenumber). The last plot is a plot of total irradiance
@@ -5633,7 +5633,7 @@ classdef MODTRANCase
         plothandles = [];
         for iCase = 1:numel(MODCase)
             if ~isempty(MODCase(iCase).flx)
-                plothandles = [plothandles MODTRANCase.PlotFlx(MODCase(iCase).flx, varargin{:})];
+                plothandles = [plothandles Mod5.PlotFlx(MODCase(iCase).flx, varargin{:})];
             end
         end
     end % PlotIrrad
@@ -5651,7 +5651,7 @@ classdef MODTRANCase
         %
         %    plothandle = MyMCase.PlotFlxImg(Flx, Altitudes, InterpMethod, TheColorMap);
         %
-        % Input MyMCase must be a MODTRANCase object with .flx field.
+        % Input MyMCase must be a Mod5 object with .flx field.
         %
         % Plots colored images of the spectral fluxes (horizontal
         % irradiance) with the spectral variable on the horizontal axis and
@@ -5683,25 +5683,25 @@ classdef MODTRANCase
         plothandles = [];
         for iCase = 1:numel(MODCase)
             if ~isempty(MODCase(iCase).flx)
-                plothandles = [plothandles MODTRANCase.PlotFlxImg(MODCase(iCase).flx, varargin{:})];
+                plothandles = [plothandles Mod5.PlotFlxImg(MODCase(iCase).flx, varargin{:})];
             end
         end
     end % PlotIrradImg
     
     function MC = AttachFlt(MC, Flt, iSubCases)
-      % AttachFlt : Attach a filter to a MODTRANCase
+      % AttachFlt : Attach a filter to a Mod5
       %
       % Usage:
       %   MC = MC.AttachFlt(Flt); % Attach Flt to all sub-cases
       %    Or
       %   MC = MC.AttachFlt(Flt, iSubCases); % Attach only to certain sub-cases
       %
-      % Where MC is the MODTRANCase to which the spectral filter defined
+      % Where MC is the Mod5 to which the spectral filter defined
       % by the structure Flt is to be attached. The filter will be
       % used to compute band/channel radiances (.chn file output from MODTRAN)
       % when MODTRAN is run on the case.
       % The structure Flt can be read from a .flt format file, or it can
-      % by created using the function MODTRANCase.CreateFlt.
+      % by created using the function Mod5.CreateFlt.
       %
       % If given, iSubCases must be a vector of sub-case indices to
       %   which the filter data is to apply. If not given, the filter
@@ -5712,7 +5712,7 @@ classdef MODTRANCase
       % Note that attaching a filter to a case will alter the MODTRAN
       %   parameters LFLTNM and FILTNM accordingly. When the case is run,
       %   a .flt file having the name of the case will be written to
-      %   the MODTRAN executable directory. Within a MODTRANCase, there
+      %   the MODTRAN executable directory. Within a Mod5, there
       %   may be several difference filter sets attached to subsets of 
       %   sub-cases. That is, it is possible for each sub-case to have a
       %   different filter set. However, a call to AttachFlt is required
@@ -5746,14 +5746,14 @@ classdef MODTRANCase
       %
       
       % Check that the Flt has the required fields
-      assert(isscalar(Flt) && isstruct(Flt), 'MODTRANCase:AttachFlt:FltNotStruct', ...
+      assert(isscalar(Flt) && isstruct(Flt), 'Mod5:AttachFlt:FltNotStruct', ...
         'Input Flt must be a scalar structure with fields FileHeader, UnitsHeader, Units, FilterHeader and Filters.');      
       if ~all(isfield(Flt, {'FileHeader','UnitsHeader', 'Units', 'FilterHeaders', 'Filters'}))
-        error('MODTRANCase:AttachFlt:BadFlt', ...
+        error('Mod5:AttachFlt:BadFlt', ...
           'The Flt structure input does not have all the correct fields - FileHeader, UnitsHeader, Units, FilterHeader and Filters. ')
       end
       if exist('iSubCases', 'var')
-        assert(isnumeric(iSubCases) && all(iSubCases >= 1) && all(iSubCases <= numel(MC)),'MODTRANCase:AttachFlt:BadiSubCases', ...
+        assert(isnumeric(iSubCases) && all(iSubCases >= 1) && all(iSubCases <= numel(MC)),'Mod5:AttachFlt:BadiSubCases', ...
           'Input iSubCases must be a numeric vector of integer indices, all less than or equal to the number of sub-cases in MC.');
       else
         iSubCases = 1:numel(MC);
@@ -5772,7 +5772,7 @@ classdef MODTRANCase
       end
     end % AttachFlt
     function MC = AttachAlb(MC, Alb, iCSALB, iAACSALB)
-      % AttachAlb : Attach albedo (reflectance) data to a MODTRANCase
+      % AttachAlb : Attach albedo (reflectance) data to a Mod5
       %
       % AttachAlb will attach lambertian albedo (reflectance) data to a MODTRAN
       % radiance case. The albedo data can come for various sources,
@@ -5794,7 +5794,7 @@ classdef MODTRANCase
       %
       % Where :
       %
-      %  MC is a MODTRANCase. Only radiance cases (IEMSCT = 1 or 2) qualify.
+      %  MC is a Mod5. Only radiance cases (IEMSCT = 1 or 2) qualify.
       %    An warning will be issued if MC(i) is not a radiance case, but
       %    the albedo data be attached to the offending sub-case anyway. 
       %
@@ -5809,7 +5809,7 @@ classdef MODTRANCase
       %         wv : The wavelengths (in µm) at which the albedo is given 
       %       refl : The reflectance (albedo) of the material at the given wavelengths.
       %
-      % Note that only one set of albedo data can be attached to a MODTRANCase.
+      % Note that only one set of albedo data can be attached to a Mod5.
       %  All sub-cases must draw from the same set of albedo curves. The Alb
       %  structure itself gets attached to the first sub-case that uses
       %  the albedo data given in the property alb.
@@ -5821,7 +5821,7 @@ classdef MODTRANCase
       %   You would be well advised to reduce the span of V1 and V2 to fix
       %   the problem, or supply new albedo data that fully spans the interval.
       %
-      % This function alters the input MODTRANCase (MC) in several ways.
+      % This function alters the input Mod5 (MC) in several ways.
       %   The SURREF input (on MODTRAN Card 1) is set to 'LAMBER'. 
       %   Cards 4A, 4L1 and 4L2 will be set up appropriately as follows:
       %
@@ -5834,7 +5834,7 @@ classdef MODTRANCase
       %      albedo Alb(iAACSALB).
       %
       % iCSALB and iAASALB, if given, must either be scalar or they must
-      %   have the same number of elements as the input MODTRANCase MC.
+      %   have the same number of elements as the input Mod5 MC.
       %   If they have the same number of elements as MC, then different
       %   albedo curves (all from Alb) can be assigned to the different
       %   sub-cases of MC. If albedo data is not to be assigned to a
@@ -5846,7 +5846,7 @@ classdef MODTRANCase
       % AttachAlb will cause the method Run to write the albedo data to
       %   a file called CaseName.alb, where CaseName is the name of the
       %   first sub-case (MODCase(1).CaseName). The albedo data Alb,
-      %   is saved in the MODTRANCase property alb.
+      %   is saved in the Mod5 property alb.
       %
       % AATEMP on Card 4A will not be altered by AttachAlb.      
       %
@@ -5862,8 +5862,8 @@ classdef MODTRANCase
       %
       %   % Read some reflectance data from an ASD file. Suppose there
       %   % are 4 reflectance curves in the file.
-      %   MyAlb = MODTRANCase.ReadAlbFromASD('MyASDTextData.txt');
-      %   MyCase = MODTRANCase('MyCase.tp5'); % Read a case - suppose it has 4 subcases
+      %   MyAlb = Mod5.ReadAlbFromASD('MyASDTextData.txt');
+      %   MyCase = Mod5('MyCase.tp5'); % Read a case - suppose it has 4 subcases
       %   MyCase = MyCase.AttachAlb(MyAlb, [1 3 1 0], [0 0 2 0]);
       %
       %  The above AttachAlb example will attach albedo curves 1, 3 and 1
@@ -5872,23 +5872,23 @@ classdef MODTRANCase
       %  albedo curve number 2.
       
       % Do some input validation
-      assert(isstruct(Alb) && all(isfield(Alb, {'Header','title','wv','refl'})), 'MODTRANCase:WriteAlb:BadAlb', ...
+      assert(isstruct(Alb) && all(isfield(Alb, {'Header','title','wv','refl'})), 'Mod5:WriteAlb:BadAlb', ...
         'The input structure Alb must have the fields Header, title, wv, and refl.');
             
       if exist('iCSALB', 'var')
-        assert(isnumeric(iCSALB) && (isscalar(iCSALB) || numel(iCSALB) == numel(MC)), 'MODTRANCase:AttachAlb:BadiCSALB', ...
-          'Input iCSALB must be numeric and either be scalar or have the same number of elements as input MODTRANCase MC.');
+        assert(isnumeric(iCSALB) && (isscalar(iCSALB) || numel(iCSALB) == numel(MC)), 'Mod5:AttachAlb:BadiCSALB', ...
+          'Input iCSALB must be numeric and either be scalar or have the same number of elements as input Mod5 MC.');
         iCSALB = round(iCSALB);        
-        assert(all(iCSALB) >= 0 & all(iCSALB) <= numel(Alb), 'MODTRANCase:AttachAlb:iCSALBoutofRange', ...
+        assert(all(iCSALB) >= 0 & all(iCSALB) <= numel(Alb), 'Mod5:AttachAlb:iCSALBoutofRange', ...
           'Value(s) of input iCSALB must be positive and less than or equal to number of elements in input Alb.');
       else
         iCSALB = 1;
       end
       if exist('iAACSALB', 'var')
-        assert(isnumeric(iAACSALB) && (isscalar(iAACSALB) || numel(iAACSALB) == numel(MC)), 'MODTRANCase:AttachAlb:BadiAACSALB', ...
-          'Input iAACSALB must be numeric and either be scalar or have the same number of elements as input MODTRANCase MC.'); 
+        assert(isnumeric(iAACSALB) && (isscalar(iAACSALB) || numel(iAACSALB) == numel(MC)), 'Mod5:AttachAlb:BadiAACSALB', ...
+          'Input iAACSALB must be numeric and either be scalar or have the same number of elements as input Mod5 MC.'); 
         iAACSALB = round(iAACSALB);        
-        assert(all(iAACSALB) >= 1 & all(iAACSALB) <= numel(Alb), 'MODTRANCase:AttachAlb:iAACSALBoutofRange', ...
+        assert(all(iAACSALB) >= 1 & all(iAACSALB) <= numel(Alb), 'Mod5:AttachAlb:iAACSALBoutofRange', ...
           'Value(s) of input iAACSALB must be less than or equal to number of elements in input Alb.');        
       else
         iAACSALB = 0;
@@ -5907,14 +5907,14 @@ classdef MODTRANCase
       if ~isempty(iAttach)
         iAttach = iAttach(1);
       else
-        error('MODTRANCase:AttachAlb:iCSALBallZero','At least one element of input iCSALB must be non-zero.');
+        error('Mod5:AttachAlb:iCSALBallZero','At least one element of input iCSALB must be non-zero.');
       end
       MC(iAttach).alb = Alb; % Attach the albedo data, only to first subcase using the data
       for iC = 1:numel(MC) % Run through the sub-cases
         if iCSALB(iC) > 0 % Set up CSALB for this sub-case
           % If not a radiance case, issue warning
           if ~any(MC(iC).IEMSCT == [1 2])
-            warning('MODTRANCase:AttachAlb:NotRadianceCase','Sub-case %i is not a radiance case. Albedo data has been attached anyway.', iC);
+            warning('Mod5:AttachAlb:NotRadianceCase','Sub-case %i is not a radiance case. Albedo data has been attached anyway.', iC);
           end
           % Determine limiting wavelengths of the case
           switch upper(MC(iC).FLAGS(1))
@@ -5932,35 +5932,35 @@ classdef MODTRANCase
           AlbLambda1 = min(Alb(iCSALB(iC)).wv);
           AlbLambda2 = max(Alb(iCSALB(iC)).wv);
           if (AlbLambda1 > Lambda1) || (Lambda2 > AlbLambda2)
-            warning('MODTRANCase:AttachAlb:WavelengthOverlap', ...
+            warning('Mod5:AttachAlb:WavelengthOverlap', ...
               'Albedo wavelength range for sub-case %i does not span the case range (V1 to V2). Albedo data has been attached anyway.', iC);
           end
           if iAACSALB(iC) > 0
             AlbLambda1 = min(Alb(iAACSALB(iC)).wv);
             AlbLambda2 = max(Alb(iAACSALB(iC)).wv);
             if (AlbLambda1 > Lambda1) || (Lambda2 > AlbLambda2)
-              warning('MODTRANCase:AttachAlb:WavelengthOverlap', ...
+              warning('Mod5:AttachAlb:WavelengthOverlap', ...
                 'Albedo wavelength range for sub-case %i does not span the case range (V1 to V2). Albedo data has not been attached.', iC);
             end
           end % Finished checking wavelength range overlap
           MC(iC).SURREF = 'LAMBER';
           MC(iC).NSURF = 1;
           MC(iC).SALBFL = [MC(iAttach).CaseName '(' num2str(MC(iAttach).CaseIndex) ').alb'];
-          MC(iC).CSALB = MODTRANCase.AlbedoName(Alb(iCSALB(iC)).title);
+          MC(iC).CSALB = Mod5.AlbedoName(Alb(iCSALB(iC)).title);
           if iAACSALB(iC) > 0
             MC(iC).NSURF = 2; % Will also specify area-averaged albedo
-            MC(iC).CSALB = strvcat(MC(iC).CSALB, MODTRANCase.AlbedoName(Alb(iAACSALB(iC)).title));
+            MC(iC).CSALB = strvcat(MC(iC).CSALB, Mod5.AlbedoName(Alb(iAACSALB(iC)).title));
           end
         end
       end
     end % AttachAlb
     function MC = Set(MC, varargin)
-      % Set : Set any number of MODTRANCase properties in one function call
+      % Set : Set any number of Mod5 properties in one function call
       %
       % Usage :
       %   MC = MC.Set(Property1, Value1, Property2, Value2, ...)
       % Where :
-      %   The Properties are valid MODTRANCase properties, including
+      %   The Properties are valid Mod5 properties, including
       %   any of the MODTRAN parameters. The order of the property
       %   value pairs is not important, nor do they have to appear on
       %   a single MODTRAN Card. 
@@ -5979,17 +5979,17 @@ classdef MODTRANCase
 
       
       % MC must be scalar
-      assert(isscalar(MC), 'MODTRANCase:Set','Input MODTRANCase to method Set must be scalar.');
+      assert(isscalar(MC), 'Mod5:Set','Input Mod5 to method Set must be scalar.');
       
       % Ensure that there are an even number of varargs
       if rem(length(varargin), 2)
-        error('MODTRANCase:Set','There must be a value given for each property name - hence an even number of arguments to method Set.');
+        error('Mod5:Set','There must be a value given for each property name - hence an even number of arguments to method Set.');
       end
       
       % Then just blindly run through them and set the properties, provided that the Property is char
       % Rely on set methods such as they exist to check for value correctness
       for iProp = 1:2:length(varargin)
-        assert(ischar(varargin{iProp}), 'MODTRANCase:Set', ...
+        assert(ischar(varargin{iProp}), 'Mod5:Set', ...
           'Property names must be character strings in the arguments of method Set.');
         MC.(varargin{iProp}) = varargin{iProp + 1};
       end
@@ -6001,7 +6001,7 @@ classdef MODTRANCase
       %  MC = MC.SetCard1(MODTRN, SPEED, MODEL, ITYPE, IEMSCT, IMULT, M1, ...
       %                M2, M3, M4, M5, M6, MDEF, IM, NOPRNT, TPTEMP, SURREF)
       %
-      % Refer to the MODTRAN4 User's Manual for descriptions of the input
+      % Refer to the MODTRAN5 User's Manual for descriptions of the input
       % parameters.
       %
       % 
@@ -6126,11 +6126,11 @@ classdef MODTRANCase
       %% Validate inputs
       % Only scalar cases
       if ~isscalar(MC)
-        error('MODTRANCase:SetRadTransPathGeom:OnlyScalarCases','Only scalar MODTRAN cases are handled by SetRadTransPathGeom.');
+        error('Mod5:SetRadTransPathGeom:OnlyScalarCases','Only scalar MODTRAN cases are handled by SetRadTransPathGeom.');
       end
       % Firstly, this is the wrong function for irradiance modes
       if MC.IEMSCT == 3
-        error('MODTRANCase:SetRadTransPathGeom:WrongIEMSCT', ...
+        error('Mod5:SetRadTransPathGeom:WrongIEMSCT', ...
           'This is the wrong function for irradiance cases. Use SetIrradPathGeom instead, or set IEMSCT to 0,1 or 2 for a radiance/transmittance computation.')
       end
       % if inputs don't exist, make them zero
@@ -6144,7 +6144,7 @@ classdef MODTRANCase
       if ~exist('PHI', 'var'), PHI = 0; end;
       
       % All inputs must be scalar and numeric
-      assert(MODTRANCase.ScalarNumPos(ITYPE, H1, H2, ANGLE, RANGE, BETA, RO, LENN, PHI), 'MODTRANCase:SetRadTransPathGeom:ScalarNum', ...
+      assert(Mod5.ScalarNumPos(ITYPE, H1, H2, ANGLE, RANGE, BETA, RO, LENN, PHI), 'Mod5:SetRadTransPathGeom:ScalarNum', ...
         'All inputs to SetRadTransPathGeom must be scalar, numeric and >= 0. ITYPE must be 1, 2 or 3.');
       % The following are the allowed combinations of parameters
       % 1 means mandatory, 0 means disallowed and 2 means optional
@@ -6191,7 +6191,7 @@ classdef MODTRANCase
           Mandatory = Mandatory(iCase, :);  
         otherwise
           fprintf(2, 'Use ITYPE = 1 for horizontal path, 2 for slant path between 2 altitudes and 3 for slant path to space or ground.\n');
-          error('MODTRANCase:SetRadTransPathGeom:BadITYPE','Input ITYPE must be 1, 2 or 3. Given input was %d.', ITYPE)
+          error('Mod5:SetRadTransPathGeom:BadITYPE','Input ITYPE must be 1, 2 or 3. Given input was %d.', ITYPE)
       end
       % Check that mandatory fields are zero and
       Parameters = {'H1','H2','ANGLE','RANGE','BETA','PHI'};
@@ -6201,7 +6201,7 @@ classdef MODTRANCase
         fprintf(2, 'The following standard Card 3 MODTRAN input parameters should be provided in this case.\nITYPE');
         fprintf(2, ' %s', Parameters{logical(Mandatory)});
         fprintf(2, '\nAll other parameters should be given as 0, or omitted. Consult Card 3 documentation.\n');
-        error('MODTRANCase:SetRadTransPathGeom','An incompatible set of path geometry inputs was given.')
+        error('Mod5:SetRadTransPathGeom','An incompatible set of path geometry inputs was given.')
       end
       %% Go ahead and set the parameters
       MC.ITYPE = ITYPE;
@@ -6250,11 +6250,11 @@ classdef MODTRANCase
       
       %% Perform some input checking
       if ~isscalar(MC)
-        error('MODTRANCase:SetIrradPathGeom:OnlyScalarCases','Only scalar MODTRAN cases are handled by SetIrradPathGeom.');
+        error('Mod5:SetIrradPathGeom:OnlyScalarCases','Only scalar MODTRAN cases are handled by SetIrradPathGeom.');
       end
       % Firstly, this is the wrong function for non-irradiance modes
       if MC.IEMSCT ~= 3
-        error('MODTRANCase:SetIrradPathGeom:WrongIEMSCT', ...
+        error('Mod5:SetIrradPathGeom:WrongIEMSCT', ...
           'This is the wrong function for non-irradiance cases. Use SetRadTransPathGeom instead, or set IEMSCT to 3 for an irradiance computation.')
       end
       % if inputs don't exist, make them zero
@@ -6265,7 +6265,7 @@ classdef MODTRANCase
       if ~exist('RO', 'var'), RO = 0; end;
       if ~exist('ISOURC', 'var'), ISOURC = 0; end;
       if ~exist('ANGLEM', 'var'), ANGLEM = 0; end;
-      assert(MODTRANCase.ScalarNumPos(H1, H2, ANGLE, IDAY, RO, ISOURC, ANGLEM), 'MODTRANCase:SetIrradPathGeom:ScalarNum', ...
+      assert(Mod5.ScalarNumPos(H1, H2, ANGLE, IDAY, RO, ISOURC, ANGLEM), 'Mod5:SetIrradPathGeom:ScalarNum', ...
         'All inputs to SetIrradPathGeom must be scalar, numeric and >= 0. ITYPE will be set to 3.');
       MC.ITYPE = 3; % Set an irradiance mode computation
       %% Go ahead and set the parameters
@@ -6278,7 +6278,7 @@ classdef MODTRANCase
       MC.ANGLEM = ANGLEM;
      end % SetIrradPathGeom
     function MC = SetScatGeom(MC, IPARM, IDAY, ISOURC, PARM, TIME, PSIPO, ANGLEM)
-      % SetScatGeom: Set the solar/lunar radiation scattering geometry for a MODTRANCase
+      % SetScatGeom: Set the solar/lunar radiation scattering geometry for a Mod5
       %
       % Usage:
       %  MC = MC.SetScatGeom(IPARM, IDAY, ISOURC, PARM, TIME, PSIPO, ANGLEM)
@@ -6367,7 +6367,7 @@ classdef MODTRANCase
       % Input ISOURC specifies whether the Sun or the Moon is to be used
       %  as the exoatmospheric source of scattered radiation. Use 
       %  ISOURC = 0 for the Sun and use ISOURC = 1 for the Moon. Note 
-      %  that MODTRAN4 does not have the capability to compute the
+      %  that MODTRAN5 does not have the capability to compute the
       %  position of the Moon, and therefore you cannot specify 
       %  ISOURC = 1 in combination with IPARM = 1 or 11. Doing so will
       %  generate an error. Also note that if you specify ISOURC = 1 (Moon),
@@ -6392,18 +6392,18 @@ classdef MODTRANCase
       %% Input checking
       % This function is only for IEMSCT = 2, and IEMSCT is set to 2 if not
       if MC.IEMSCT ~= 2
-        warning('MODTRANCase:SetScatGeom:IMESCTnot2','SetScatGeom is only used for a MODTRANCase having IEMSCT = 2 (See Card 1). IEMSCT will be set to 2.')
+        warning('Mod5:SetScatGeom:IMESCTnot2','SetScatGeom is only used for a Mod5 having IEMSCT = 2 (See Card 1). IEMSCT will be set to 2.')
       end
       % Input case must be scalar
-      assert(isscalar(MC),'MODTRANCase:SetScatGeom:OnlyScalarCases','SetScatGeom only handles scalar MODTRANCases.');
-      assert(exist('IPARM', 'var') && isscalar(IPARM) && isnumeric(IPARM) && any(IPARM == [0 1 2 10 11 12]), 'MODTRANCase:SetScatGeom:BadIPARM', ...
+      assert(isscalar(MC),'Mod5:SetScatGeom:OnlyScalarCases','SetScatGeom only handles scalar Mod5s.');
+      assert(exist('IPARM', 'var') && isscalar(IPARM) && isnumeric(IPARM) && any(IPARM == [0 1 2 10 11 12]), 'Mod5:SetScatGeom:BadIPARM', ...
         'Input IPARM must be scalar, numeric and one of 0, 1, 2, 10, 11 or 12.');
       
       % Check IDAY
       if ~exist('IDAY', 'var') || isempty(IDAY)
         IDAY = 93;
       end
-      assert(isnumeric(IDAY) && (numel(IDAY) == 3 || isscalar(IDAY)), 'MODTRANCase:SetScatGeom:BadIDAY', ...
+      assert(isnumeric(IDAY) && (numel(IDAY) == 3 || isscalar(IDAY)), 'Mod5:SetScatGeom:BadIDAY', ...
         'Input IDAY (day of year) must be a numeric scalar or a vector of length 3 [Year Month Day].');
       % Compute day of year if IDAY given as a three element date
       if numel(IDAY) == 3
@@ -6414,7 +6414,7 @@ classdef MODTRANCase
       if ~exist('ISOURC', 'var') || isempty(ISOURC)
         ISOURC = 0; % Sun, default
       end
-      assert(isscalar(ISOURC) && isnumeric(ISOURC) && any(ISOURC == [0 1]), 'MODTRANCase:SetScatGeom:BadISOURC', ...
+      assert(isscalar(ISOURC) && isnumeric(ISOURC) && any(ISOURC == [0 1]), 'Mod5:SetScatGeom:BadISOURC', ...
         'Input ISOURC (extraterrestrial radiation source) must be scalar, numeric and either 0 (Sun) or 1 (Moon).');
       
       % Check TIME if it exists
@@ -6424,7 +6424,7 @@ classdef MODTRANCase
             TIME = TIME(1) + TIME(2)/60 + TIME(3)/3600;
           end
         else
-          error('MODTRANCase:SetScatGeom:BadTIME','Input TIME (time of day) must be decimal hours (0 to 24) or a 3-element vector [H M S].');
+          error('Mod5:SetScatGeom:BadTIME','Input TIME (time of day) must be decimal hours (0 to 24) or a 3-element vector [H M S].');
         end
       else
         TIME = [];
@@ -6432,7 +6432,7 @@ classdef MODTRANCase
       
       % Check PSIPO if it exists
       if exist('PSIPO', 'var') && ~isempty(PSIPO)
-        assert(isscalar(PSIPO) && isnumeric(PSIPO) && PSIPO >= 0 && PSIPO <= 360, 'MODTRANCase:SetScatGeom:BadPSIPO', ...
+        assert(isscalar(PSIPO) && isnumeric(PSIPO) && PSIPO >= 0 && PSIPO <= 360, 'Mod5:SetScatGeom:BadPSIPO', ...
           'Input PSIPO (azimuth H1 to H2 or H2 to H1) must be scalar numeric and from 0 to 360 degrees.');
       else
         PSIPO = [];
@@ -6440,7 +6440,7 @@ classdef MODTRANCase
       
       % Check ANGLEM if it exists
       if exist('ANGLEM', 'var') && ~isempty(ANGLEM)
-        assert(isscalar(ANGLEM) && isnumeric(ANGLEM) && ANGLEM >= -180 && ANGLEM <= 180, 'MODTRANCase:SetScatGeom:BadANGLEM', ...
+        assert(isscalar(ANGLEM) && isnumeric(ANGLEM) && ANGLEM >= -180 && ANGLEM <= 180, 'Mod5:SetScatGeom:BadANGLEM', ...
           'Input ANGLEM (Lunar phase angle) must be scalar, numeric and from -180 to 180 degrees.');
       else
         ANGLEM = [];
@@ -6452,154 +6452,154 @@ classdef MODTRANCase
       switch IPARM
         case 0 % Sensor and source lat/long, true path azimuth and lunar phase angle (if Moon)
           % Check PARMs
-          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 4, 'MODTRANCase:SetScatGeom:BadPARM', ...
+          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 4, 'Mod5:SetScatGeom:BadPARM', ...
             'Input PARM (scattering geometry parameters) must be numeric and a vector of length 4 for IPARM = 0.');
-          assert(all(PARM([1 3]) >= -90) && all(PARM([2 4]) <= 90) && all(PARM([2 4]) >= 0) && all(PARM([2 4]) <= 360), 'MODTRANCase:SetScatGeom', ...
+          assert(all(PARM([1 3]) >= -90) && all(PARM([2 4]) <= 90) && all(PARM([2 4]) >= 0) && all(PARM([2 4]) <= 360), 'Mod5:SetScatGeom', ...
             'Inputs PARM(1) and PARM(3), (latitudes) must be -90 to 90 deg, and PARM(2) and PARM(4) (longitudes) must be 0 to 360 deg.');
           % Check TIME input
           if ~isempty(TIME)
-            warning('MODTRANCase:SetScatGeom:TIMEisNotUsed','Input TIME (UTC) is not used for IPARM = 0 and has been ignored.');
+            warning('Mod5:SetScatGeom:TIMEisNotUsed','Input TIME (UTC) is not used for IPARM = 0 and has been ignored.');
           end
           TIME = 0;
           % Check PSIPO and ANGLEM
           if isempty(PSIPO)
-            error('MODTRANCase:SetScatGeom:PSIPOisMandatory','Input PSIPO (azimuth angle from H1 to H2) is required for IPARM = 0.');
+            error('Mod5:SetScatGeom:PSIPOisMandatory','Input PSIPO (azimuth angle from H1 to H2) is required for IPARM = 0.');
           end
           if ISOURC == 1 % If Moon the ANGLEM is required
             if isempty(ANGLEM)
-              error('MODTRANCase:SetScatGeom','Input ANGLEM (lunar phase angle) is required for IPARM = 0 and ISOURC = 1.')
+              error('Mod5:SetScatGeom','Input ANGLEM (lunar phase angle) is required for IPARM = 0 and ISOURC = 1.')
             end
           else % ANGLEM is not required and is ignored is specified
             if ~isempty(ANGLEM)
-              warning('MODTRANCase:SetScatGeom:ANGLEMisNotUsed', ...
+              warning('Mod5:SetScatGeom:ANGLEMisNotUsed', ...
                 'Input ANGLEM (lunar phase angle) is not used for IPARM = 0 with ISOURC = 0, and has been ignored.');
               ANGLEM = 0;
             end
           end
         case 1 % Observer/sensor lat/long, time and true path azimuth, (Moon not allowed)
-          assert(ISOURC == 0, 'MODTRANCase:SetScatGeom:MoonNotAllowed', ...
+          assert(ISOURC == 0, 'Mod5:SetScatGeom:MoonNotAllowed', ...
             'Input ISOURC = 1 (extraterrestrial source is Moon) is not allowed for IPARM = 1.')
           % Check PARMs
-          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 2, 'MODTRANCase:SetScatGeom:BadPARM', ...
+          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 2, 'Mod5:SetScatGeom:BadPARM', ...
             'Input PARM (scattering geometry parameters) must be numeric and a vector of length 2 for IPARM = 1.');
-          assert(PARM(1) >= -90 && PARM(1) <= 90 && PARM(2) >= 0 && PARM(2) <= 360, 'MODTRANCase:SetScatGeom', ...
+          assert(PARM(1) >= -90 && PARM(1) <= 90 && PARM(2) >= 0 && PARM(2) <= 360, 'Mod5:SetScatGeom', ...
             'Input PARM(1) (latitude of observer) must be -90 to 90 deg, and PARM(2) (longitude) must be 0 to 360 deg.');
           PARM(3) = 0;
           PARM(4) = 0;          
           % Check TIME is given
-          assert(~isempty(TIME),'MODTRANCase:SetScatGeom:TIMEisMandatory', ...
+          assert(~isempty(TIME),'Mod5:SetScatGeom:TIMEisMandatory', ...
             'Input TIME (UTC) is required for IPARM = 1.');
           % Check PSIPO is there
           if isempty(PSIPO)
-            error('MODTRANCase:SetScatGeom:PSIPOisMandatory','Input PSIPO (azimuth angle from H1 to H2) is required for IPARM = 1.');
+            error('Mod5:SetScatGeom:PSIPOisMandatory','Input PSIPO (azimuth angle from H1 to H2) is required for IPARM = 1.');
           end
           if ~isempty(ANGLEM)
-            warning('MODTRANCase:SetScatGeom:ANGLEMisIgnored','Input ANGLEM (lunar phase angle) is not used for IPARM = 1 and has been ignored.');
+            warning('Mod5:SetScatGeom:ANGLEMisIgnored','Input ANGLEM (lunar phase angle) is not used for IPARM = 1 and has been ignored.');
           end
           ANGLEM = 0;          
         case 2 % Azimuth angle between LOS and sightline to Sun/Moon, Zenith angle of Sun/Moon at H1, together with lunar phase angle (if required)
           % Check PARMs
-          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 2, 'MODTRANCase:SetScatGeom:BadPARM', ...
+          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 2, 'Mod5:SetScatGeom:BadPARM', ...
             'Input PARM (scattering geometry parameters) must be numeric and a vector of length 2 for IPARM = 2.');
-          assert(PARM(1) >= 0 && PARM(1) <= 360 && PARM(2) >= 0 && PARM(2) <= 90, 'MODTRANCase:SetScatGeom', ...
+          assert(PARM(1) >= 0 && PARM(1) <= 360 && PARM(2) >= 0 && PARM(2) <= 90, 'Mod5:SetScatGeom', ...
             'Input PARM(1) (azimuth angle between LOS and Source) must be 0 to 360 deg, and PARM(2) (source zenith angle at H1) must be 0 to 90 deg.');
           PARM(3) = 0;
           PARM(4) = 0;          
           % Check TIME input
           if ~isempty(TIME)
-            warning('MODTRANCase:SetScatGeom:TIMEisNotUsed','Input TIME (UTC) is not used for IPARM = 2 and has been ignored.');
+            warning('Mod5:SetScatGeom:TIMEisNotUsed','Input TIME (UTC) is not used for IPARM = 2 and has been ignored.');
           end
           TIME = 0;
           % Check PSIPO input
           if ~isempty(PSIPO)
-            warning('MODTRANCase:SetScatGeom:PSIOPOisNotUsed','Input PSIPO (LOS azimuth) is not used for IPARM = 2 and has been ignored.');
+            warning('Mod5:SetScatGeom:PSIOPOisNotUsed','Input PSIPO (LOS azimuth) is not used for IPARM = 2 and has been ignored.');
           end
           PSIPO = 0;
           % Check ANGLEM
           if ISOURC == 1 % If Moon the ANGLEM is required
             if isempty(ANGLEM)
-              error('MODTRANCase:SetScatGeom','Input ANGLEM (lunar phase angle) is required for IPARM = 2 and ISOURC = 1.')
+              error('Mod5:SetScatGeom','Input ANGLEM (lunar phase angle) is required for IPARM = 2 and ISOURC = 1.')
             end
           else % ANGLEM is not required and is ignored is specified
             if ~isempty(ANGLEM)
-              warning('MODTRANCase:SetScatGeom:ANGLEMisNotUsed','Input ANGLEM (lunar phase angle) is not used for IPARM = 2 and has been ignored.');
+              warning('Mod5:SetScatGeom:ANGLEMisNotUsed','Input ANGLEM (lunar phase angle) is not used for IPARM = 2 and has been ignored.');
               ANGLEM = 0;
             end
           end
           
         case 10 % Target (H2) and source lat/long, true path azimuth and lunar phase angle (if Moon)
           % Check PARMs
-          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 4, 'MODTRANCase:SetScatGeom:BadPARM', ...
+          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 4, 'Mod5:SetScatGeom:BadPARM', ...
             'Input PARM (scattering geometry parameters) must be numeric and a vector of length 4 for IPARM = 10.');
-          assert(all(PARM([1 3]) >= -90) && all(PARM([2 4]) <= 90) && all(PARM([2 4]) >= 0) && all(PARM([2 4]) <= 360), 'MODTRANCase:SetScatGeom', ...
+          assert(all(PARM([1 3]) >= -90) && all(PARM([2 4]) <= 90) && all(PARM([2 4]) >= 0) && all(PARM([2 4]) <= 360), 'Mod5:SetScatGeom', ...
             'Inputs PARM(1) and PARM(3), (latitudes) must be -90 to 90 deg, and PARM(2) and PARM(4) (longitudes) must be 0 to 360 deg.');
           % Check TIME input
           if ~isempty(TIME)
-            warning('MODTRANCase:SetScatGeom:TIMEisNotUsed','Input TIME (UTC) is not used for IPARM = 10 and has been ignored.');
+            warning('Mod5:SetScatGeom:TIMEisNotUsed','Input TIME (UTC) is not used for IPARM = 10 and has been ignored.');
           end
           TIME = 0;
           % Check PSIPO and ANGLEM
           if isempty(PSIPO)
-            error('MODTRANCase:SetScatGeom:PSIPOisMandatory','Input PSIPO (azimuth angle from H2 to H1) is required for IPARM = 10.');
+            error('Mod5:SetScatGeom:PSIPOisMandatory','Input PSIPO (azimuth angle from H2 to H1) is required for IPARM = 10.');
           end
           if ISOURC == 1 % If Moon the ANGLEM is required
             if isempty(ANGLEM)
-              error('MODTRANCase:SetScatGeom','Input ANGLEM (lunar phase angle) is required for IPARM = 10 and ISOURC = 1.')
+              error('Mod5:SetScatGeom','Input ANGLEM (lunar phase angle) is required for IPARM = 10 and ISOURC = 1.')
             end
           else % ANGLEM is not required and is ignored if specified
             if ~isempty(ANGLEM)
-              warning('MODTRANCase:SetScatGeom:ANGLEMisNotUsed', ...
+              warning('Mod5:SetScatGeom:ANGLEMisNotUsed', ...
                 'Input ANGLEM (lunar phase angle) is not used for IPARM = 10 with ISOURC = 0, and has been ignored.');
               ANGLEM = 0;
             end
           end          
         case 11 % Target (H2) lat/long, time and true path azimuth (Moon not allowed)
-          assert(ISOURC == 0, 'MODTRANCase:SetScatGeom:MoonNotAllowed', ...
+          assert(ISOURC == 0, 'Mod5:SetScatGeom:MoonNotAllowed', ...
             'Input ISOURC = 1 (extraterrestrial source is Moon) is not allowed for IPARM = 11.')          
           % Check PARMs
-          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 2, 'MODTRANCase:SetScatGeom:BadPARM', ...
+          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 2, 'Mod5:SetScatGeom:BadPARM', ...
             'Input PARM (scattering geometry parameters) must be numeric and a vector of length 2 for IPARM = 11.');
-          assert(PARM(1) >= -90 && PARM(1) <= 90 && PARM(2) >= 0 && PARM(2) <= 360, 'MODTRANCase:SetScatGeom', ...
+          assert(PARM(1) >= -90 && PARM(1) <= 90 && PARM(2) >= 0 && PARM(2) <= 360, 'Mod5:SetScatGeom', ...
             'Input PARM(1) (latitude of observer) must be -90 to 90 deg, and PARM(2) (longitude) must be 0 to 360 deg.');
           PARM(3) = 0;
           PARM(4) = 0;
           % Check TIME is given
-          assert(~isempty(TIME),'MODTRANCase:SetScatGeom:TIMEisMandatory', ...
+          assert(~isempty(TIME),'Mod5:SetScatGeom:TIMEisMandatory', ...
             'Input TIME (UTC) is required for IPARM = 11.');
           % Check PSIPO is there
           if isempty(PSIPO)
-            error('MODTRANCase:SetScatGeom:PSIPOisMandatory','Input PSIPO (azimuth angle from H2 to H1) is required for IPARM = 11.');
+            error('Mod5:SetScatGeom:PSIPOisMandatory','Input PSIPO (azimuth angle from H2 to H1) is required for IPARM = 11.');
           end
           if ~isempty(ANGLEM)
-            warning('MODTRANCase:SetScatGeom:ANGLEMisIgnored','Input ANGLEM (lunar phase angle) is not used for IPARM = 11 and has been ignored.');
+            warning('Mod5:SetScatGeom:ANGLEMisIgnored','Input ANGLEM (lunar phase angle) is not used for IPARM = 11 and has been ignored.');
           end
           ANGLEM = 0;          
         case 12 % Relative solar/lunar azimuth and solar/lunar zenith angle measured at the target (H2) 
           % Check PARMs
-          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 2, 'MODTRANCase:SetScatGeom:BadPARM', ...
+          assert(exist('PARM', 'var') && isnumeric(PARM) && numel(PARM) == 2, 'Mod5:SetScatGeom:BadPARM', ...
             'Input PARM (scattering geometry parameters) must be numeric and a vector of length 2 for IPARM = 12.');
-          assert(PARM(1) >= 0 && PARM(1) <= 360 && PARM(2) >= 0 && PARM(2) <= 90, 'MODTRANCase:SetScatGeom', ...
+          assert(PARM(1) >= 0 && PARM(1) <= 360 && PARM(2) >= 0 && PARM(2) <= 90, 'Mod5:SetScatGeom', ...
             'Input PARM(1) (relative solar/lunar azimuth angle at H2) must be 0 to 360 deg, and PARM(2) (source zenith angle at H2) must be 0 to 90 deg.');
           PARM(3) = 0;
           PARM(4) = 0;          
           % Check TIME input
           if ~isempty(TIME)
-            warning('MODTRANCase:SetScatGeom:TIMEisNotUsed','Input TIME (UTC) is not used for IPARM = 12 and has been ignored.');
+            warning('Mod5:SetScatGeom:TIMEisNotUsed','Input TIME (UTC) is not used for IPARM = 12 and has been ignored.');
           end
           TIME = 0;
           % Check PSIPO input
           if ~isempty(PSIPO)
-            warning('MODTRANCase:SetScatGeom:PSIOPOisNotUsed','Input PSIPO (LOS azimuth) is not used for IPARM = 12 and has been ignored.');
+            warning('Mod5:SetScatGeom:PSIOPOisNotUsed','Input PSIPO (LOS azimuth) is not used for IPARM = 12 and has been ignored.');
           end
           PSIPO = 0;
           % Check ANGLEM
           if ISOURC == 1 % If Moon the ANGLEM is required
             if isempty(ANGLEM)
-              error('MODTRANCase:SetScatGeom','Input ANGLEM (lunar phase angle) is required for IPARM = 12 and ISOURC = 1.')
+              error('Mod5:SetScatGeom','Input ANGLEM (lunar phase angle) is required for IPARM = 12 and ISOURC = 1.')
             end
           else % ANGLEM is not required and is ignored is specified
             if ~isempty(ANGLEM)
-              warning('MODTRANCase:SetScatGeom:ANGLEMisNotUsed','Input ANGLEM (lunar phase angle) is not used for IPARM = 12 and has been ignored.');
+              warning('Mod5:SetScatGeom:ANGLEMisNotUsed','Input ANGLEM (lunar phase angle) is not used for IPARM = 12 and has been ignored.');
               ANGLEM = 0;
             end
           end
@@ -6619,7 +6619,7 @@ classdef MODTRANCase
       MC.ANGLEM = ANGLEM;
       % Issue a warning if aerosol phase function IPH and G have not been set.
       if isempty(MC.IPH)
-        warning('MODTRANCase:SetScatGeom:IPHisEmpty', ...
+        warning('Mod5:SetScatGeom:IPHisEmpty', ...
           'The property IPH (Aerosol phase function control flag) has not been set. IPH has been set to 2 (Mie-calculated phase functions) and G to 0.');
         MC.IPH = 2;
         MC.G = 0;
@@ -6663,8 +6663,8 @@ classdef MODTRANCase
       % The set function for the relevant inputs should do most of the
       % checking.
       
-      assert(isscalar(MC), 'MODTRANCase:SetSpectralRange:OnlyScalarCases','Only scalar MODTRANCase''s are currently handled by this function.')
-      assert(V2 > V1, 'MODTRANCase:SetSpectralRange:BadV', ...
+      assert(isscalar(MC), 'Mod5:SetSpectralRange:OnlyScalarCases','Only scalar Mod5''s are currently handled by this function.')
+      assert(V2 > V1, 'Mod5:SetSpectralRange:BadV', ...
         'Input V2 (final wavelength/wavenumber) must be greater than V1 (initial wavelength/wavenumber).');
       if ~exist('ConvShape', 'var')
         ConvShape = ' ';
@@ -6672,7 +6672,7 @@ classdef MODTRANCase
       if ~exist('FWHMisRelative', 'var')
         FWHMisRelative = 0; % Absolute by default
       else
-        assert(isscalar(FWHMisRelative) && isnumeric(FWHMisRelative), 'MODTRANCase:SetSpectralRange:BadFWHMisRelative', ...
+        assert(isscalar(FWHMisRelative) && isnumeric(FWHMisRelative), 'Mod5:SetSpectralRange:BadFWHMisRelative', ...
           'Input FWHMisRelative to function SetSpectralRange must be a scalar, numeric flag.');
       end
       % Set the values in the instance
@@ -6685,12 +6685,12 @@ classdef MODTRANCase
       if FWHMisRelative
         AbsFWHM = [V1 V2] * FWHM ./ 100; % Compute absolute FWHM at both limits of the spectral range
         if any(DV > AbsFWHM./2)
-          warning('MODTRANCase:SetSpectralRange:DVtooBig','DV should not exceed FWHM. The recommended value for DV is the absolute FWHM/2.')
+          warning('Mod5:SetSpectralRange:DVtooBig','DV should not exceed FWHM. The recommended value for DV is the absolute FWHM/2.')
         end
         MC.FLAGS(3) = 'R'; % Relative FWHM in percent
       else
         if DV > FWHM/2
-          warning('MODTRANCase:SetSpectralRange:DVtooBig','DV should not exceed FWHM. The recommended value for DV is the absolute FWHM/2.')          
+          warning('Mod5:SetSpectralRange:DVtooBig','DV should not exceed FWHM. The recommended value for DV is the absolute FWHM/2.')          
         end
         MC.FLAGS(3) = 'A'; % Absolute FWHM in wavenumbers or wavelength
       end
@@ -6749,7 +6749,7 @@ classdef MODTRANCase
       % Usage :
       %   SS = MC.CreateSeries(ParamName1, ParamValues1, ParamName2, ParamValues2, ...)
       %
-      % Input MC is a scalar MODTRANCase which serves as a basis for the
+      % Input MC is a scalar Mod5 which serves as a basis for the
       %  sensitivity analysis.
       %
       % ParamNameN is the name of the MOTRAN parameter to vary. ParamName must
@@ -6763,7 +6763,7 @@ classdef MODTRANCase
       %  in the Nth dimension. That is, EVERY combination of the variable
       %  parameters is generated. If there are 2 values for ParamName1, 
       %  5 values for ParamName2 and 2 values for ParamName3, there will
-      %  be a total of 20 subcases in the generated MODTRANCase (SS).
+      %  be a total of 20 subcases in the generated Mod5 (SS).
       %
       % In order to make the results from the different sub-cases easy
       %  to compare, it is best not to vary parameters such as V1, V2, DV,
@@ -6785,8 +6785,8 @@ classdef MODTRANCase
       %
       %  SS = MC.CreateSeries('MODEL', {1 2 3 4 5 6});
       %
-      % The above example starts with a scalar MODTRANCase (MC) and
-      % creates another MODTRANCase (SS) having 6 sub-cases with
+      % The above example starts with a scalar Mod5 (MC) and
+      % creates another Mod5 (SS) having 6 sub-cases with
       % different canned atmospheres (1 through 6). 
       %
       %  SS = MC.CreateSeries('MODEL', {1 2 3 4 5 6}, 'IEMSCT', {2 3})
@@ -6803,20 +6803,20 @@ classdef MODTRANCase
       %  in question, the overall range of the expected output parameter(s)
       %  can be determined.
       
-      assert(isscalar(MC), 'MODTRANCase:CreateSeries:OnlyScalarCases',...
-        'The base MODTRANCase must be scalar (have a single element).');
+      assert(isscalar(MC), 'Mod5:CreateSeries:OnlyScalarCases',...
+        'The base Mod5 must be scalar (have a single element).');
       % Must be even number of parameters in varargin
       if rem(numel(varargin), 2) % odd
-        error('MODTRANCase:CreateSeries:OddArgs','The number of input arguments was odd. There must be an even number of parameters.');
+        error('Mod5:CreateSeries:OddArgs','The number of input arguments was odd. There must be an even number of parameters.');
       end
       % Verify that all parameter names are character strings and that values are either numeric or cell arrays of strings.
       nTotalSubCases = 1;
       nParm = numel(varargin)/2;
       CaseShape = [];
       for iParm = 1:2:(numel(varargin)-1)
-        assert(ischar(varargin{iParm}), 'MODTRANCase:CreateSeries', ...
+        assert(ischar(varargin{iParm}), 'Mod5:CreateSeries', ...
           'MODTRAN parameter names (ParamNameN) must be character strings in single quotes.');
-        assert(iscell(varargin{iParm + 1}) || isnumeric(varargin{iParm + 1}), 'MODTRANCase:CreateSeries:BadArgs', ...
+        assert(iscell(varargin{iParm + 1}) || isnumeric(varargin{iParm + 1}), 'Mod5:CreateSeries:BadArgs', ...
           'MODTRAN parameter values must be a cell array.');
         nTotalSubCases = nTotalSubCases * numel(varargin{iParm + 1});
         CaseShape = [CaseShape numel(varargin{iParm + 1})];
@@ -6905,7 +6905,7 @@ classdef MODTRANCase
         % tp7 outputs and add a corresponding optical depth. The optical
         % depth is -log(transmittance).
         %
-        % See also : MODTRANCase.CreateOptDepthCase
+        % See also : Mod5.CreateOptDepthCase
         for iC = 1:numel(MC)
             if ~isempty(MC(iC).tp7)
                 for iH = 1:numel(MC(iC).tp7.Headers)
@@ -6951,7 +6951,7 @@ classdef MODTRANCase
                     end
                 end
                 % Lookup all the headers again
-                MC(iC).tp7.HeadDescr = MODTRANCase.LookupHeaders(MC(iC).tp7.Headers);
+                MC(iC).tp7.HeadDescr = Mod5.LookupHeaders(MC(iC).tp7.Headers);
             end
             if ~isempty(MC(iC).sc7)
                 for iH = 1:numel(MC(iC).sc7.Headers)
@@ -6997,7 +6997,7 @@ classdef MODTRANCase
                     end
                 end    
                 % Lookup all the headers again
-                MC(iC).sc7.HeadDescr = MODTRANCase.LookupHeaders(MC(iC).sc7.Headers);
+                MC(iC).sc7.HeadDescr = Mod5.LookupHeaders(MC(iC).sc7.Headers);
                 
             end
         end
@@ -7018,9 +7018,9 @@ classdef MODTRANCase
     % the compulsory cards.
     %% Set methods for non-MODTRAN parameter properties
     function MC = set.CaseName(MC, NewCaseName)
-     assert(isscalar(MC), 'MODTRANCase.setCaseName.MustBeScalar', ...
+     assert(isscalar(MC), 'Mod5.setCaseName.MustBeScalar', ...
        'Setting of CaseName property only deals with scalar (single) cases. Use a loop to set non-scalar cases.');
-     assert(ischar(NewCaseName) && numel(NewCaseName) < 80 && MODTRANCase.isValidFilename(NewCaseName), 'MODTRANCase:setCaseName:BadCaseName', ...
+     assert(ischar(NewCaseName) && numel(NewCaseName) < 80 && Mod5.isValidFilename(NewCaseName), 'Mod5:setCaseName:BadCaseName', ...
         'Input NewCaseName must be a string of less than 80 characters, that is also a valid filename.');
       MC.CaseName = NewCaseName;
     end % set.CaseName
@@ -7028,50 +7028,50 @@ classdef MODTRANCase
     function MC = set.MODTRN(MC, newMODTRN) % Band model
      % Perform integrity checks
      % Don't handle non-scalar cases
-     assert(isscalar(MC), 'MODTRANCase.setMODTRN.MustBeScalar', ...
+     assert(isscalar(MC), 'Mod5.setMODTRN.MustBeScalar', ...
        'Setting of MODTRN only deals with scalar (single) cases. Use a loop to set non-scalar cases.');
-     assert(ischar(newMODTRN) && numel(newMODTRN)==1,'MODTRANCase:setMODTRN:BadValue', ...
+     assert(ischar(newMODTRN) && numel(newMODTRN)==1,'Mod5:setMODTRN:BadValue', ...
      'Parameter MODTRN on Card 1 must be a single character. The class of the new value was %s.', class(newMODTRN));  
-     assert(any(upper(newMODTRN) == 'TM CKFL'), 'MODTRANCase:setMODTRN:BadValue', ...
+     assert(any(upper(newMODTRN) == 'TM CKFL'), 'Mod5:setMODTRN:BadValue', ...
      'Parameter MODTRN on Card 1 must be one of blank, T, M, C, K, F or L. The value given for MODTRN was ''%s''', newMODTRN);
       MC.MODTRN = newMODTRN;
     end % set.MODTRN
     function MC = set.SPEED(MC, newSPEED) % Algorithm speed
-     assert(ischar(newSPEED) && numel(newSPEED)==1,'MODTRANCase:setSPEED:BadValue', ...
+     assert(ischar(newSPEED) && numel(newSPEED)==1,'Mod5:setSPEED:BadValue', ...
      'Parameter SPEED on Card 1 must be a single character. The class of the new value was %s.', class(newSPEED));  
-     assert(any(upper(newSPEED) == 'S M'), 'MODTRANCase:setSPEED:BadValue', ...
+     assert(any(upper(newSPEED) == 'S M'), 'Mod5:setSPEED:BadValue', ...
      'Parameter SPEED on Card 1 must be one of blank, S or M. The value passed in was:%s', newSPEED);
       MC.SPEED = newSPEED;
     end % set.SPEED
     function MC = set.MODEL(MC, newMODEL) % Canned atmospheric model
       % Validation of MODEL
-      assert(isscalar(MC) && isscalar(newMODEL), 'MODTRANCase:setMODEL:MustBeScalar', ...
+      assert(isscalar(MC) && isscalar(newMODEL), 'Mod5:setMODEL:MustBeScalar', ...
         'Inputs to set.MODEL must be scalar.');
-      assert(isnumeric(newMODEL) && any(newMODEL == [0 1 2 3 4 5 6 7]), 'MODTRANCase:setMODEL:BadInput', ...
+      assert(isnumeric(newMODEL) && any(newMODEL == [0 1 2 3 4 5 6 7]), 'Mod5:setMODEL:BadInput', ...
         'New MODEL (atmospheric model) value in set.MODEL must be one of 0,1,2,3,4,5,6 or 7.');
       MC.MODEL = newMODEL;
     end % set.MODEL
     function MC = set.ITYPE(MC, newITYPE) % Line of sight type
       % Validation of ITYPE
-      assert(isscalar(MC) && isscalar(newITYPE), 'MODTRANCase:setITYPE:MustBeScalar', ...
+      assert(isscalar(MC) && isscalar(newITYPE), 'Mod5:setITYPE:MustBeScalar', ...
         'Inputs to set.ITYPE must be scalar.');
-      assert(isnumeric(newITYPE) && any(newITYPE == [1 2 3]), 'MODTRANCase:setITYPE:BadInput', ...
+      assert(isnumeric(newITYPE) && any(newITYPE == [1 2 3]), 'Mod5:setITYPE:BadInput', ...
         'New ITYPE (line of sight (LOS) path type) value in set.ITYPE must be one of 1,2 or 3.');
       MC.ITYPE = newITYPE;
     end % set.ITYPE
     function MC = set.IEMSCT(MC, newIEMSCT) % Radiance/Irradiance/Transmittance mode
       % Validation of IEMSCT
-      assert(isscalar(MC) && isscalar(newIEMSCT), 'MODTRANCase:setIEMSCT:MustBeScalar', ...
+      assert(isscalar(MC) && isscalar(newIEMSCT), 'Mod5:setIEMSCT:MustBeScalar', ...
         'Inputs to set.IEMSCT must be scalar.');
-      assert(isnumeric(newIEMSCT) && any(newIEMSCT == [0 1 2 3]), 'MODTRANCase:setIEMSCT:BadInput', ...
+      assert(isnumeric(newIEMSCT) && any(newIEMSCT == [0 1 2 3]), 'Mod5:setIEMSCT:BadInput', ...
         'New IEMSCT (radiance/transmittance/irradiance mode) value in set.IEMSCT must be one of 0,1,2 or 3.');
       MC.IEMSCT = newIEMSCT;
     end % set.IEMSCT
     function MC = set.IMULT(MC, newIMULT) % Multiple scattering
-      assert(isscalar(MC) && isscalar(newIMULT), 'MODTRANCase:setIMULT:MustBeScalar', ...
+      assert(isscalar(MC) && isscalar(newIMULT), 'Mod5:setIMULT:MustBeScalar', ...
         'Inputs to set.IMULT must be scalar.');
       assert(isnumeric(newIMULT) && any(newIMULT == [-1 0 1]), ...
-        'MODTRANCase:setIMULT:BadIMULT', 'IMULT (multiple scattering flag)value must be -1, 0 or 1.');
+        'Mod5:setIMULT:BadIMULT', 'IMULT (multiple scattering flag)value must be -1, 0 or 1.');
       MC.IMULT = newIMULT;
     end % set.IMULT
     function MC = set.M1(MC, newM1) % Temperature/pressure profile
@@ -7111,7 +7111,7 @@ classdef MODTRANCase
       MC.NOPRNT = newNOPRNT;
     end % set.NOPRNT
     function MC = set.SURREF(MC, newSURREF) % Surface reflectance
-      assert(isscalar(MC) && ischar(newSURREF) && length(newSURREF(:)) <= 7, 'MODTRANCase:setSURREF:BadInput', ...
+      assert(isscalar(MC) && ischar(newSURREF) && length(newSURREF(:)) <= 7, 'Mod5:setSURREF:BadInput', ...
         'Case input to set.SURREF must be scalar, SURREF must be a string of length 7 or less.');
       MC.SURREF = newSURREF;
     end % set.SURREF
@@ -7119,7 +7119,7 @@ classdef MODTRANCase
     function MC = set.DIS(MC, newDIS)
       MC.ScalarChar(newDIS, 'tTfF ', 'DIS');
       if any(newDIS == 'tT') && MC.IMULT == 0
-        warning('MODTRANCase:setDISAZM:CheckIMULT', ...
+        warning('Mod5:setDISAZM:CheckIMULT', ...
           'DISORT can only be used if multi-scatter is enabled. Check the IMULT parameter.')
       end      
       MC.DIS = newDIS;
@@ -7128,7 +7128,7 @@ classdef MODTRANCase
       MC.ScalarChar(newDISAZM, 'tTfF ', 'DISAZM');
       % Issue a warning if IMULT not set
       if any(newDISAZM == 'tT') && (MC.IMULT == 0 || ~any(MC.DIS == 'tT'))
-        warning('MODTRANCase:setDISAZM:CheckIMULT', ...
+        warning('Mod5:setDISAZM:CheckIMULT', ...
           'Azimuthal dependence of multi-scattering only valid if DISORT is requested in multi-scatter mode. Check IMULT and DIS parameters.')
       end
       MC.DISAZM = newDISAZM;
@@ -7136,7 +7136,7 @@ classdef MODTRANCase
     function MC = set.NSTR(MC, newNSTR) % number of streams in DISORT
       MC.ScalarIntNumeric(newNSTR, [0 2 4 8 16], 'NSTR');
       if ~any(newNSTR == [0 2]) && (MC.IMULT == 0 || any(MC.DIS == 'fF '))
-        warning('MODTRANCase:setDISAZM:CheckIMULT', ...
+        warning('Mod5:setDISAZM:CheckIMULT', ...
           'Setting number of streams (NSTR ~= 0 or 2) only effective if DISORT is requested in multi-scatter mode. Check IMULT and DIS parameters.')
       end
       MC.NSTR = newNSTR;
@@ -7146,7 +7146,7 @@ classdef MODTRANCase
       MC.LSUN = newLSUN;
     end % set.LSUN
     function MC = set.ISUN(MC, newISUN)
-      assert(isnumeric(newISUN) && isscalar(newISUN), 'MODTRANCase:setISUN:BadISUN', ...
+      assert(isnumeric(newISUN) && isscalar(newISUN), 'Mod5:setISUN:BadISUN', ...
         'Input ISUN must be scalar numeric.');
       MC.ISUN = newISUN;
     end % set.ISUN
@@ -7154,9 +7154,9 @@ classdef MODTRANCase
       if isempty(newCO2MX)
         newCO2MX = 365; % Default to 365 ppmv
       end
-      assert(isscalar(MC) && isscalar(newCO2MX), 'MODTRANCase:setCO2MX:MustBeScalar', ...
+      assert(isscalar(MC) && isscalar(newCO2MX), 'Mod5:setCO2MX:MustBeScalar', ...
         'Inputs to %s be scalar.', mfilename);
-      assert(isnumeric(newCO2MX),'MODTRANCase:setCO2MX', ...
+      assert(isnumeric(newCO2MX),'Mod5:setCO2MX', ...
         'Input parameter CO2MX must be numeric.');
       MC.CO2MX = newCO2MX;
     end % set.CO2MX 
@@ -7164,7 +7164,7 @@ classdef MODTRANCase
       if isempty(newH2OSTR)
         newH2OSTR = '          ';
       end
-      assert(isscalar(MC) && ischar(newH2OSTR) && length(newH2OSTR) <= 10, 'MODTRANCase:setH2OSTR:BadH2OSTR', ...
+      assert(isscalar(MC) && ischar(newH2OSTR) && length(newH2OSTR) <= 10, 'Mod5:setH2OSTR:BadH2OSTR', ...
         'Input H2OSTR must be a string of length 10 or fewer characters.');
       if length(newH2OSTR) < 10
         newH2OSTR = [' ' newH2OSTR blanks(10 - length(newH2OSTR) - 1)];
@@ -7175,7 +7175,7 @@ classdef MODTRANCase
       if isempty(newO3STR)
         newO3STR = '          ';
       end
-      assert(isscalar(MC) && ischar(newO3STR) && length(newO3STR) <= 10, 'MODTRANCase:setO3STR:BadO3STR', ...
+      assert(isscalar(MC) && ischar(newO3STR) && length(newO3STR) <= 10, 'Mod5:setO3STR:BadO3STR', ...
         'Input O3STR must be a string of length 10 or fewer characters.');
       if length(newO3STR) < 10
         newO3STR = [' ' newO3STR blanks(10 - length(newO3STR) - 1)];
@@ -7202,7 +7202,7 @@ classdef MODTRANCase
       if isempty(newSOLCON)
         newSOLCON = 0;
       end
-      assert(isscalar(newSOLCON) && isnumeric(newSOLCON), 'MODTRANCase:setSOLCON:BadSOLCON', ...
+      assert(isscalar(newSOLCON) && isnumeric(newSOLCON), 'Mod5:setSOLCON:BadSOLCON', ...
         'Input SOLCON must be scalar and numeric.');
       MC.SOLCON = newSOLCON;
     end % set.SOLCON
@@ -7214,14 +7214,14 @@ classdef MODTRANCase
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('MODTRANCase.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
-            [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;            
+            [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;            
           end
         else
-          [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;
+          [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
       end
       % If the new value is the empty matrix, set it to that
@@ -7230,7 +7230,7 @@ classdef MODTRANCase
         % The following as warned against by MLint, so just offer warning if 
         % MC.LSUNFL = 'F'; % Don't want MODTRAN to try to read something from non-existent place.
         if isempty(MC.LSUNFL) || upper(MC.LSUNFL(1)) == 'T'
-          warning('MODTRANCase:setSUNFL2:LSUNFLInconsistent', ...
+          warning('Mod5:setSUNFL2:LSUNFLInconsistent', ...
             'If SUNFL2 is set to [], then LSUNFL must be set blank or ''F'' for false.');
         end
       elseif isnumeric(newSUNFL2)
@@ -7244,20 +7244,20 @@ classdef MODTRANCase
           case 4
             MC.SUNFL2 = '4';
           otherwise
-            error('MODTRANCase:setLSUNFL2:BadSUNFL2', ...
+            error('Mod5:setLSUNFL2:BadSUNFL2', ...
               'Numeric values for MODTRAN parameter LSUNFL2 may be 1, 2, 3 or 4. Otherwise LSUNFL2 must be blank or a valid filename.');
         end
       else
         % Perform some input checking
         assert(ischar(newSUNFL2) && length(newSUNFL2) <= 80, ...
-          'MODTRANCase:setSUNFL2:BadSUNFL2','The parameter SUNFL2 must be a char array of length less than 80.');
+          'Mod5:setSUNFL2:BadSUNFL2','The parameter SUNFL2 must be a char array of length less than 80.');
         if isempty(newSUNFL2) % Then use a file dialog to set the file
           [Filename, Pathname] = uigetfile({'*.dat', ...
             'User-Defined TOA Irradiance Files (*.dat)'; '*.*', 'All Files (*.*)'}, 'Select User-Defined Solar TOA File', MODTRANPath);
           if Filename % a valid filename was returned from the uigetfile
             % Now the first part of the pathname must match MODTRANPath
             if ~strncmpi(MODTRANPath, Pathname, length(MODTRANPath)) || length(Pathname) < length(MODTRANPath)
-              error('MODTRANCase:setSUNFL2:BadPath',...
+              error('Mod5:setSUNFL2:BadPath',...
                 'The location of the SUNFL2 file must be within the current MODTRAN executable path %s', MODTRANPath)
             else
               % Set the new filter filename to the remainder of the string
@@ -7276,7 +7276,7 @@ classdef MODTRANCase
               end
               % Check status of LSUNFL
               if ~isempty(MC.LSUNFL) && any(upper(MC.LSUNFL(1)) == 'F ')
-                warning('MODTRANCase:setSUNFL2:LSUNFLInconsistent', ...
+                warning('Mod5:setSUNFL2:LSUNFLInconsistent', ...
                   'If SUNFL2 is set to a valid file, then LSUNFL must be set ''t'' or ''T'' for true.');
               end
             end
@@ -7286,7 +7286,7 @@ classdef MODTRANCase
             % Check existence of the file
             FullFilename = strtrim([MODTRANPath newSUNFL2]);
             if ~exist(FullFilename, 'file')
-              warning('MODTRANCase:setSUNFL2:FileNotExist', ...
+              warning('Mod5:setSUNFL2:FileNotExist', ...
                 'The binary band model file (parameter SUNFL2) %s was not found. Check this before running MODTRAN.', FullFilename);
             end
           end
@@ -7303,14 +7303,14 @@ classdef MODTRANCase
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('MODTRANCase.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
-            [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;            
+            [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;            
           end
         else
-          [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;
+          [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
       end
       % If the new value is the empty matrix, set it to that
@@ -7319,20 +7319,20 @@ classdef MODTRANCase
         % The following as warned against by MLint, so just offer warning if 
         % MC.LBMNAM = 'F'; % Don't want MODTRAN to try to read something from non-existent place.
         if isempty(MC.LBMNAM) || upper(MC.LBMNAM(1)) == 'T'
-          warning('MODTRANCase:setBMNAME:LBMNAMInconsistent', ...
+          warning('Mod5:setBMNAME:LBMNAMInconsistent', ...
             'If BMNAME is set to [], then LBMNAM must be set blank or ''F'' for false.');
         end
       else
         % Perform some input checking
         assert(ischar(newBMNAME) && length(newBMNAME) <= 80, ...
-          'MODTRANCase:setBMNAME:BadBMNAME','The parameter BMNAME must be a char array of length less than 80.');
+          'Mod5:setBMNAME:BadBMNAME','The parameter BMNAME must be a char array of length less than 80.');
         if isempty(newBMNAME) % Then use a file dialog to set the file
           [Filename, Pathname] = uigetfile({'*.bin', ...
             'Band Model Binary Files (*.bin)'; '*.*', 'All Files (*.*)'}, 'Select Band Model Binary File', MODTRANPath);
           if Filename % a valid filename was returned from the uigetfile
             % Now the first part of the pathname must match MODTRANPath
             if ~strncmpi(MODTRANPath, Pathname, length(MODTRANPath)) || length(Pathname) < length(MODTRANPath)
-              error('MODTRANCase:setBMNAME:BadPath',...
+              error('Mod5:setBMNAME:BadPath',...
                 'The location of the BMNAME file must be within the current MODTRAN executable path %s', MODTRANPath)
             else
               % Set the new filter filename to the remainder of the string
@@ -7340,7 +7340,7 @@ classdef MODTRANCase
               MC.BMNAME = FullFilename(length(MODTRANPath)+1:end);
               % Check status of LBMNAM
               if ~isempty(MC.LBMNAM) && any(upper(MC.LBMNAM(1)) == 'F ')
-                warning('MODTRANCase:setBMNAME:LBMNAMInconsistent', ...
+                warning('Mod5:setBMNAME:LBMNAMInconsistent', ...
                   'If BMNAME is set to a valid file, then LBMNAM must be set ''t'' or ''T'' for true.');
               end
             end
@@ -7349,7 +7349,7 @@ classdef MODTRANCase
           % Check existence of the file
           FullFilename = strtrim([MODTRANPath newBMNAME]);
           if ~exist(FullFilename, 'file')
-            warning('MODTRANCase:setBMNAME:FileNotExist', ...
+            warning('Mod5:setBMNAME:FileNotExist', ...
               'The binary band model file (parameter BMNAME) %s was not found. Check this before running MODTRAN.', FullFilename);
           end
           % and set the property anyway
@@ -7364,14 +7364,14 @@ classdef MODTRANCase
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('MODTRANCase.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
-            [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;            
+            [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;            
           end
         else
-          [MODTRANExe, MODTRANPath] = MODTRANCase.SetMODTRANExe;
+          [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
       end
       % If the new value is the empty matrix, set it to that
@@ -7380,20 +7380,20 @@ classdef MODTRANCase
         % The following as warned against by MLint, so just offer warning if 
         % MC.LFLTNM = 'F'; % Don't want MODTRAN to try to read something from non-existent place.
         if isempty(MC.LFLTNM) || upper(MC.LFLTNM(1)) == 'T'
-          warning('MODTRANCase:setFILTNM:LFLTNMInconsistent', ...
+          warning('Mod5:setFILTNM:LFLTNMInconsistent', ...
             'If FILTNM is set to [], then LFLTNM must be set blank or ''F'' for false.');
         end
       else
         % Perform some input checking
         assert(ischar(newFILTNM) && length(newFILTNM) <= 80, ...
-          'MODTRANCase:setFILTNM:BadFILTNM','The parameter FILTNM must be a char array of length less than 80.');
+          'Mod5:setFILTNM:BadFILTNM','The parameter FILTNM must be a char array of length less than 80.');
         if isempty(newFILTNM) % Then use a file dialog to set the file
           [Filename, Pathname] = uigetfile({'*.flt', ...
             'Band Filter Function Files (*.flt)'; '*.*', 'All Files (*.*)'}, 'Select Filter Function File', MODTRANPath);
           if Filename % a valid filename was returned from the uigetfile
             % Now the first part of the pathname must match MODTRANPath
             if ~strncmpi(MODTRANPath, Pathname, length(MODTRANPath)) || length(Pathname) < length(MODTRANPath)
-              error('MODTRANCase:setFILTNM:BadPath',...
+              error('Mod5:setFILTNM:BadPath',...
                 'The location of the FILTNM file must be within the current MODTRAN executable path %s', MODTRANPath)
             else
               % Set the new filter filename to the remainder of the string
@@ -7401,7 +7401,7 @@ classdef MODTRANCase
               MC.FILTNM = FullFilename(length(MODTRANPath)+1:end);
               % Check status of LFLTNM
               if ~isempty(MC.LFLTNM) && any(upper(MC.LFLTNM(1)) == 'F ')
-                warning('MODTRANCase:setFILTNM:LFLTNMInconsistent', ...
+                warning('Mod5:setFILTNM:LFLTNMInconsistent', ...
                   'If FILTNM is set to a valid file, then LFLTNM must be set ''t'' or ''T'' for true.');
               end
             end
@@ -7410,7 +7410,7 @@ classdef MODTRANCase
           % Check existence of the file
           FullFilename = strtrim([MODTRANPath newFILTNM]);
           if ~exist(FullFilename, 'file') && ~strcmp(newFILTNM, [MC.CaseName '.flt'])
-            warning('MODTRANCase:setFILTNM:FileNotExist', ...
+            warning('Mod5:setFILTNM:FileNotExist', ...
               'The spectral filter file (parameter FILTNM) %s was not found. Check this before running MODTRAN.', FullFilename);
           end
           % and set the property anyway
@@ -7423,7 +7423,7 @@ classdef MODTRANCase
       if isempty(newAPLUS)
         newAPLUS = '  ';
       end
-      assert(ischar(newAPLUS) && (strcmp(newAPLUS, ' ') || strcmp(newAPLUS, '  ') || strcmp(newAPLUS, 'A+')), 'MODTRANCase:setAPLUS:BadAPLUS', ...
+      assert(ischar(newAPLUS) && (strcmp(newAPLUS, ' ') || strcmp(newAPLUS, '  ') || strcmp(newAPLUS, 'A+')), 'Mod5:setAPLUS:BadAPLUS', ...
         'Input APLUS must either be blank or equal to ''A+''');
       if strcmp(newAPLUS, ' ')
         newAPLUS = '  ';
@@ -7447,7 +7447,7 @@ classdef MODTRANCase
         newARUSS = '   ';
       end
       assert(ischar(newARUSS) && (strcmp(newARUSS, ' ') || strcmp(newARUSS, '  ') || strcmp(newARUSS, 'USS') || ...
-         strcmp(newARUSS, '   ')), 'MODTRANCase:setARUSS:BadARUSS', ...
+         strcmp(newARUSS, '   ')), 'Mod5:setARUSS:BadARUSS', ...
         'Input ARUSS must either be blank or equal to ''USS''');
       if strcmp(newARUSS, ' ') || strcmp(newARUSS, '  ')
         newARUSS = '   ';
@@ -7471,30 +7471,30 @@ classdef MODTRANCase
       MC.IVSA = newIVSA;
     end % set.IVSA
     function MC = set.VIS(MC, newVIS)
-%       assert(isscalar(newVIS) && isnumeric(newVIS) && newVIS >= 0, 'MODTRANCase:setVIS:BadVIS', ...
+%       assert(isscalar(newVIS) && isnumeric(newVIS) && newVIS >= 0, 'Mod5:setVIS:BadVIS', ...
 %         'Input VIS (meteorological range in km) must be scalar, positive, numeric.');
-      assert(isscalar(newVIS) && isnumeric(newVIS), 'MODTRANCase:setVIS:BadVIS', ...
+      assert(isscalar(newVIS) && isnumeric(newVIS), 'Mod5:setVIS:BadVIS', ...
         'Input VIS (meteorological range in km) must be scalar, positive, numeric.');
     
       MC.VIS = newVIS;
     end % set.VIS
     function MC = set.WSS(MC, newWSS)
-      assert(isscalar(newWSS) && isnumeric(newWSS) && newWSS >= 0, 'MODTRANCase:setWSS:BadWSS', ...
+      assert(isscalar(newWSS) && isnumeric(newWSS) && newWSS >= 0, 'Mod5:setWSS:BadWSS', ...
         'Input WSS (current wind speed in m/s) must be scalar, positive, numeric.');
       MC.WSS = newWSS;
     end % set.WSS
     function MC = set.WHH(MC, newWHH)
-      assert(isscalar(newWHH) && isnumeric(newWHH) && newWHH >= 0, 'MODTRANCase:setWHH:BadWHH', ...
+      assert(isscalar(newWHH) && isnumeric(newWHH) && newWHH >= 0, 'Mod5:setWHH:BadWHH', ...
         'Input WHH (24-hour averaged wind speed in m/s) must be scalar, positive, numeric.');
       MC.WHH = newWHH;
     end % set.WHH
     function MC = set.RAINRT(MC, newRAINRT)
-      assert(isscalar(newRAINRT) && isnumeric(newRAINRT) && newRAINRT >= 0, 'MODTRANCase:setRAINRT:BadRAINRT', ...
+      assert(isscalar(newRAINRT) && isnumeric(newRAINRT) && newRAINRT >= 0, 'Mod5:setRAINRT:BadRAINRT', ...
         'Input RAINRT (rain rate in mm/hour) must be scalar, positive, numeric.');
       MC.RAINRT = newRAINRT;
     end % set.RAINRT
     function MC = set.GNDALT(MC, newGNDALT)
-      assert(isscalar(newGNDALT) && isnumeric(newGNDALT) && abs(newGNDALT) <= 6, 'MODTRANCase:setGNDALT:BadGNDALT', ...
+      assert(isscalar(newGNDALT) && isnumeric(newGNDALT) && abs(newGNDALT) <= 6, 'Mod5:setGNDALT:BadGNDALT', ...
         'Input GNDALT must be scalar, numeric and between -6 km and 6 km.');
       MC.GNDALT = newGNDALT;
     end % set.GNDALT
@@ -7503,7 +7503,7 @@ classdef MODTRANCase
       if isempty(newH1)
         newH1 = 0;
       end
-      assert(isscalar(newH1) && isnumeric(newH1) && newH1 >= 0,'MODTRANCase:setH1:BadH1',...
+      assert(isscalar(newH1) && isnumeric(newH1) && newH1 >= 0,'Mod5:setH1:BadH1',...
         'Input H1 (LOS initial altitude in km) must be scalar, numeric and positive.')
       MC.H1 = newH1;
     end % set.H1
@@ -7511,7 +7511,7 @@ classdef MODTRANCase
       if isempty(newH2)
         newH2 = 0;
       end
-      assert(isscalar(newH2) && isnumeric(newH2) && newH2 >= 0,'MODTRANCase:setH2:BadH2',...
+      assert(isscalar(newH2) && isnumeric(newH2) && newH2 >= 0,'Mod5:setH2:BadH2',...
         'Input H2 (LOS final height or tangent altitude in km) must be scalar, numeric and positive.')
       MC.H2 = newH2;
     end % set.H2
@@ -7519,7 +7519,7 @@ classdef MODTRANCase
       if isempty(newANGLE)
         newANGLE = 0;
       end
-      assert(isscalar(newANGLE) && isnumeric(newANGLE) && newANGLE >= 0 && newANGLE <= 180,'MODTRANCase:setANGLE:BadANGLE',...
+      assert(isscalar(newANGLE) && isnumeric(newANGLE) && newANGLE >= 0 && newANGLE <= 180,'Mod5:setANGLE:BadANGLE',...
         'Input ANGLE (LOS initial zenith angle in degrees) must be scalar, numeric, positive and <= 180.')
       MC.ANGLE = newANGLE;
     end % set.ANGLE
@@ -7527,7 +7527,7 @@ classdef MODTRANCase
       if isempty(newRANGE)
         newRANGE = 0;
       end
-      assert(isscalar(newRANGE) && isnumeric(newRANGE) && newRANGE >= 0,'MODTRANCase:setRANGE:BadRANGE',...
+      assert(isscalar(newRANGE) && isnumeric(newRANGE) && newRANGE >= 0,'Mod5:setRANGE:BadRANGE',...
         'Input RANGE (LOS total length in km) must be scalar, numeric and positive.')
       MC.RANGE = newRANGE;
     end % set.RANGE
@@ -7535,7 +7535,7 @@ classdef MODTRANCase
       if isempty(newBETA)
         newBETA = 0;
       end
-      assert(isscalar(newBETA) && isnumeric(newBETA) && newBETA >= 0,'MODTRANCase:setBETA:BadBETA',...
+      assert(isscalar(newBETA) && isnumeric(newBETA) && newBETA >= 0,'Mod5:setBETA:BadBETA',...
         'Input BETA (Earth centre angle subtended by H1 and H2 in degrees) must be scalar, numeric and positive.')
       MC.BETA = newBETA;
     end % set.BETA
@@ -7543,7 +7543,7 @@ classdef MODTRANCase
       if isempty(newRO)
         newRO = 0;
       end
-      assert(isscalar(newRO) && isnumeric(newRO) && newRO >= 0,'MODTRANCase:setRO:BadRO',...
+      assert(isscalar(newRO) && isnumeric(newRO) && newRO >= 0,'Mod5:setRO:BadRO',...
         'Input RO (Radius of the earth in km) must be scalar, numeric and positive.')
       MC.RO = newRO;
     end % set.RO
@@ -7558,7 +7558,7 @@ classdef MODTRANCase
       if isempty(newPHI)
         newPHI = 0;
       end
-      assert(isscalar(newPHI) && isnumeric(newPHI) && newPHI >= 0 && newPHI <= 180,'MODTRANCase:setPHI:BadPHI',...
+      assert(isscalar(newPHI) && isnumeric(newPHI) && newPHI >= 0 && newPHI <= 180,'Mod5:setPHI:BadPHI',...
         'Input PHI (Zenith angle at H2 toward H1 in degrees) must be scalar, numeric, positive and <= 180.')
       MC.PHI = newPHI;
     end % set.PHI
@@ -7567,12 +7567,12 @@ classdef MODTRANCase
       if isempty(newIDAY)
         newIDAY = 0;
       end
-      assert((isscalar(newIDAY) || numel(newIDAY) == 3) && isnumeric(newIDAY), 'MODTRANCase:setIDAY:BadIDAY', ...
+      assert((isscalar(newIDAY) || numel(newIDAY) == 3) && isnumeric(newIDAY), 'Mod5:setIDAY:BadIDAY', ...
         'Input IDAY (Day of year) must be scalar, numeric and <= 365, or a 3 element vector [Year Month Day].');
       if numel(newIDAY) == 3
         newIDAY = datenum(newIDAY) - datenum([newIDAY(1) 1 1]) +1;
       else
-        assert(newIDAY >= 0 && newIDAY <= 365, 'MODTRANCase:setIDAY:BadIDAY', ...
+        assert(newIDAY >= 0 && newIDAY <= 365, 'Mod5:setIDAY:BadIDAY', ...
         'Input IDAY (Day of year) must be scalar, numeric and <= 365, or a 3 element vector [Year Month Day].');
       end
       MC.IDAY = newIDAY;
@@ -7581,7 +7581,7 @@ classdef MODTRANCase
       if isempty(newISOURC)
         newISOURC = 0; % extraterrestrial source is the sun by default
       end
-      assert(isscalar(newISOURC) && isnumeric(newISOURC) && any(newISOURC == [0 1]), 'MODTRANCase:setISOURC:BadISOURC', ...
+      assert(isscalar(newISOURC) && isnumeric(newISOURC) && any(newISOURC == [0 1]), 'Mod5:setISOURC:BadISOURC', ...
         'Input ISOURC (Extraterrestrial Source) must be either 0 for the Sun or 1 for the Moon.');
       MC.ISOURC = newISOURC;
     end % set.ISOURC
@@ -7589,7 +7589,7 @@ classdef MODTRANCase
       if isempty(newANGLEM)
         newANGLEM = 0;
       end
-      assert(isscalar(newANGLEM) && isnumeric(newANGLEM) && newANGLEM >= -180 && newANGLEM <= 180, 'MODTRANCase:setANGLEM:BadANGLEM', ...
+      assert(isscalar(newANGLEM) && isnumeric(newANGLEM) && newANGLEM >= -180 && newANGLEM <= 180, 'Mod5:setANGLEM:BadANGLEM', ...
         'Input ANGLEM (Phase angle of the Moon) must be scalar from -180 to 180 in degrees.');
       MC.ANGLEM = newANGLEM;
     end % set.ANGLEM
@@ -7598,7 +7598,7 @@ classdef MODTRANCase
       if isempty(newIPARM)
         newIPARM = 0;
       end
-      assert(isscalar(newIPARM) && isnumeric(newIPARM) && any(newIPARM == [0 1 2 10 11 12]), 'MODTRANCase:setIPARM:BadIPARM', ...
+      assert(isscalar(newIPARM) && isnumeric(newIPARM) && any(newIPARM == [0 1 2 10 11 12]), 'Mod5:setIPARM:BadIPARM', ...
         'Input IPARM (Solar/Lunar scattering geometry control) must be scalar and one of 0, 1, 2, 10, 11 or 12.');
       MC.IPARM = newIPARM;
     end % set.IPARM
@@ -7606,7 +7606,7 @@ classdef MODTRANCase
       if isempty(newIPH)
         newIPH = 0;
       end
-      assert(isscalar(newIPH) && isnumeric(newIPH) && any(newIPH == [0 1 2]), 'MODTRANCase:setIPH:BadIPH', ...
+      assert(isscalar(newIPH) && isnumeric(newIPH) && any(newIPH == [0 1 2]), 'Mod5:setIPH:BadIPH', ...
         'Input IPH (Aerosol phase function selector) must be scalar and one of 0, 1, or 2.');
       MC.IPH = newIPH;
     end % set.IPH
@@ -7615,7 +7615,7 @@ classdef MODTRANCase
       if isempty(newPARM1)
         newPARM1 = 0;
       end
-      assert(isscalar(newPARM1) && isnumeric(newPARM1), 'MODTRANCase:setPARM1:BadPARM1', ...
+      assert(isscalar(newPARM1) && isnumeric(newPARM1), 'Mod5:setPARM1:BadPARM1', ...
         'Input PARM1 (solar/lunar radiation scattering geometry parameter) must be scalar and numeric.');
       MC.PARM1 = newPARM1;
     end % set.PARM1
@@ -7623,7 +7623,7 @@ classdef MODTRANCase
       if isempty(newPARM2)
         newPARM2 = 0;
       end
-      assert(isscalar(newPARM2) && isnumeric(newPARM2), 'MODTRANCase:setPARM2:BadPARM2', ...
+      assert(isscalar(newPARM2) && isnumeric(newPARM2), 'Mod5:setPARM2:BadPARM2', ...
         'Input PARM2 (solar/lunar radiation scattering geometry parameter) must be scalar and numeric.');
       MC.PARM2 = newPARM2;
     end % set.PARM2
@@ -7631,7 +7631,7 @@ classdef MODTRANCase
       if isempty(newPARM3)
         newPARM3 = 0;
       end
-      assert(isscalar(newPARM3) && isnumeric(newPARM3), 'MODTRANCase:setPARM3:BadPARM3', ...
+      assert(isscalar(newPARM3) && isnumeric(newPARM3), 'Mod5:setPARM3:BadPARM3', ...
         'Input PARM3 (solar/lunar radiation scattering geometry parameter) must be scalar and numeric.');
       MC.PARM3 = newPARM3;
     end % set.PARM3
@@ -7639,7 +7639,7 @@ classdef MODTRANCase
       if isempty(newPARM4)
         newPARM4 = 0;
       end
-      assert(isscalar(newPARM4) && isnumeric(newPARM4), 'MODTRANCase:setPARM4:BadPARM4', ...
+      assert(isscalar(newPARM4) && isnumeric(newPARM4), 'Mod5:setPARM4:BadPARM4', ...
         'Input PARM4 (solar/lunar radiation scattering geometry parameter) must be scalar and numeric.');
       MC.PARM4 = newPARM4;
     end % set.PARM4
@@ -7647,10 +7647,10 @@ classdef MODTRANCase
       if isempty(newTIME)
         newTIME = 0;
       end
-      assert((isscalar(newTIME) || numel(newTIME) == 3) && isnumeric(newTIME) && newTIME(1) >= 0 && newTIME(1) <= 24, 'MODTRANCase:setTIME:BadTIME', ...
+      assert((isscalar(newTIME) || numel(newTIME) == 3) && isnumeric(newTIME) && newTIME(1) >= 0 && newTIME(1) <= 24, 'Mod5:setTIME:BadTIME', ...
         'Input TIME (Greenwich Time now UTC) must be scalar, numeric and from 0 to 24, or a vector [Hour Minute Second].');
       if numel(newTIME) == 3
-        assert(all(newTIME([2 3]) >= 0) && all(newTIME([2 3]) <= 60), 'MODTRANCase:setTIME:BadTIME', ...
+        assert(all(newTIME([2 3]) >= 0) && all(newTIME([2 3]) <= 60), 'Mod5:setTIME:BadTIME', ...
           'Input TIME (Greenwich Time now UTC) must be scalar, numeric and from 0 to 24, or a vector [Hour Minute Second].');
         newTIME = newTIME(1) + newTIME(2)/60 + newTIME(3)/3600; % Convert to decimal hours
       end
@@ -7660,7 +7660,7 @@ classdef MODTRANCase
       if isempty(newPSIPO)
         newPSIPO = 0;
       end
-      assert(isscalar(newPSIPO) && isnumeric(newPSIPO) && newPSIPO >= 0 && newPSIPO <= 360, 'MODTRANCase:setPSIPO:BadPSIPO', ...
+      assert(isscalar(newPSIPO) && isnumeric(newPSIPO) && newPSIPO >= 0 && newPSIPO <= 360, 'Mod5:setPSIPO:BadPSIPO', ...
         'Input PSIPO (True path azimuth from H1 to H2 or from H2 to H1) must be scalar, numeric and from 0 to 360 degrees.');
       MC.PSIPO = newPSIPO;
     end % set.PSIPO
@@ -7668,28 +7668,28 @@ classdef MODTRANCase
       if isempty(newG)
         newG = 0;
       end
-      assert(isscalar(newG) && isnumeric(newG) && newG >= -1 && newG <= 1, 'MODTRANCase:setG:BadG', ...
+      assert(isscalar(newG) && isnumeric(newG) && newG >= -1 && newG <= 1, 'Mod5:setG:BadG', ...
         'Input G (Henyey-Greenstein asymmetry parameter) must be scalar, numeric and from -1 to 1.');
       MC.G = newG;
     end % set.G
     %% Card 4 set methods (Spectral range and resolution)
     function MC = set.V1(MC, newV1)
-      assert(isscalar(newV1) && isnumeric(newV1) && newV1 >= 0, 'MODTRANCase:setV1:BadV1',...
+      assert(isscalar(newV1) && isnumeric(newV1) && newV1 >= 0, 'Mod5:setV1:BadV1',...
         'Input V1 (Start of spectral range) must be scalar, numeric and >= 0.');
       MC.V1 = newV1;
     end % set.V1
     function MC = set.V2(MC, newV2)
-      assert(isscalar(newV2) && isnumeric(newV2) && newV2 > 0, 'MODTRANCase:setV2:BadV2',...
+      assert(isscalar(newV2) && isnumeric(newV2) && newV2 > 0, 'Mod5:setV2:BadV2',...
         'Input V2 (End of spectral range) must be scalar, numeric and > 0.');
       MC.V2 = newV2;
     end % set.V2
     function MC = set.DV(MC, newDV)
-      assert(isscalar(newDV) && isnumeric(newDV) && newDV > 0, 'MODTRANCase:setDV:BadDV',...
+      assert(isscalar(newDV) && isnumeric(newDV) && newDV > 0, 'Mod5:setDV:BadDV',...
         'Input DV (Spectral increment) must be scalar, numeric and > 0.');
       MC.DV = newDV;
     end % set.DV
     function MC = set.FWHM(MC, newFWHM)
-      assert(isscalar(newFWHM) && isnumeric(newFWHM) && newFWHM > 0, 'MODTRANCase:setFWHM:BadFWHM',...
+      assert(isscalar(newFWHM) && isnumeric(newFWHM) && newFWHM > 0, 'Mod5:setFWHM:BadFWHM',...
         'Input FWHM (Full-Width at Half Maximum of the scanning filter) must be scalar, numeric and > 0.');
       MC.FWHM = newFWHM;
     end % set.FWHM
@@ -7697,7 +7697,7 @@ classdef MODTRANCase
       if isempty(newYFLAG)
         newYFLAG = ' ';
       end
-      assert(ischar(newYFLAG) && numel(newYFLAG) == 1 && any(upper(newYFLAG) == ' TR'), 'MODTRANCase:setYFLAG:BadYFLAG', ...
+      assert(ischar(newYFLAG) && numel(newYFLAG) == 1 && any(upper(newYFLAG) == ' TR'), 'Mod5:setYFLAG:BadYFLAG', ...
         'Input YFLAG (Transmittance/Radiance specifier for plot files) must be a single character, one of '' '', ''T'' or ''R''.');
       MC.YFLAG = newYFLAG;
     end % set.YFLAG
@@ -7705,7 +7705,7 @@ classdef MODTRANCase
       if isempty(newXFLAG)
         newXFLAG = ' ';
       end
-      assert(ischar(newXFLAG) && numel(newXFLAG) == 1 && any(upper(newXFLAG) == ' WMN'), 'MODTRANCase:setXFLAG:BadXFLAG', ...
+      assert(ischar(newXFLAG) && numel(newXFLAG) == 1 && any(upper(newXFLAG) == ' WMN'), 'Mod5:setXFLAG:BadXFLAG', ...
         'Input XFLAG (Spectral units specifier for plot files) must be a single character, one of '' '', ''W'', ''M'' or ''N''.');
       MC.XFLAG = newXFLAG;
     end % set.XFLAG
@@ -7713,7 +7713,7 @@ classdef MODTRANCase
       if isempty(newDLIMIT)
         newDLIMIT = '        ';
       end
-      assert(ischar(newDLIMIT) && size(newDLIMIT, 1) == 1 && size(newDLIMIT,2) <= 8, 'MODTRANCase:setDLIMIT:BadDLIMIT', ...
+      assert(ischar(newDLIMIT) && size(newDLIMIT, 1) == 1 && size(newDLIMIT,2) <= 8, 'Mod5:setDLIMIT:BadDLIMIT', ...
         'Input DLIMIT (Plot file multiple plot delimiter) must be a character string of 8 or fewer characters.');
       newDLIMIT = [newDLIMIT blanks(8 - length(newDLIMIT))]; % Pad out to 8 characters
       MC.DLIMIT = newDLIMIT;
@@ -7722,22 +7722,22 @@ classdef MODTRANCase
       if isempty(newFLAGS)
         newFLAGS = '       ';
       end
-      assert(ischar(newFLAGS) && size(newFLAGS,1) == 1 && size(newFLAGS,2) <= 7, 'MODTRANCase:setFLAGS:BadFLAGS', ...
+      assert(ischar(newFLAGS) && size(newFLAGS,1) == 1 && size(newFLAGS,2) <= 7, 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS (Unit, convolution and flux table controls) must be a character string of length 7 or less.');
       % Check each flag for correct range
-      assert(any(newFLAGS(1:1) == ' WMN'), 'MODTRANCase:setFLAGS:BadFLAGS', ...
+      assert(any(newFLAGS(1:1) == ' WMN'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(1:1) (Unit specifier for V1, V2, DV and FWHM) must be '' '', ''W'', ''M'' or ''N''.');
-      assert(any(newFLAGS(2:2) == ' 1T2R3G4S5C6H7U'), 'MODTRANCase:setFLAGS:BadFLAGS', ...
+      assert(any(newFLAGS(2:2) == ' 1T2R3G4S5C6H7U'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(2:2) (Convolution instrument function specifier) must be '' '', ''1'', ''T'', ''2'', ''R'', ''3'', ''G'', ''4'', ''S'', ''5'', ''C'', ''6'', ''H'', ''7'' or ''U''.');
-      assert(any(newFLAGS(3:3) == ' AR'), 'MODTRANCase:setFLAGS:BadFLAGS', ...
+      assert(any(newFLAGS(3:3) == ' AR'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(3:3) (FWHM absolute/relative specifier) must be '' '', ''A'', or ''R''.');
-      assert(any(newFLAGS(4:4) == ' A'), 'MODTRANCase:setFLAGS:BadFLAGS', ...
+      assert(any(newFLAGS(4:4) == ' A'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(4:4) (Convolve only total quantities or all quantities) must be '' '' or ''A''.');
-      assert(any(newFLAGS(5:5) == ' sS'), 'MODTRANCase:setFLAGS:BadFLAGS', ...
+      assert(any(newFLAGS(5:5) == ' sS'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(5:5) (Saving of unconvolved results) must be '' '', ''s'', or ''S''.');
-      assert(any(newFLAGS(6:6) == ' rR'), 'MODTRANCase:setFLAGS:BadFLAGS', ...
+      assert(any(newFLAGS(6:6) == ' rR'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(6:6) (Use of saved results for convolution) must be '' '', ''r'' or ''R''.');
-      assert(any(newFLAGS(7:7) == ' tTfF'), 'MODTRANCase:setFLAGS:BadFLAGS', ...
+      assert(any(newFLAGS(7:7) == ' tTfF'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(7:7) (Wrapping of flux table results) must be '' '', ''t'', ''T'', ''f'' or ''F''.');
       MC.FLAGS = newFLAGS;
     end % set.FLAGS
@@ -7746,7 +7746,7 @@ classdef MODTRANCase
       if isempty(newIRPT)
         newIRPT = 0;
       end
-      assert(isscalar(newIRPT) && isnumeric(newIRPT) && any(newIRPT == [-4 -3 -1 0 1 3 4]), 'MODTRANCase:setIRPT:BadIRPT', ...
+      assert(isscalar(newIRPT) && isnumeric(newIRPT) && any(newIRPT == [-4 -3 -1 0 1 3 4]), 'Mod5:setIRPT:BadIRPT', ...
         'Input IRPT (Sub-case repeat control flag) must be scalar, numeric and one of -4, -3, -1, 0, 1, 3 or 4');
       MC.IRPT = newIRPT;
     end % set.IRPT
@@ -7759,21 +7759,21 @@ classdef MODTRANCase
       % written between the starting and ending times.
       ResultFile = dir([MODCase(1).CaseName '.tp7']); % The main output
       if isempty(ResultFile)
-        warning('MODTRANCase:ProcessTp7:NoTape7', ...
+        warning('Mod5:ProcessTp7:NoTape7', ...
           'No output .tp7 was found for case %s. Make sure that MODTRAN executed correctly.', MODCase(1).CaseName);
         return;
       end
       OneSecond = 1/24/60/60;
       if ResultFile.datenum - MODCase(1).RunStartSerTime < -OneSecond
-        warning('MODTRANCase_Run:ResultFileOld',...
+        warning('Mod5_Run:ResultFileOld',...
           'The %s.tp7 output file found for this case appears to precede the start time of the run and has therefore been ignored.', ...
           MODCase(1).CaseName);
       else
         
-        [Data, Heads] = MODTRANCase.Read7([MODCase(1).CaseName '.tp7']);
+        [Data, Heads] = Mod5.Read7([MODCase(1).CaseName '.tp7']);
         % Distribute the data
         if size(Data,1) ~= numel(MODCase)
-          warning('MODTRANCase_Run:tp7DataBlocks',...
+          warning('Mod5_Run:tp7DataBlocks',...
             'The number of data blocks in file %s does not match the number of sub-cases.', [MODCase(1).CaseName '.tp7']);
         end
         for iSubCase = 1:min(numel(MODCase), size(Data,1))
@@ -7783,11 +7783,11 @@ classdef MODTRANCase
           MODCase(iSubCase).tp7.IrradUnits = 'W/cm^2/cm^-1';
           MODCase(iSubCase).tp7.xLabel = 'Wavenumber (cm^{-1})';
           % Fix the headers
-          FixedHeads = MODTRANCase.FixHeaders(Heads{iSubCase});
+          FixedHeads = Mod5.FixHeaders(Heads{iSubCase});
           % Put in the headers
           MODCase(iSubCase).tp7.Headers = FixedHeads;
           % Look up the header descriptions
-          MODCase(iSubCase).tp7.HeadDescr = MODTRANCase.LookupHeaders(FixedHeads);
+          MODCase(iSubCase).tp7.HeadDescr = Mod5.LookupHeaders(FixedHeads);
           
           for iHead = 1:length(Heads{iSubCase}) % Run through the columns of data
             if isvarname(FixedHeads{iHead})
@@ -7808,18 +7808,18 @@ classdef MODTRANCase
       end
       OneSecond = 1/24/60/60;
       if ResultFile.datenum - MODCase(1).RunStartSerTime < -OneSecond
-        warning('MODTRANCase_Run:ResultFileOld',...
+        warning('Mod5_Run:ResultFileOld',...
           'The %s.7sc output file found for this case appears to precede the start time of the run and has therefore been ignored.', ...
           MODCase(1).CaseName);
       else
         
-        [Data, Heads] = MODTRANCase.Read7([MODCase(1).CaseName '.7sc']);
+        [Data, Heads] = Mod5.Read7([MODCase(1).CaseName '.7sc']);
         if numel(Data) == 1 && isempty(Data{1})
           return; % Nothing to be done - there is no data in the .7sc file
         end
         % Distribute the data
         if size(Data,1) ~= numel(MODCase)
-          warning('MODTRANCase_Run:sc7DataBlocks',...
+          warning('Mod5_Run:sc7DataBlocks',...
             'The number of data blocks in file %s does not match the number of sub-cases.', [MODCase(1).CaseName '.7sc']);
         end
         for iSubCase = 1:min(numel(MODCase), size(Data,1))
@@ -7827,17 +7827,17 @@ classdef MODTRANCase
             continue; % sorry, no convolved data for this sub-case
           end
           % Fix the headers
-          FixedHeads = MODTRANCase.FixHeaders(Heads{iSubCase});
+          FixedHeads = Mod5.FixHeaders(Heads{iSubCase});
           % Put in the headers
           MODCase(iSubCase).sc7.Headers = FixedHeads;
           % Look up the header descriptions
-          MODCase(iSubCase).sc7.HeadDescr = MODTRANCase.LookupHeaders(FixedHeads);
+          MODCase(iSubCase).sc7.HeadDescr = Mod5.LookupHeaders(FixedHeads);
           
           % Check the units in the case
           switch upper(MODCase(iSubCase).FLAGS(1))
             case {' ', 'W'}
               if ~strcmp(FixedHeads{1}, 'FREQ')
-                warning('MODTRANCase_Run_Process7sc:UnitInconsistency', ...
+                warning('Mod5_Run_Process7sc:UnitInconsistency', ...
                   'Spectral unit inconsistency (cm^-1) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
               end
               MODCase(iSubCase).sc7.SpectralUnits = 'cm^-1';
@@ -7846,7 +7846,7 @@ classdef MODTRANCase
               MODCase(iSubCase).sc7.xLabel = 'Wavenumber (cm^{-1})';
             case 'M'
               if ~strcmp(FixedHeads{1}, 'FREQMCRN')
-                warning('MODTRANCase_Run_Process7sc:UnitInconsistency', ...
+                warning('Mod5_Run_Process7sc:UnitInconsistency', ...
                   'Spectral unit inconsistency (micron) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
               end
               MODCase(iSubCase).sc7.SpectralUnits = [char(181) 'm'];
@@ -7855,7 +7855,7 @@ classdef MODTRANCase
               MODCase(iSubCase).sc7.xLabel = ['Wavelength (' char(181) 'm)'];
             case 'N'
               if ~strcmp(FixedHeads{1}, 'FREQNM')
-                warning('MODTRANCase_Run_Process7sc:UnitInconsistency', ...
+                warning('Mod5_Run_Process7sc:UnitInconsistency', ...
                   'Spectral unit inconsistency (nm) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
               end              
               MODCase(iSubCase).sc7.SpectralUnits = 'nm';
@@ -7863,7 +7863,7 @@ classdef MODTRANCase
               MODCase(iSubCase).sc7.IrradUnits = [char(181) 'W/cm^2/nm'];
               MODCase(iSubCase).sc7.xLabel = 'Wavelength (nm)';
             otherwise
-              warning('MODTRANCase_Run_Process7sc:BadFLAGS', ...
+              warning('Mod5_Run_Process7sc:BadFLAGS', ...
                 'FLAGS(1) in subcase %s(%i) is not valid, wavenumber units cm^-1 assumed.', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
               MODCase(iSubCase).sc7.SpectralUnits = 'cm^-1';
               MODCase(iSubCase).sc7.RadianceUnits = 'W/sr/cm^2/cm^-1';
@@ -7894,7 +7894,7 @@ classdef MODTRANCase
         if strcmpi(PlotWhat{1},'ALL')
           PlotWhat = MODCase(iCase).(WhichStruct).Headers; 
         end
-        Descriptions = MODTRANCase.LookupHeaders(PlotWhat);
+        Descriptions = Mod5.LookupHeaders(PlotWhat);
         IsTransmittance = strfind(Descriptions, 'Transmittance');
         IsRadiance = strfind(Descriptions, 'Radiance');
         IsDepth = strfind(Descriptions, 'Depth');
@@ -8019,7 +8019,7 @@ classdef MODTRANCase
         hold off;
       end
       if isempty(plothandles)
-        warning('MODTRANCase:Plot7:NothingToPlot', ...
+        warning('Mod5:Plot7:NothingToPlot', ...
           'The requested data is not available for plotting. Ensure that your case is correctly configured and that MODTRAN has executed correctly.');
       end
     end % Plot7
@@ -8033,7 +8033,7 @@ classdef MODTRANCase
       plothandle = [];
       PlotWhat = upper(PlotWhat);
       % No input checking is done - should have been done by calling function
-      Description = MODTRANCase.LookupHeaders(PlotWhat);
+      Description = Mod5.LookupHeaders(PlotWhat);
       IsTransmittance = ~isempty(cell2mat(strfind(Description, 'Transmittance')));
       IsRadiance = ~isempty(cell2mat(strfind(Description, 'Radiance')));
       IsDepth = ~isempty(cell2mat(strfind(Description, 'Depth')));
@@ -8168,7 +8168,7 @@ classdef MODTRANCase
         hold off;
       end
       if isempty(plothandle)
-        warning('MODTRANCase:Plot7ByCase:NoData', ...
+        warning('Mod5:Plot7ByCase:NoData', ...
           'The requested plot data was not available for Plot7. Ensure that your case is correctly configured and that MODTRAN has executed correctly.')
       end
     end % Plot7ByCase
@@ -8180,11 +8180,11 @@ classdef MODTRANCase
       end
       OneSecond = 1/24/60/60;
       if ResultFile.datenum - MODCase(1).RunStartSerTime < -OneSecond
-        warning('MODTRANCase_Run:ResultFileOld',...
+        warning('Mod5_Run:ResultFileOld',...
           'The %s plot output file found for this case appears to precede the start time of the run and has therefore been ignored.', ...
           MODCase(1).CaseName);
       else
-        PlotData = MODTRANCase.ReadPlt(ResultFile.name);
+        PlotData = Mod5.ReadPlt(ResultFile.name);
         % Distribute the plot data to the cases, and set the units
         % Assume that a block of data will occur in the plot data for
         % each sub-case that has the YFLAG set to T or R.
@@ -8222,7 +8222,7 @@ classdef MODTRANCase
               Head = 'FREQ'; % Don't know what else to do ...
           end
           if iBlock > size(PlotData,1)
-            warning('MODTRANCase_ProcessPlots:InsufficientPlotData', ...
+            warning('Mod5_ProcessPlots:InsufficientPlotData', ...
               'There is insufficient data in the plot file to assign to the sub-cases in %s.', MODCase(iCase).CaseName);
             break; % Abandon effort to assign plot data
           end
@@ -8255,7 +8255,7 @@ classdef MODTRANCase
         end
         % Should check where iBlock ends up and warn if not all plot data was distributed
         if iBlock ~= size(PlotData,1)
-          warning('MODTRANCase:ProcessPlt:BlockCountMismatch', ...
+          warning('Mod5:ProcessPlt:BlockCountMismatch', ...
             'There is a .plt file block count mismatch in case %s', MODCase(1).CaseName)
         end
       end
@@ -8268,11 +8268,11 @@ classdef MODTRANCase
       end
       OneSecond = 1/24/60/60;
       if ResultFile.datenum - MODCase(1).RunStartSerTime < -OneSecond
-        warning('MODTRANCase_Run:ResultFileOld',...
+        warning('Mod5_Run:ResultFileOld',...
           'The %s plot output file found for this case appears to precede the start time of the run and has therefore been ignored.', ...
           MODCase(1).CaseName);
       else
-        PlotData = MODTRANCase.ReadPlt(ResultFile.name);
+        PlotData = Mod5.ReadPlt(ResultFile.name);
         % Distribute the plot data to the cases, and set the units
         % Results in .psc are determined by FLAGS(1)
         iBlock = 0;
@@ -8309,7 +8309,7 @@ classdef MODTRANCase
               Head = 'FREQ'; % Don't know what else to do ...
           end
           if iBlock > size(PlotData,1)
-            warning('MODTRANCase_ProcessPlots:InsufficientPlotData', ...
+            warning('Mod5_ProcessPlots:InsufficientPlotData', ...
               'There is insufficient data in the .psc plot file to assign to the sub-cases in %s.', MODCase(iCase).CaseName);
             break; % Abandon effort to assign plot data
           end
@@ -8341,7 +8341,7 @@ classdef MODTRANCase
           end
         end
         if iBlock ~= size(PlotData,1)
-          warning('MODTRANCase:ProcessPsc:BlockCountMismatch', ...
+          warning('Mod5:ProcessPsc:BlockCountMismatch', ...
             'There is a .psc file block count mismatch in case %s', MODCase(1).CaseName)
         end        
       end
@@ -8356,17 +8356,17 @@ classdef MODTRANCase
       end
       OneSecond = 1/24/60/60;
       if ResultFile.datenum - MODCase(1).RunStartSerTime < -OneSecond
-        warning('MODTRANCase:ProcessChn:ResultFileOld',...
+        warning('Mod5:ProcessChn:ResultFileOld',...
           'The %s.chn output file found for this case appears to precede the start time of the run and has therefore been ignored.', ...
           MODCase(1).CaseName);
       else % Read the data from the .chn file and distribute to the sub-cases
-        [Data, Descr, ColHeads] = MODTRANCase.ReadChn([MODCase(1).CaseName '.chn']);
+        [Data, Descr, ColHeads] = Mod5.ReadChn([MODCase(1).CaseName '.chn']);
         iBlock = 0;
         for iCase = 1:numel(MODCase)
           if upper(MODCase(iCase).LFLTNM) == 'T'
             iBlock = iBlock + 1;
             if iBlock > numel(Data)
-              warning('MODTRANCase:ProcessChn:InsufficientData', ...
+              warning('Mod5:ProcessChn:InsufficientData', ...
                 'There were insufficient data blocks in %s.chn to distribute to qualifying sub-cases.', MODCase(1).CaseName);
               return; % Abandon data distribution
             end
@@ -8376,7 +8376,7 @@ classdef MODTRANCase
             switch MODCase(iCase).IEMSCT
               case 0 % Transmittance mode
                 if isempty(strfind(ColHeads{iBlock}(2,:),'EXTINCTION'))
-                  warning('MODTRANCase:ProcessChn:UnexpectedHeaders', ...
+                  warning('Mod5:ProcessChn:UnexpectedHeaders', ...
                     'Extinction data was expected in .chn data for case %s(%i), but headers do not concur.', MODCase(iCase).CaseName, ...
                     MODCase(iCase).CaseIndex);
                 end
@@ -8389,7 +8389,7 @@ classdef MODTRANCase
                 MODCase(iCase).chn.SpecMaxNm = Data{iBlock}(:,7);
               case {1 2 4} % Radiance modes, mode 4 is actually MODTRAN 5
                 if isempty(strfind(ColHeads{iBlock}(1,:),'RADIANCE'))
-                  warning('MODTRANCase:ProcessChn:UnexpectedHeaders', ...
+                  warning('Mod5:ProcessChn:UnexpectedHeaders', ...
                     'Radiance data was expected in chn data for case %s(%i), but headers do not concur.', MODCase(iCase).CaseName, ...
                     MODCase(iCase).CaseIndex);
                 end
@@ -8407,7 +8407,7 @@ classdef MODTRANCase
                 % And the description of the channel
               case 3 % Irradiance mode
                 if isempty(strfind(ColHeads{iBlock}(2,:),'IRRADIANCE'))
-                  warning('MODTRANCase:ProcessChn:UnexpectedHeaders', ...
+                  warning('Mod5:ProcessChn:UnexpectedHeaders', ...
                     'Irradiance data was expected in .chn data for case %s(%i), but headers do not concur.', MODCase(iCase).CaseName, ...
                     MODCase(iCase).CaseIndex);
                 end                
@@ -8437,18 +8437,18 @@ classdef MODTRANCase
       end
       OneSecond = 1/24/60/60;
       if ResultFile.datenum - MODCase(1).RunStartSerTime < -OneSecond
-        warning('MODTRANCase:ProcessFlx:ResultFileOld',...
+        warning('Mod5:ProcessFlx:ResultFileOld',...
           'The %s.flx output file found for this case appears to precede the start time of the run and has therefore been ignored.', ...
           MODCase(1).CaseName);
       else % Read the data from the .flx file and distribute to the sub-cases
-        Flx = MODTRANCase.ReadFlx([MODCase(1).CaseName '.flx']);
+        Flx = Mod5.ReadFlx([MODCase(1).CaseName '.flx']);
         iBlock = 0;
         for iCase = 1:numel(MODCase)
           if any(upper(MODCase(iCase).FLAGS(7)) == 'TF') 
             % Flux data should have been generated for this subcase
             iBlock = iBlock + 1;
             if iBlock > numel(Flx)
-              warning('MODTRANCase:ProcessFlx:InsufficientData', ...
+              warning('Mod5:ProcessFlx:InsufficientData', ...
                 'There were insufficient data blocks in %s.flx to distribute to qualifying sub-cases.', MODCase(1).CaseName);
               return; % Abandon data distribution
             end
@@ -8459,7 +8459,7 @@ classdef MODTRANCase
         % Is there any data left ?
         if iBlock ~= numel(Flx)
             % Issue a warning
-            warning('MODTRANCase:ProcessFlx:TooMuchData', ...
+            warning('Mod5:ProcessFlx:TooMuchData', ...
               'There were more data blocks in %s.flx than needed to distribute to qualifying sub-cases.', MODCase(1).CaseName);
         end
       end      
@@ -8514,9 +8514,9 @@ classdef MODTRANCase
     
     % Find starting and ending positions of the fields
     Stop = cumsum(FieldWidth);
-    lin = MODTRANCase.fgetl80(fid);
+    lin = Mod5.fgetl80(fid);
     while length(lin) < max(Stop) % Keep reading lines and concatenating until there is enough data to satisfy the format 
-      lin = [lin MODTRANCase.fgetl80(fid)];
+      lin = [lin Mod5.fgetl80(fid)];
     end
     Start = Stop - FieldWidth + 1;
     % Print the card name if in debug mode
@@ -8525,7 +8525,7 @@ classdef MODTRANCase
       % Find the card name in the list
       iMatch = strmatch(CardName, C.CardNames, 'exact');
       if length(iMatch) ~= 1
-        warning('MODTRANCase:CardNameNotFound','Card name not found in global list.')
+        warning('Mod5:CardNameNotFound','Card name not found in global list.')
       else
         % Print description
         fprintf(1, '%s\n', C.CardDescr{iMatch});
@@ -8554,14 +8554,14 @@ classdef MODTRANCase
     function [Card, lin] = ReadFreeCard(C, fid, FieldFormat, CardName)
     % Read a simple MODTRAN card using free format
     % Get a line
-    lin = MODTRANCase.fgetl80(fid);
+    lin = Mod5.fgetl80(fid);
     % Print the card name if in debug mode
     if C.DebugFlag
       fprintf(1,'Reading Free Format Card %s - ', CardName)
       % Find the card name in the list
       iMatch = strmatch(CardName, C.CardNames, 'exact');
       if length(iMatch) ~= 1
-        warning('MODTRANCase:CardNameNotFound','Card name not found in global list.')
+        warning('Mod5:CardNameNotFound','Card name not found in global list.')
       else
         % Print the card description
         fprintf(1, '%s\n', C.CardDescr{iMatch});
@@ -8584,7 +8584,7 @@ classdef MODTRANCase
        {'c', 'c', 'd', 'd', 'd','d','d','d','d','d','d','d','d','d','d','f', '7c'}, '1');
       [C.MODTRN, C.SPEED, C.MODEL, C.ITYPE, C.IEMSCT, C.IMULT, C.M1, C.M2, ...
        C.M3, C.M4, C.M5, C.M6, C.MDEF, C.IM, C.NOPRNT, C.TPTEMP, C.SURREF] = Card{:};
-     assert(any(upper(C.SPEED) == 'S M'), 'MODTRANCase:ReadCard1BadSPEED', ...
+     assert(any(upper(C.SPEED) == 'S M'), 'Mod5:ReadCard1BadSPEED', ...
      'Parameter SPEED on Card 1 must be one of blank, S or M. The card read contained the following:\n%s', lin);         
    
     end % ReadCard1
@@ -9028,7 +9028,7 @@ classdef MODTRANCase
         Data = [Data Card{:}];
       end
 %       if length(Data) ~= nSets * 4
-%         warning('MODTRANCase:ReadCard2D2InsufficientData','There was insufficient data provided on the 2D2 card series.')
+%         warning('Mod5:ReadCard2D2InsufficientData','There was insufficient data provided on the 2D2 card series.')
 %       end
       % Distribute the resulting data to the four variables
       iPoint = 1;
@@ -9109,7 +9109,7 @@ classdef MODTRANCase
         if MC.NWLF == 0
           MC = MC.ReadCard3B2(fid);
         elseif MC.NWLF > 0 % Read Cards 3C1 to 3C6
-          % warning('MODTRANCase:FnotReadRight','Reading of F on Cards 3C1 to 3C6 could be incorrect.')
+          % warning('Mod5:FnotReadRight','Reading of F on Cards 3C1 to 3C6 could be incorrect.')
           MC = MC.ReadCard3C1(fid);
           MC = MC.ReadCard3C2(fid);
           for iNANGLS = 1:MC.NANGLS
@@ -9139,7 +9139,7 @@ classdef MODTRANCase
         if MC.NWLF == 0
           MC = MC.WriteCard3B2(fid);
         elseif MC.NWLF > 0 % Write Cards 3C1 to 3C6
-          %warning('MODTRANCase:FnotWriteRight','Writing of F on Cards 3C1 to 3C6 could be incorrect.')
+          %warning('Mod5:FnotWriteRight','Writing of F on Cards 3C1 to 3C6 could be incorrect.')
           MC = MC.WriteCard3C1(fid);
           MC = MC.WriteCard3C2(fid);
           for iNANGLS = 1:MC.NANGLS
@@ -9836,7 +9836,7 @@ classdef MODTRANCase
         fprintf(2, 'Inputs to set.%s must be scalar and new value must be one of ', Caller);
         fprintf(2, '%d ', ValidRange);
         fprintf(2, '\n');
-        error(['MODTRANCase:set' Caller ':BadInput'],'Bad input (%d) to set.%s encountered.', Value, Caller);
+        error(['Mod5:set' Caller ':BadInput'],'Bad input (%d) to set.%s encountered.', Value, Caller);
       end
     end % ScalarIntNumeric
     function Pass = ScalarChar(MC, Value, ValidChar, Caller)
@@ -9847,9 +9847,9 @@ classdef MODTRANCase
           fprintf(2, '''%c ''', ValidChar(iChar));
         end
         fprintf(2, '\n');
-        error(['MODTRANCase:set' Caller ':BadInput'],'Bad input to set.%s encountered.', Caller);
+        error(['Mod5:set' Caller ':BadInput'],'Bad input to set.%s encountered.', Caller);
       end      
     end
   end % private methods
-end % Class MODTRANCase
+end % Class Mod5
 
