@@ -1,6 +1,6 @@
 % Mod5 MODTRAN 5 Case Examples
 % $Id$
-% Copyright 2010, D J Griffith
+% Copyright 2010, $Author$d
 %
 % Each cell in this script contains a single example. Run examples
 % individually by clicking somewhere in the cell and then clicking on the
