@@ -2925,7 +2925,7 @@ classdef Mod5
       while ~feof(fid)
         lin = [' ' fgetl(fid) ' ']; % pad front and rear with a blank        
         tok = strtok(lin, ' ');
-        if strcmpi(tok, 'FREQ') % Found a header line
+        if numel(tok) >= 4 && (strcmpi(tok(1:4), 'FREQ') || strcmpi(tok(1:4), 'WAVL'))% Found a header line
           dblock = dblock + 1;
           headers = {}; % Empty the headers cell array
           headlin1 = lin; % This will be the first header line 
