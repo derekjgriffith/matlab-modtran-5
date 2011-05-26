@@ -4722,9 +4722,9 @@ classdef Mod5
         PlotFlag = 1; % Plot data is read but not plotted
       end
       %% Setup and run the case
-      % First write the file modroot.in in the MODTRANPath
+      % First write the file mod5root.in in the MODTRANPath
       
-      modrootfid = fopen([MODTRANPath 'modroot.in'], 'wt');
+      modrootfid = fopen([MODTRANPath 'mod5root.in'], 'wt');
       try
         fprintf(modrootfid, '%s\n', MODCase(1).CaseName);
         fclose(modrootfid);
@@ -4803,13 +4803,13 @@ classdef Mod5
               MODCase(iCase).RunEndTime = MODCase(1).RunEndTime;
             end
           end
-          % Move the file modroot.in because it has a devastating effect on PcModWin if that is installed
-          % PcModWin RUNS THE WRONG CASE if modroot.in exists, because PCModWin writes to tape5, but MODTRAN
-          % ignores that and uses the file root in modroot.in instead.
-          [MoveSuccess, MoveMessage, MoveMessageID] = movefile([MODTRANPath 'modroot.in'],[MODTRANPath 'Lastmodroot.in'],'f');
-          if ~MoveSuccess && exist([MODTRANPath 'modroot.in'], 'file')
-            warning('Mod5_Run:modrootFileExists', ...
-              'The file %smodroot.in exists and this will cause PcModWin (if in use) to run the wrong case.', MODTRANPath);
+          % Move the file mod5root.in because it has a devastating effect on PcModWin if that is installed
+          % PcModWin RUNS THE WRONG CASE if mod5root.in exists, because PCModWin writes to tape5, but MODTRAN
+          % ignores that and uses the file root in mod5root.in instead.
+          [MoveSuccess, MoveMessage, MoveMessageID] = movefile([MODTRANPath 'mod5root.in'],[MODTRANPath 'Lastmod5root.in'],'f');
+          if ~MoveSuccess && exist([MODTRANPath 'mod5root.in'], 'file')
+            warning('Mod5_Run:mod5rootFileExists', ...
+              'The file %smod5root.in exists and this will cause PcModWin (if in use) to run the wrong case.', MODTRANPath);
           end
           %% Read MODTRAN results
           % An effort should be made to check that MODTRAN terminated normally
