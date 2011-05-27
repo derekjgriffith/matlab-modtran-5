@@ -2947,13 +2947,17 @@ classdef Mod5
             beststarth1(beststarth1 > length(headlin1)) = length(headlin1); % constrain to maximum of headlin1 
             beststoph1 = stop;
             beststoph1(beststoph1 > length(headlin1)) = length(headlin1);
-            beststoph1(end) = length(headlin1);
+            %beststoph1(end) = length(headlin1);
+            % Attempt to expand the headers
+            [beststarth1, beststoph1] = Mod5.DilateHeaders(beststarth1, beststoph1, headlin1);
             % Do the same for the second header line
             beststarth2 = start;
             beststarth2(beststarth2 > length(headlin2)) = length(headlin2); % constrain to maximum of headlin2 
             beststoph2 = stop;
             beststoph2(beststoph2 > length(headlin2)) = length(headlin2);
-            beststoph2(end) = length(headlin2);
+            %beststoph2(end) = length(headlin2);
+            [beststarth2, beststoph2] = Mod5.DilateHeaders(beststarth2, beststoph2, headlin2);
+            
             % Split up the first header line
             for iii = 1:(length(start))
                 headers{iii} = headlin1(beststarth1(iii):beststoph1(iii));
@@ -2981,7 +2985,10 @@ classdef Mod5
             beststarth1(beststarth1 > length(headlin1)) = length(headlin1); % constrain to maximum of headlin1 
             beststoph1 = stop;
             beststoph1(beststoph1 > length(headlin1)) = length(headlin1);
-            beststoph1(end) = length(headlin1);
+            %beststoph1(end) = length(headlin1);
+            % Attempt to expand the headers
+            [beststarth1, beststoph1] = Mod5.DilateHeaders(beststarth1, beststoph1, headlin1);
+            
             % Split up the first header line
             for iii = 1:(length(start))
                 headers{iii} = headlin1(beststarth1(iii):beststoph1(iii));
@@ -3709,6 +3716,23 @@ classdef Mod5
     end % ReadPlt
   end % Public static Methods
   methods (Access = private, Static)
+    function [start, stop] = DilateHeaders(start, stop, headlin)
+        % Attempt to expand the headers in a .7sc type file
+        % Move the header start positions to the left while the adjacent
+        % character to the left is non-blank
+        for istart = 2:numel(start)
+            while headlin(start(istart)-1) ~= ' ' && (start(istart)-1) > stop(istart - 1)  
+                start(istart) = start(istart) - 1;
+            end
+        end
+        % Move the header stop positions to the right while the
+        % adjacent character to the right is non-blank
+        for istop = 1:(numel(stop)-1)
+            while headlin(stop(istop)+1) ~= ' ' && (stop(istop)+1) < start(istop + 1)
+                stop(istop) = stop(istop) + 1;
+            end
+        end
+    end % Dilate      
     function Goodness = GoodFit(NewWv)
       % GoodFit : Experiment, leave well alone
       global OldRefl OldWv NewRefl
