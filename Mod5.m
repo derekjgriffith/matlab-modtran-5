@@ -832,7 +832,13 @@ classdef Mod5
       for iHead = 1:numel(Headers)
         switch Headers{iHead}
           case 'FREQ CM-1', FixedHeaders{iHead} = 'FREQ';
-          case 'FREQ NANOMETER', FixedHeaders{iHead} = 'FREQNM';
+          case 'FREQ (CM-1)', FixedHeaders{iHead} = 'FREQ';
+          case 'FREQ(CM-1)', FixedHeaders{iHead} = 'FREQ';
+          case 'FREQ NANOMETER', FixedHeaders{iHead} = 'WAVLNM';
+          case 'WAVLEN(NM)', FixedHeaders{iHead} = 'WAVLNM';
+          case 'WAVLEN (uM)', FixedHeaders{iHead} = 'WAVLUM';
+          case 'WAVLEN(MCRN)', FixedHeaders{iHead} = 'WAVLUM';
+          case 'FREQMCRN', FixedHeaders{iHead} = 'WAVLUM';
           case 'TRAN', FixedHeaders{iHead} = 'TRANS';
           case 'TOT TRANS', FixedHeaders{iHead} = 'TRANS';
           case 'TOTAL TRANS', FixedHeaders{iHead} = 'TRANS';
@@ -869,7 +875,7 @@ classdef Mod5
           'DEPTH', 'Optical Depth'; 'H2OTRANS', 'Water (Band Model) Transmittance'; 'CO2PTRANS', 'CO2+ Transmittance'; ...
           'O3TRANS', 'Ozone Transmittance'; 'TRACETRANS', 'Trace Gases Transmittance'; 'N2CONT', 'Nitrogen Continuum Transmittance'; ...
           'H2OCONT', 'Water Continuum Transmittance'; 'MOLECSCAT', 'Molecular Scattering Transmittance'; ...
-          'AERTRANS', 'Aerosol Transmittance'; 'HNO3TRANS', 'Nitric Acid Transmittance'; 'AERABTRANS', 'Aerosol AB Transmittance'; ...
+          'AERTRANS', 'Aerosol Transmittance'; 'HNO3TRANS', 'Nitric Acid Transmittance'; 'AERABTRANS', 'Aerosol Unabsorbed Transmittance'; ...
           'LOGTOTAL', 'Optical Depth'; 'CO2TRANS', 'Carbon Dioxide Transmittance'; ...
           'COTRANS', 'Carbon Monoxide Transmittance'; 'CH4TRANS', 'Methane Transmittance'; ...
           'N2OTRANS', 'Nitrous Oxide Transmittance'; 'O2TRANS', 'Oxygen Transmittance'; 'NH3TRANS','Ammonia Transmittance'; ...
@@ -877,12 +883,30 @@ classdef Mod5
           'SO2TRANS', 'Sulphur Dioxide Transmittance'; 'H2OOD', 'Water (Band Model) Optical Depth'; 'CO2POD', 'CO2+ Optical Depth'; ...
           'O3OD', 'Ozone Optical Depth'; 'TRACEOD', 'Trace Gases Optical Depth'; 'N2CONTOD', 'Nitrogen Continuum Optical Depth'; ...
           'H2OCOD', 'Water Continuum Optical Depth'; 'MOLECOD', 'Molecular Scattering Optical Depth'; ...
-          'AEROD', 'Aerosol Optical Depth'; 'HNO3OD', 'Nitric Acid Optical Depth'; 'AERABOD', 'Aerosol AB Optical Depth'; ...
+          'AEROD', 'Aerosol Optical Depth'; 'HNO3OD', 'Nitric Acid Optical Depth'; 'AERABOD', 'Aerosol Absorption Optical Depth'; ...
           'LOGTOTAL', 'Total Optical Depth'; 'CO2OD', 'Carbon Dioxide Optical Depth'; ...
           'COOD', 'Carbon Monoxide Optical Depth'; 'CH4OD', 'Methane Optical Depth'; ...
           'N2OOD', 'Nitrous Oxide Optical Depth'; 'O2OD', 'Oxygen Optical Depth'; 'NH3OD','Ammonia Optical Depth'; ...
           'NOOD', 'Nitric Oxide Optical Depth'; 'NO2OD','Nitrogen Dioxide Optical Depth'; ...
-          'SO2OD', 'Sulphur Dioxide Optical Depth'};
+          'SO2OD', 'Sulphur Dioxide Optical Depth'; 'COMBINTRANS', 'Total Transmittance'; 'LOGCOMBIN', 'Total Optical Depth'; ...
+          'AERCLDTRANS', 'Aerosol and Cloud Transmittance'; 'AERCLDABTRNS', 'Aerosol and Cloud Unabsorbed Transmittance'; ...
+          'CLOUDTRANS', 'Cloud Transmittance'; 'CLOUDOD', 'Cloud Optical Depth'; ...
+          'CFC11TRANS', 'CFC11 Transmittance'; 'CFC11OD', 'CFC11 Optical Depth'; ...
+          'CFC12TRANS', 'CFC12 Transmittance'; 'CFC12OD', 'CFC12 Optical Depth'; ...
+          'CFC13TRANS', 'CFC13 Transmittance'; 'CFC13OD', 'CFC13 Optical Depth'; ...
+          'CFC14TRANS', 'CFC14 Transmittance'; 'CFC14OD', 'CFC14 Optical Depth'; ...
+          'CFC22TRANS', 'CFC22 Transmittance'; 'CFC22OD', 'CFC22 Optical Depth'; ...
+          'CFC113TRANS', 'CFC113 Transmittance'; 'CFC113OD', 'CFC113 Optical Depth'; ...
+          'CFC114TRANS', 'CFC114 Transmittance'; 'CFC114OD', 'CFC114 Optical Depth'; ...
+          'CFC115TRANS', 'CFC115 Transmittance'; 'CFC115OD', 'CFC115 Optical Depth'; ...
+          'CCL4TRANS', 'Carbon Tetra-Chloride Transmittance'; 'CCL4OD', 'Carbon Tetra-Chloride Optical Depth'; ...
+          'CLONO2TRANS', 'Chlorine Nitrate Transmittance'; 'CLONO2OD', 'Chlorine Nitrate Optical Depth'; ...
+          'HNO4TRANS', 'Peroxynitrous Acid Transmittance'; 'HNO4OD', 'Peroxynitrous Acid Optical Depth'; ...
+          'N2O5TRANS', 'Dinitrogen Pentoxide Transmittance'; 'N2O5OD', 'Dinitrogen Pentoxide Optical Depth'; ...
+          'CHCL2FTRANS', 'Dichlorofluoromethane Transmittance'; 'CHCL2FOD', 'Dichlorofluoromethane Optical Depth'; ...
+          'DIREM', 'Directional Emissivity'; 'BBODYTK', 'Brightness Temperature'; ...
+          'WAVLNM', 'Wavelength (nm)'; 'WAVLUM', ['Wavelength (' char(181) 'm)']; ...
+          };
         Header = OutputDescr(:,1);
         Description = OutputDescr(:,2);
       end
@@ -899,7 +923,7 @@ classdef Mod5
       end
       if isempty(Descr)
         disp(Headers);
-        warning('Mod5:LookupHeaders:NotFount','Above header not found in data.')
+        warning('Mod5:LookupHeaders:NotFound','Above header not found in data.')
       end
     end % LookupHeaders
     function Alb = CreateAlb(Header, title, wv, refl)
@@ -7809,6 +7833,7 @@ classdef Mod5
           MODCase(iSubCase).tp7.RadianceUnits = 'W/sr/cm^2/cm^-1';
           MODCase(iSubCase).tp7.IrradUnits = 'W/cm^2/cm^-1';
           MODCase(iSubCase).tp7.xLabel = 'Wavenumber (cm^{-1})';
+          MODCase(iSubCase).tp7.RawHeaders = Heads{iSubCase}; % Include the raw headers
           % Fix the headers
           FixedHeads = Mod5.FixHeaders(Heads{iSubCase});
           % Put in the headers
@@ -7853,6 +7878,8 @@ classdef Mod5
           if isempty(Heads{iSubCase})
             continue; % sorry, no convolved data for this sub-case
           end
+          % Record the raw headers
+          MODCase(iSubCase).sc7.RawHeaders = Heads{iSubCase};
           % Fix the headers
           FixedHeads = Mod5.FixHeaders(Heads{iSubCase});
           % Put in the headers
@@ -7863,28 +7890,28 @@ classdef Mod5
           % Check the units in the case
           switch upper(MODCase(iSubCase).FLAGS(1))
             case {' ', 'W'}
-              if ~strcmp(FixedHeads{1}, 'FREQ')
-                warning('Mod5_Run_Process7sc:UnitInconsistency', ...
-                  'Spectral unit inconsistency (cm^-1) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
-              end
+%               if ~strcmp(FixedHeads{1}, 'FREQ')
+%                 warning('Mod5_Run_Process7sc:UnitInconsistency', ...
+%                   'Spectral unit inconsistency (cm^-1) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
+%               end
               MODCase(iSubCase).sc7.SpectralUnits = 'cm^-1';
               MODCase(iSubCase).sc7.RadianceUnits = 'W/sr/cm^2/cm^-1';
               MODCase(iSubCase).sc7.IrradUnits = 'W/cm^2/cm^-1';
               MODCase(iSubCase).sc7.xLabel = 'Wavenumber (cm^{-1})';
             case 'M'
-              if ~strcmp(FixedHeads{1}, 'FREQMCRN')
-                warning('Mod5_Run_Process7sc:UnitInconsistency', ...
-                  'Spectral unit inconsistency (micron) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
-              end
+%               if ~strcmp(FixedHeads{1}, 'WAVLUM')
+%                 warning('Mod5_Run_Process7sc:UnitInconsistency', ...
+%                   'Spectral unit inconsistency (micron) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
+%               end
               MODCase(iSubCase).sc7.SpectralUnits = [char(181) 'm'];
               MODCase(iSubCase).sc7.RadianceUnits = ['W/sr/cm^2/' char(181) 'm'];
               MODCase(iSubCase).sc7.IrradUnits = ['W/cm^2/' char(181) 'm'];  
               MODCase(iSubCase).sc7.xLabel = ['Wavelength (' char(181) 'm)'];
             case 'N'
-              if ~strcmp(FixedHeads{1}, 'FREQNM')
-                warning('Mod5_Run_Process7sc:UnitInconsistency', ...
-                  'Spectral unit inconsistency (nm) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
-              end              
+%               if ~strcmp(FixedHeads{1}, 'WAVLNM')
+%                 warning('Mod5_Run_Process7sc:UnitInconsistency', ...
+%                   'Spectral unit inconsistency (nm) encountered in sub case %s(%i).', MODCase(iSubCase).CaseName, MODCase(iSubCase).CaseIndex);
+%               end              
               MODCase(iSubCase).sc7.SpectralUnits = 'nm';
               MODCase(iSubCase).sc7.RadianceUnits = [char(181) 'W/sr/cm^2/nm'];   
               MODCase(iSubCase).sc7.IrradUnits = [char(181) 'W/cm^2/nm'];
@@ -8233,7 +8260,7 @@ classdef Mod5
               MODCase(iCase).plt.SpectralUnits = [char(181) 'm'];
               MODCase(iCase).plt.RadianceUnits = ['W/sr/cm^2/' char(181) 'm'];
               MODCase(iCase).plt.IrradUnits = ['W/cm^2/' char(181) 'm'];
-              Head = 'FREQMCRN';
+              Head = 'WAVLUM';
               MODCase(iCase).plt.Headers{1} = Head;                
               MODCase(iCase).plt.xLabel = 'Wavelength (\mum)';
               iBlock = iBlock + 1;
@@ -8241,7 +8268,7 @@ classdef Mod5
               MODCase(iCase).plt.SpectralUnits = 'nm';
               MODCase(iCase).plt.RadianceUnits = [char(181) 'W/sr/cm^2/nm'];
               MODCase(iCase).plt.IrradUnits = [char(181) 'W/cm^2/nm'];
-              Head = 'FREQNM';
+              Head = 'WAVLNM';
               MODCase(iCase).plt.Headers{1} = Head;                
               MODCase(iCase).plt.xLabel = 'Wavelength (nm)';
               iBlock = iBlock + 1;
@@ -8320,7 +8347,7 @@ classdef Mod5
               MODCase(iCase).psc.SpectralUnits = [char(181) 'm'];
               MODCase(iCase).psc.RadianceUnits = ['W/sr/cm^2/' char(181) 'm'];
               MODCase(iCase).psc.IrradUnits = ['W/cm^2/' char(181) 'm'];
-              Head = 'FREQMCRN';
+              Head = 'WAVLUM';
               MODCase(iCase).psc.Headers{1} = Head;                
               MODCase(iCase).psc.xLabel = 'Wavelength (\mum)';
               iBlock = iBlock + 1;
@@ -8328,7 +8355,7 @@ classdef Mod5
               MODCase(iCase).psc.SpectralUnits = 'nm';
               MODCase(iCase).psc.RadianceUnits = [char(181) 'W/sr/cm^2/nm'];
               MODCase(iCase).psc.IrradUnits = [char(181) 'W/cm^2/nm'];
-              Head = 'FREQNM';
+              Head = 'WAVLNM';
               MODCase(iCase).psc.Headers{1} = Head;                
               MODCase(iCase).psc.xLabel = 'Wavelength (nm)';
               iBlock = iBlock + 1;
