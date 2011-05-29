@@ -30,6 +30,8 @@ classdef Mod5
 %    see the MODTRAN5 User's Manual.
 %              MODTRN: See MODTRAN5 User's Manual Card 1 Series, Main Radiation Transport
 %               SPEED: See MODTRAN5 User's Manual, Algorithm control
+%              BINARY: See MODTRAN5 User's Manual, Binary/ASCII output switch
+%              LYMOLC: See MODTRAN5 User's Manual, Auxiliary trace gases
 %               MODEL: See MODTRAN5 User's Manual, Canned Atmospheric Model
 %               ITYPE: See MODTRAN5 User's Manual, Type of atmospheric path
 %              IEMSCT: See MODTRAN5 User's Manual, Mode of execution, Rad/Trans etc.
@@ -41,7 +43,7 @@ classdef Mod5
 %                  M5: See MODTRAN5 User's Manual
 %                  M6: See MODTRAN5 User's Manual
 %                MDEF: See MODTRAN5 User's Manual
-%                  IM: See MODTRAN5 User's Manual
+%              I_RD2C: See MODTRAN5 User's Manual
 %              NOPRNT: See MODTRAN5 User's Manual, Controls .tp8 and .clr output.
 %              TPTEMP: See MODTRAN5 User's Manual
 %              SURREF: See MODTRAN5 User's Manual
@@ -397,6 +399,8 @@ classdef Mod5
  
     MODTRN  % Band model selection. Must be blank, 'T', 'M', 'C', 'K', 'F' or 'L' 
     SPEED   % 'S' or blank for slow correlated-k, 'M' for medium
+    BINARY  % Flag to specify if main MODTRAN outputs are in binary or text format
+    LYMOLC  % '+' indicates inclusion of 16 auxiliary trace gas species
     MODEL   % Canned atmospheric model or 7 for user-defined atmosphere
             % 0 If single-altitude meteorological data are specified (constant pressure, horizontal
             %   path only; see instructions for CARDs 2C, 2C1, 2C2, 2C2X, and 2C3).
@@ -408,9 +412,6 @@ classdef Mod5
             % 6 1976 US Standard.
             % 7 If a user-specified model atmosphere (e.g. radiosonde data) is to be read in; see
             %   instructions for CARDs 2C, 2C1, 2C2, 2C2X, and 2C3.
-    BINARY  % Flag to specify if main MODTRAN outputs are in binary or text format
-    LYMOLC  % '+' indicates inclusion of 16 auxiliary trace gas species
- 
     ITYPE   % Type of atmospheric path
     IEMSCT  % MODTRAN computation mode - radiance, transmittance or direct solar irradiance
     IMULT   % Execute MODTRAN with multiple scattering (radiance modes)
@@ -421,7 +422,7 @@ classdef Mod5
     M5      % Canned atmosphere selection for nitrous oxide profile
     M6      % Canned atmosphere selection for carbon monoxide profile
     MDEF    % Other light and heavy molecular species profile control flag
-    IM      % Controls reading of user-defined atmosphere in this run
+    I_RD2C  % Controls reading of user-defined atmosphere in this run
     NOPRNT  % Controls output files and content
     TPTEMP  % Boundary temperature at H2
     SURREF  % Controls reflectance or BRDF at H2
@@ -641,7 +642,7 @@ classdef Mod5
     % if possible. That is, if a parameter is given in a column in the input file, then it is read into
     % a column vector. There may be exceptions to this rule.
                 
-    ParmNames = {{'MODTRN','SPEED','BINARY','LYMOLC','MODEL','ITYPE','IEMSCT','IMULT','M1','M2','M3','M4','M5','M6','MDEF','IM','NOPRNT','TPTEMP','SURREF'}, ... % 1
+    ParmNames = {{'MODTRN','SPEED','BINARY','LYMOLC','MODEL','ITYPE','IEMSCT','IMULT','M1','M2','M3','M4','M5','M6','MDEF','I_RD2C','NOPRNT','TPTEMP','SURREF'}, ... % 1
                 {'DIS','DISAZM','NSTR','LSUN','ISUN','CO2MX','H2OSTR','O3STR','LSUNFL','LBMNAM','LFLTNM','H2OAER','SOLCON'}, ... % 1A
                 {'SUNFL2'}, ... % 1A1
                 {'BMNAME'}, ... % 1A2
@@ -4110,7 +4111,7 @@ classdef Mod5
         if MC(iCase).IVSA == 1  % Read Card 2B
           MC(iCase) = MC(iCase).ReadCard2B(fid);
         end
-        if any(MC(iCase).MODEL == [0 7]) && MC(iCase).IM == 1 % Read Card 2C
+        if any(MC(iCase).MODEL == [0 7 8]) && MC(iCase).I_RD2C == 1 % Read Card 2C
           MC(iCase) = MC(iCase).ReadCard2C(fid); 
           for iML = 1:MC(iCase).ML % Read CARDs 2C1 through 2C3 (as required) repeated ML times.
             MC(iCase) = MC(iCase).ReadCard2C1(fid, iML);
@@ -4280,7 +4281,7 @@ classdef Mod5
         if MC(iCase).IVSA == 1  % Write Card 2B
           MC(iCase) = MC(iCase).WriteCard2B(fid);
         end
-        if any(MC(iCase).MODEL == [0 7]) && MC(iCase).IM == 1 % Write Card 2C
+        if any(MC(iCase).MODEL == [0 7 8]) && MC(iCase).I_RD2C == 1 % Write Card 2C
           MC(iCase) = MC(iCase).WriteCard2C(fid); 
           for iML = 1:MC(iCase).ML % Write CARDs 2C1 through 2C3 (as required) repeated ML times.
             MC(iCase) = MC(iCase).WriteCard2C1(fid, iML);
@@ -4471,7 +4472,7 @@ classdef Mod5
         if MC(iCase).IVSA == 1  % Describe Card 2B
           % MC(iCase) = MC(iCase).DescribeCard2B(fid);
         end
-        if any(MC(iCase).MODEL == [0 7]) && MC(iCase).IM == 1 % Describe Card 2C
+        if any(MC(iCase).MODEL == [0 7 8]) && MC(iCase).I_RD2C == 1 % Describe Card 2C
           % MC(iCase) = MC(iCase).DescribeCard2C(fid); 
           for iML = 1:MC(iCase).ML % Describe CARDs 2C1 through 2C3 (as required) repeated ML times.
             % MC(iCase) = MC(iCase).DescribeCard2C1(fid, iML);
@@ -5420,7 +5421,7 @@ classdef Mod5
       %  plothandles = MODCase.PlotAtm(PlotWhat);
       %
       % Where MODCase is a Mod5 (or vector of cases) that have
-      % user-defined atmospheres (MODEL = 0 or 7 and IM = 1).
+      % user-defined atmospheres (MODEL = 0 or 7 or 8 and I_RD2C = 1).
       %
       % PlotWhat is a cell array of strings indicating which data should
       % be plotted. Use the following codes:
@@ -5492,7 +5493,7 @@ classdef Mod5
       iHeavy = sort(unique(iHeavy));
       % Run through all sub-cases
       % Plot only when the sub-case ...
-      %   a) has a user-defined model atmosphere MODEL = 0/7/8, IM = 1 and
+      %   a) has a user-defined model atmosphere MODEL = 0/7/8, I_RD2C = 1 and
       %   b) user has requested plotting of the atmospheric layer data and
       %   c1) atmospheric layer data is given and is non-zero with explicit or default units
       %        OR
@@ -5503,7 +5504,7 @@ classdef Mod5
         XLabels = {};
         AtmName = strtrim(MODCase(iCase).HMODEL);
         Z = MODCase(iCase).ZM;
-        if any(MODCase(iCase).MODEL == [0 7 8]) || MODCase(iCase).IM == 1
+        if any(MODCase(iCase).MODEL == [0 7 8]) || MODCase(iCase).I_RD2C == 1
           % Check for unit consistency across all layers
           JChar = cellstr(MODCase(iCase).JCHAR);
           JCharX = MODCase(iCase).JCHARX;
@@ -6020,7 +6021,7 @@ classdef Mod5
       %
       %  MC = MC.Set('MODTRN', 'M','SPEED','S','MODEL', 3, 'ITYPE', 3, 'IEMSCT', 2, ...
       %              'IMULT', 0, 'M1', 0, 'M2', 0, 'M3', 0, 'M4', 0, 'M5', 0 , 'M6', 0, ...
-      %              'MDEF', 0, 'IM', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', '0.5');
+      %              'MDEF', 0, 'I_RD2C', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', '0.5');
       %
       % The above example sets all parameters on MODTRAN Card1. Remember
       % that if MODTRAN requires a particular card, it is important to
@@ -6050,7 +6051,7 @@ classdef Mod5
       %
       % Usage :
       %  MC = MC.SetCard1(MODTRN, SPEED, MODEL, ITYPE, IEMSCT, IMULT, M1, ...
-      %                M2, M3, M4, M5, M6, MDEF, IM, NOPRNT, TPTEMP, SURREF)
+      %                M2, M3, M4, M5, M6, MDEF, I_RD2C, NOPRNT, TPTEMP, SURREF)
       %
       % Refer to the MODTRAN5 User's Manual for descriptions of the input
       % parameters.
@@ -6066,7 +6067,7 @@ classdef Mod5
       % IMULT  = 0;   No multiple scattering (inapplicable to transmittance mode
       % M1 = M2 = M3 = M4 = M5 = M6 = 0; Default profiles to MODEL (1976 US Standard Atm.)
       % MDEF   = 1;   Default other gases and heavy species - no user input
-      % IM     = 0;   Normal program operation - no user-supplied atm. profiles
+      % I_RD2C     = 0;   Normal program operation - no user-supplied atm. profiles
       % NOPRNT = 1;   Minimize printing to tape6.
       % TPTEMP = 0;   No surface emission added if H2 is above ground
       % SURREF = '0.5'; Albedo of the earth (spectrally flat)
@@ -6089,7 +6090,7 @@ classdef Mod5
       iP.addOptional('M5', 0);
       iP.addOptional('M6', 0);
       iP.addOptional('MDEF', 1);
-      iP.addOptional('IM', 0);
+      iP.addOptional('I_RD2C', 0);
       iP.addOptional('NOPRNT', 1);
       iP.addOptional('TPTEMP', 0);
       iP.addOptional('SURREF', '0.5', @ischar);
@@ -6107,7 +6108,7 @@ classdef Mod5
       MC.M5 = M5;
       MC.M6 = M6;
       MC.MDEF = MDEF;
-      MC.IM = IM;
+      MC.I_RD2C = I_RD2C;
       MC.NOPRNT = NOPRNT;
       MC.TPTEMP = TPTEMP;
       MC.SURREF = SURREF;
@@ -7094,6 +7095,25 @@ classdef Mod5
      'Parameter SPEED on Card 1 must be one of blank, S or M. The value passed in was:%s', newSPEED);
       MC.SPEED = newSPEED;
     end % set.SPEED
+    function MC = set.BINARY(MC, newBINARY)
+     assert(ischar(newBINARY) && numel(newBINARY) == 1, 'Mod5:setBINARY:BadValue', ...
+      'Parameter BINARY on Card 1 must be a single character. The class of the new value was %s.', class(newBINARY));
+     assert(any(upper(newBINARY) == 'F T'), 'Mod5:setBINARY:BadValue', ...
+      'Parameter BINARY on Card 1 must be one of blank, T or F. The value passed in was:%s', newBINARY);
+      if upper(newBINARY) == 'T'
+          warning('Mod5:setBINARY:NotSupported','Binary output (switch BINARY on Card 1) is not yet supported in this class wrapper. Output set to ASCII.');
+          MC.BINARY = ' ';
+      else
+          MC.BINARY = newBINARY;
+      end
+    end % set.BINARY
+    function MC = set.LYMOLC(MC, newLYMOLC)
+     assert(ischar(newLYMOLC) && numel(newLYMOLC)==1,'Mod5:setLYMOLC:BadValue', ...
+     'Parameter LYMOLC on Card 1 must be a single character. The class of the new value was %s.', class(newLYMOLC));  
+     assert(any(upper(newLYMOLC) == ' +'), 'Mod5:setLYMOLC:BadValue', ...
+     'Parameter LYMOLC on Card 1 must be either blank or ''+''. The value passed in was:%s', newLYMOLC);
+      MC.LYMOLC = newLYMOLC;
+    end % set.LYMOLC
     function MC = set.MODEL(MC, newMODEL) % Canned atmospheric model
       % Validation of MODEL
       assert(isscalar(MC) && isscalar(newMODEL), 'Mod5:setMODEL:MustBeScalar', ...
@@ -7153,10 +7173,10 @@ classdef Mod5
       MC.ScalarIntNumeric(newMDEF, 0:2, 'MDEF');
       MC.MDEF = newMDEF;
     end % set.MDEF
-    function MC = set.IM(MC, newIM) % User atmosphere input control
-      MC.ScalarIntNumeric(newIM, 0:1, 'IM');
-      MC.IM = newIM;
-    end % set.IM
+    function MC = set.I_RD2C(MC, newI_RD2C) % User atmosphere input control
+      MC.ScalarIntNumeric(newI_RD2C, 0:1, 'I_RD2C');
+      MC.I_RD2C = newI_RD2C;
+    end % set.I_RD2C
     function MC = set.NOPRNT(MC, newNOPRNT) % Control outputs to tape6 and tape8
       MC.ScalarIntNumeric(newNOPRNT, -2:1, 'NOPRNT');
       MC.NOPRNT = newNOPRNT;
@@ -8631,21 +8651,22 @@ classdef Mod5
     
     end % ReadFreeCard
     function C = ReadCard1(C, fid) % C is the MODTRAN case instance
-      % MODTRN, SPEED, MODEL, ITYPE, IEMSCT, IMULT, M1, M2, M3, M4, M5,
-      % M6, MDEF, IM, NOPRNT, TPTEMP, SURREF
-      % FORMAT (2A1, I3, 12I5, F8.3, A7)
-      [Card, lin] = C.ReadSimpleCard(fid, [1 1 3 5 5 5 5 5 5 5 5 5 5 5 5 8 7], ...
-       {'c', 'c', 'd', 'd', 'd','d','d','d','d','d','d','d','d','d','d','f', '7c'}, '1');
-      [C.MODTRN, C.SPEED, C.MODEL, C.ITYPE, C.IEMSCT, C.IMULT, C.M1, C.M2, ...
-       C.M3, C.M4, C.M5, C.M6, C.MDEF, C.IM, C.NOPRNT, C.TPTEMP, C.SURREF] = Card{:};
+      % MODTRN, SPEED, BINARY, LYMOLC, MODEL, ITYPE, IEMSCT, IMULT, M1, M2, M3, M4, M5,
+      % M6, MDEF, I_RD2C, NOPRNT, TPTEMP, SURREF
+      % old FORMAT (2A1, I3, 12I5, F8.3, A7)
+      % new FORMAT (4A1, I1, 11I5, 1X, I4, F8.0, A7)
+      [Card, lin] = C.ReadSimpleCard(fid, [1 1 1 1 1 5 5 5 5 5 5 5 5 5 5 5 1 8 7], ...
+       {'c', 'c', 'c', 'c', 'd', 'd', 'd','d','d','d','d','d','d','d','d','d','*', 'd', 'f', '7c'}, '1');
+      [C.MODTRN, C.SPEED, C.BINARY, C.LYMOLC, C.MODEL, C.ITYPE, C.IEMSCT, C.IMULT, C.M1, C.M2, ...
+       C.M3, C.M4, C.M5, C.M6, C.MDEF, C.I_RD2C, C.NOPRNT, C.TPTEMP, C.SURREF] = Card{:};
      assert(any(upper(C.SPEED) == 'S M'), 'Mod5:ReadCard1BadSPEED', ...
      'Parameter SPEED on Card 1 must be one of blank, S or M. The card read contained the following:\n%s', lin);         
    
     end % ReadCard1
     function C = WriteCard1(C, fid)
-      fprintf(fid, '%c%c%3d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d%8.3f%7s\n', ...
-        C.MODTRN, C.SPEED, C.MODEL, C.ITYPE, C.IEMSCT, C.IMULT, C.M1, C.M2, ...
-        C.M3, C.M4, C.M5, C.M6, C.MDEF, C.IM, C.NOPRNT, C.TPTEMP, C.SURREF);
+      fprintf(fid, '%c%c%c%c%1d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d %4d%8.0f%7s\n', ...
+        C.MODTRN, C.SPEED, C.BINARY, C.LYMOLC, C.MODEL, C.ITYPE, C.IEMSCT, C.IMULT, C.M1, C.M2, ...
+        C.M3, C.M4, C.M5, C.M6, C.MDEF, C.I_RD2C, C.NOPRNT, C.TPTEMP, C.SURREF);
     end % WriteCard1
     function C = DescribeCard1(C, fid, OF)
       % OF is the format
@@ -8666,6 +8687,20 @@ classdef Mod5
             'or 15 cm^{-1}). This option is recommended for upper altitude (> 40 km) cooling-rate and weighting-function calculations only.\n']);
         case 'M'
           fprintf(fid, 'The ''medium'' speed Correlated-k algorithm (17 k values).\n');
+      end
+      C.printCardItem(fid, OF, 'BINARY', '''%c''');
+      switch upper(C.BINARY)
+          case {'F', ' '}
+              fprintf(fid, 'All MODTRAN outputs will be ASCII text files.\n');
+          case 'T'
+              fprintf(fid, 'The tape7, tape8 and plot files will be output in binary format.\n');
+      end
+      C.printCardItem(fid, OF, 'LYMOLC', '''%c''');
+      switch upper(C.LYMOLC)
+          case '+'
+              fprintf(fid, 'Atmospheric model includes 16 auxiliary trace species with canned atmospheres or user-defined atmospheres where NMOLYC = 0 (Card 2C).\n'); 
+          case ' '
+              fprintf(fid, 'Atmospheric model excludes 16 auxiliary trace gase species.\n');
       end
       C.printCardItem(fid, OF, 'MODEL', '%d');
       switch C.MODEL
@@ -8761,8 +8796,8 @@ classdef Mod5
         case {0 1}, fprintf(fid, 'Default O2, NO, SO2, NO2, NH3, and HNO3 species profiles as well as default heavy species.\n');
         case 2, fprintf(fid, 'The user must input heavy species (including chlorofluorocarbons) profiles (see card 2C series).\n');
       end
-      C.printCardItem(fid, OF, 'IM', '%d');      
-      switch C.IM
+      C.printCardItem(fid, OF, 'I_RD2C', '%d');      
+      switch C.I_RD2C
         case 0, fprintf(fid, 'For canned atmospheres or when calculations are to be run with the user-defined atmosphere last read in.\n');
         case 1, fprintf(fid, 'User input atmospheric data are to be read.\n');      
       end

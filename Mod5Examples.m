@@ -39,6 +39,8 @@ Sat1.CaseDescr = 'Example 2 : Simple EO Camera Case';
 % Set up Card 1 (mandatory - main radiative transport)
 Sat1.MODTRN = 'M';     % MODTRAN band model
 Sat1.SPEED = 'S';      % Slow algorithm
+Sat1.BINARY = 't';     % Output will be ASCII
+Sat1.LYMOLC = ' ';     % Exclude 16 auxiliary trace gases
 Sat1.MODEL = 3;        % Mid-latitude winter canned atmosphere 
 Sat1.ITYPE = 3;        % Slant path to ground
 Sat1.IEMSCT = 2;       % Compute path radiance, including solar scatter 
@@ -50,15 +52,15 @@ Sat1.M4 = 0;           % Methane defaults to MODEL profile
 Sat1.M5 = 0;           % Nitrous oxide defaults to MODEL profile
 Sat1.M6 = 0;           % Carbon monoxide defaults to MODEL profile
 Sat1.MDEF = 0;         % Default O2, NO, SO2, NO2, NH3, and HNO3 species profiles.
-Sat1.IM = 0;           % Normal program operation - no user input for profiles
+Sat1.I_RD2C = 0;       % Normal program operation - no user input for profiles
 Sat1.NOPRNT = 0;       % Minimize printing to Tape6 output file
 Sat1.TPTEMP = 0;       % Temperature at H2 - not important, only VIS/NIR
 Sat1.SURREF = '0.5';   % Earth reflectance (albedo) 50% right across spectrum
 % Note that the setting of Card 1 parameters can be accomplished in a single
 % call to the Set method as follows :
-% Sat1 = Sat1.Set('MODTRN', 'M','SPEED','S','MODEL', 3, 'ITYPE', 3, 'IEMSCT', 2, ...
+% Sat1 = Sat1.Set('MODTRN', 'M','SPEED', 'S', 'BINARY', 'f', 'LYMOLC', ' ','MODEL', 3, 'ITYPE', 3, 'IEMSCT', 2, ...
 %                 'IMULT', 0, 'M1', 0, 'M2', 0, 'M3', 0, 'M4', 0, 'M5', 0 , 'M6', 0, ...
-%                 'MDEF', 0, 'IM', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', '0.5');
+%                 'MDEF', 0, 'I_RD2C', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', '0.5');
 
 
 % Set up Card 1A (mandatory - main radiative transport continued)
@@ -190,9 +192,9 @@ Sol1 = Sol1.SetCaseName('Sol1'); % Must use SetCaseName method to set name
 Sol1.CaseDescr = 'Example 3 : Solar Irradiance Case';
 
 % Set up Card 1 (mandatory - main radiative transport)
-Sol1 = Sol1.Set('MODTRN', 'M','SPEED','S','MODEL', 2, 'ITYPE', 3, 'IEMSCT', 3, ...
+Sol1 = Sol1.Set('MODTRN', 'M','SPEED','S','BINARY', 'F', 'LYMOLC', ' ', 'MODEL', 2, 'ITYPE', 3, 'IEMSCT', 3, ...
                 'IMULT', 0, 'M1', 0, 'M2', 0, 'M3', 0, 'M4', 0, 'M5', 0 , 'M6', 0, ...
-                'MDEF', 0, 'IM', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', '0.0');
+                'MDEF', 0, 'I_RD2C', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', '0.0');
 
 % Set up Card 1A (mandatory - supplementary radiative transport parameters)
 Sol1 = Sol1.Set('DIS', 'f', 'DISAZM', 'f', 'NSTR', 2, 'LSUN', 'f', 'ISUN', 5, ...
@@ -306,9 +308,9 @@ Sat2.CaseDescr = 'Example 6 : EO Camera Case';
 % Set up Card 1 (mandatory - main radiative transport)
 % Tropical atmosphere
 % Will specify a lambertian target on Card 4L2 later
-Sat2 = Sat2.Set('MODTRN', 'M','SPEED','S','MODEL', 1, 'ITYPE', 3, 'IEMSCT', 2, ...
+Sat2 = Sat2.Set('MODTRN', 'M','SPEED','S','BINARY', 'F', 'LYMOLC', ' ','MODEL', 1, 'ITYPE', 3, 'IEMSCT', 2, ...
                 'IMULT', 0, 'M1', 0, 'M2', 0, 'M3', 0, 'M4', 0, 'M5', 0 , 'M6', 0, ...
-                'MDEF', 0, 'IM', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', 'LAMBER');
+                'MDEF', 0, 'I_RD2C', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', 'LAMBER');
               
 % Set up Card 1A (mandatory - main radiative transport continued)
 Sat2 = Sat2.Set('DIS', 'f', 'DISAZM', 'f', 'NSTR', 2, 'LSUN', 'f', 'ISUN', 0, 'CO2MX', 380, 'H2OSTR', '0.', ...
