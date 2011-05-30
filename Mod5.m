@@ -428,17 +428,27 @@ classdef Mod5
     SURREF  % Controls reflectance or BRDF at H2
     DIS     % Controls use of DISORT multiple scatter algorithm
     DISAZM  % Controls whether azimuthal dependency of DISORT is used
+    DISALB  % Controls computation of atmospheric correction data
     NSTR    % Controls number of streams for DISORT
-    LSUN    % Flag selecting spectral resolution of solar TOA database 
-    ISUN    % If LSUN set true, ISUN is FWHM for smoothing of TOA spectrum
+    SFWHM   % FWHM of triangular scanning filter for TOA solar irradiance smoothing 
+%     LSUN    % Flag selecting spectral resolution of solar TOA database 
+%     ISUN    % If LSUN set true, ISUN is FWHM for smoothing of TOA spectrum
     CO2MX   % CO2 mixing ratio in ppmv. 2010 value is about 380 ppmv
     H2OSTR  % Allows scaling of water vapor profile
     O3STR   % Allows scaling of ozone profile
+    C_PROF  % Controls scaling of vertical profiles of various species
     LSUNFL  % Flag to control reading of solar TOA irradiance data
     LBMNAM  % Flag to control reading of band model
     LFLTNM  % Flag to control reading of spectral channel filters
     H2OAER  % Allows control of water vapor scaling effects on aerosols
+    CDTDIR  % Directory where MODTRAN will search for data files
     SOLCON  % Scaling of solar constant
+    CDASTM  % Controls application of aerosol angstrom law inputs
+    ASTMC   % Angstrom law coefficient for boundary layer and troposphere
+    ASTMX   % Angstrom law offset for the boundary layer and troposphere
+    ASTMO   % Angstrom law offset for the boundary layer and troposphere
+    AERRH   % Relative humidity for the boundary layer aerosol
+    NSSALB  % Controls aerosol single scattering albedo
     SUNFL2  % File from which to read solar TOA irradiance (if LSUNFL set true)
     BMNAME  % File from white to read band model (if LBMNAM set true)
     FILTNM  % File (.flt) from which to read spectral channel filters (if LFLTNM set true)
@@ -643,7 +653,7 @@ classdef Mod5
     % a column vector. There may be exceptions to this rule.
                 
     ParmNames = {{'MODTRN','SPEED','BINARY','LYMOLC','MODEL','ITYPE','IEMSCT','IMULT','M1','M2','M3','M4','M5','M6','MDEF','I_RD2C','NOPRNT','TPTEMP','SURREF'}, ... % 1
-                {'DIS','DISAZM','NSTR','LSUN','ISUN','CO2MX','H2OSTR','O3STR','LSUNFL','LBMNAM','LFLTNM','H2OAER','SOLCON'}, ... % 1A
+                {'DIS','DISAZM','DISALB','NSTR','SFWHM','CO2MX','H2OSTR','O3STR','C_PROF','LSUNFL','LBMNAM','LFLTNM','H2OAER','CDTDIR','SOLCON','CDASTM','ASTMC','ASTMX','ASTMO','AERRH','NSSALB'}, ... % 1A
                 {'SUNFL2'}, ... % 1A1
                 {'BMNAME'}, ... % 1A2
                 {'FILTNM'}, ... % 1A3
@@ -3990,7 +4000,7 @@ classdef Mod5
     function lin = fgetl80(fid)
       % fgetl80 : Read a line from fid and pad to 80 characters with blanks
       if feof(fid)
-        % Issue warning if attempt was made to read pas the end of the file
+        % Issue warning if attempt was made to read past the end of the file
         warning('fgetl80:EOF', 'Attempted to read past end of file.');
       end
       lin = fgetl(fid);
@@ -3999,7 +4009,22 @@ classdef Mod5
       elseif length(lin) > 80
         lin = lin(1:80);
       end
-    end % fgetl80   
+    end % fgetl80 
+    function lin = fgetlN(fid, N)
+        %fgetlN : Get a line and pad with blanks to N characters
+      if feof(fid)
+        % Issue warning if attempt was made to read past the end of the file
+        warning('fgetlN:EOF', 'Attempted to read past end of file.');
+      end
+      lin = fgetl(fid);
+      if N > 0
+          if length(lin) < N
+              lin = [lin blanks(N - length(lin))];
+          elseif length(lin) > N
+              lin = lin(1:N);
+          end
+      end
+    end % fgetlN
     function Pass = ScalarNumPos(varargin)
       % ScalarNumPos : Verify that all input arguments are scalar, numeric and positive
       Pass = 1;
@@ -4091,7 +4116,7 @@ classdef Mod5
         if strcmpi(MC(iCase).LSUNFL, 'T') % Read card 1A1
           MC(iCase) = MC(iCase).ReadCard1A1(fid);
         end
-        if strcmpi(MC(iCase).LBMNAM, 'T') % Read card 1A2
+        if any(MC(iCase).LBMNAM == 'Tt42') % Read card 1A2
           MC(iCase) = MC(iCase).ReadCard1A2(fid);  % The whole line
         end
         if strcmpi(MC(iCase).LFLTNM, 'T') % Read card 1A3
@@ -4260,7 +4285,7 @@ classdef Mod5
         if strcmpi(MC(iCase).LSUNFL, 'T') % Write card 1A1
           MC(iCase) = MC(iCase).WriteCard1A1(fid);
         end
-        if strcmpi(MC(iCase).LBMNAM, 'T') % Write card 1A2
+        if any(MC(iCase).LBMNAM == 'Tt42') % Write card 1A2
           MC(iCase) = MC(iCase).WriteCard1A2(fid);  % The whole line
         end
         if strcmpi(MC(iCase).LFLTNM, 'T') % Write card 1A3
@@ -4451,7 +4476,7 @@ classdef Mod5
         if strcmpi(MC(iCase).LSUNFL, 'T') % Describe card 1A1
           MC(iCase) = MC(iCase).DescribeCard1A1(fid, OFormat);
         end
-        if strcmpi(MC(iCase).LBMNAM, 'T') % Describe card 1A2
+        if any(MC(iCase).LBMNAM == 'Tt42') % Describe card 1A2
           MC(iCase) = MC(iCase).DescribeCard1A2(fid, OFormat);  % The whole line
         end
         if strcmpi(MC(iCase).LFLTNM, 'T') % Describe card 1A3
@@ -7212,15 +7237,15 @@ classdef Mod5
       end
       MC.NSTR = newNSTR;
     end % set.NSTR
-    function MC = set.LSUN(MC, newLSUN)
-      MC.ScalarChar(newLSUN, 'tTfF ', 'LSUN');
-      MC.LSUN = newLSUN;
-    end % set.LSUN
-    function MC = set.ISUN(MC, newISUN)
-      assert(isnumeric(newISUN) && isscalar(newISUN), 'Mod5:setISUN:BadISUN', ...
-        'Input ISUN must be scalar numeric.');
-      MC.ISUN = newISUN;
-    end % set.ISUN
+%     function MC = set.LSUN(MC, newLSUN)
+%       MC.ScalarChar(newLSUN, 'tTfF ', 'LSUN');
+%       MC.LSUN = newLSUN;
+%     end % set.LSUN
+    function MC = set.SFWHM(MC, newSFWHM)
+      assert(isnumeric(newSFWHM) && isscalar(newSFWHM), 'Mod5:setSFWHM:BadSFWHM', ...
+        'Input SFWHM must be scalar numeric.');
+      MC.SFWHM = newSFWHM;
+    end % set.SFWHM
     function MC = set.CO2MX(MC, newCO2MX)
       if isempty(newCO2MX)
         newCO2MX = 365; % Default to 365 ppmv
@@ -7258,7 +7283,7 @@ classdef Mod5
       MC.LSUNFL = newLSUNFL;
     end % set.LSUNFL
     function MC = set.LBMNAM(MC, newLBMNAM)
-      MC.ScalarChar(newLBMNAM, 'tTfF ', 'LBMNAM');
+      MC.ScalarChar(newLBMNAM, 'tTfF42 ', 'LBMNAM');
       MC.LBMNAM = newLBMNAM;
     end % set.LBMNAM
     function MC = set.LFLTNM(MC, newLFLTNM)
@@ -7389,7 +7414,7 @@ classdef Mod5
         MC.BMNAME = [];
         % The following as warned against by MLint, so just offer warning if 
         % MC.LBMNAM = 'F'; % Don't want MODTRAN to try to read something from non-existent place.
-        if isempty(MC.LBMNAM) || upper(MC.LBMNAM(1)) == 'T'
+        if isempty(MC.LBMNAM) || any(MC(iCase).LBMNAM == 'Tt42')
           warning('Mod5:setBMNAME:LBMNAMInconsistent', ...
             'If BMNAME is set to [], then LBMNAM must be set blank or ''F'' for false.');
         end
@@ -7796,13 +7821,13 @@ classdef Mod5
       assert(ischar(newFLAGS) && size(newFLAGS,1) == 1 && size(newFLAGS,2) <= 7, 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS (Unit, convolution and flux table controls) must be a character string of length 7 or less.');
       % Check each flag for correct range
-      assert(any(newFLAGS(1:1) == ' WMN'), 'Mod5:setFLAGS:BadFLAGS', ...
+      assert(any(upper(newFLAGS(1:1)) == ' WMN'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(1:1) (Unit specifier for V1, V2, DV and FWHM) must be '' '', ''W'', ''M'' or ''N''.');
-      assert(any(newFLAGS(2:2) == ' 1T2R3G4S5C6H7U'), 'Mod5:setFLAGS:BadFLAGS', ...
+      assert(any(upper(newFLAGS(2:2)) == ' 1T2R3G4S5C6H7U'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(2:2) (Convolution instrument function specifier) must be '' '', ''1'', ''T'', ''2'', ''R'', ''3'', ''G'', ''4'', ''S'', ''5'', ''C'', ''6'', ''H'', ''7'' or ''U''.');
-      assert(any(newFLAGS(3:3) == ' AR'), 'Mod5:setFLAGS:BadFLAGS', ...
+      assert(any(upper(newFLAGS(3:3)) == ' AR'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(3:3) (FWHM absolute/relative specifier) must be '' '', ''A'', or ''R''.');
-      assert(any(newFLAGS(4:4) == ' A'), 'Mod5:setFLAGS:BadFLAGS', ...
+      assert(any(upper(newFLAGS(4:4)) == ' A'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(4:4) (Convolve only total quantities or all quantities) must be '' '' or ''A''.');
       assert(any(newFLAGS(5:5) == ' sS'), 'Mod5:setFLAGS:BadFLAGS', ...
         'Input FLAGS(5:5) (Saving of unconvolved results) must be '' '', ''s'', or ''S''.');
@@ -8588,10 +8613,13 @@ classdef Mod5
     
     % Find starting and ending positions of the fields
     Stop = cumsum(FieldWidth);
-    lin = Mod5.fgetl80(fid);
-    while length(lin) < max(Stop) % Keep reading lines and concatenating until there is enough data to satisfy the format 
-      lin = [lin Mod5.fgetl80(fid)];
-    end
+    % lin = Mod5.fgetl80(fid);
+    lin = Mod5.fgetlN(fid, max(Stop)); % New way of doing things
+    % It is unclear why I did the following, because in MODTRAN 5 it causes
+    % problems
+%     while length(lin) < max(Stop) % Keep reading lines and concatenating until there is enough data to satisfy the format 
+%       lin = [lin Mod5.fgetl80(fid)];
+%     end
     Start = Stop - FieldWidth + 1;
     % Print the card name if in debug mode
     if C.DebugFlag
@@ -8628,7 +8656,7 @@ classdef Mod5
     function [Card, lin] = ReadFreeCard(C, fid, FieldFormat, CardName)
     % Read a simple MODTRAN card using free format
     % Get a line
-    lin = Mod5.fgetl80(fid);
+    lin = Mod5.fgetlN(fid, 0); % Get a line, don't pad or truncate
     % Print the card name if in debug mode
     if C.DebugFlag
       fprintf(1,'Reading Free Format Card %s - ', CardName)
@@ -8655,7 +8683,7 @@ classdef Mod5
       % M6, MDEF, I_RD2C, NOPRNT, TPTEMP, SURREF
       % old FORMAT (2A1, I3, 12I5, F8.3, A7)
       % new FORMAT (4A1, I1, 11I5, 1X, I4, F8.0, A7)
-      [Card, lin] = C.ReadSimpleCard(fid, [1 1 1 1 1 5 5 5 5 5 5 5 5 5 5 5 1 8 7], ...
+      [Card, lin] = C.ReadSimpleCard(fid, [1 1 1 1 1 5 5 5 5 5 5 5 5 5 5 5 1 4 8 7], ...
        {'c', 'c', 'c', 'c', 'd', 'd', 'd','d','d','d','d','d','d','d','d','d','*', 'd', 'f', '7c'}, '1');
       [C.MODTRN, C.SPEED, C.BINARY, C.LYMOLC, C.MODEL, C.ITYPE, C.IEMSCT, C.IMULT, C.M1, C.M2, ...
        C.M3, C.M4, C.M5, C.M6, C.MDEF, C.I_RD2C, C.NOPRNT, C.TPTEMP, C.SURREF] = Card{:};
@@ -8828,19 +8856,27 @@ classdef Mod5
         
     end % DescribeCard1
     function C = ReadCard1A(C, fid)
+      % Old format for MODTRAN 4 was
       % DIS, DISAZM, NSTR, LSUN, ISUN, CO2MX, H2OSTR, O3STR, LSUNFL,
       % LBMNAM, LFLTNM, H2OAER, SOLCON
       % FORMAT (2L1, I3, L1, I4, F10.5, 2A10, 4(1X, A1), 2X, F10.3)
-      Card = C.ReadSimpleCard(fid, [1 1 3 1 4 10 10 10 1 1 1 1 1 1 1 1 2 10], ...
-       {'c', 'c','d', 'c', 'd', 'f', '10c', '10c', '*','c','*','c','*','c','*', 'c', '*', 'f'}, '1A');
-      [C.DIS, C.DISAZM, C.NSTR, C.LSUN, C.ISUN, C.CO2MX, C.H2OSTR, C.O3STR, ...
-       C.LSUNFL, C.LBMNAM, C.LFLTNM, C.H2OAER, C.SOLCON] = Card{:};
+      % New format for MODTRAN 5 is
+      % DIS, DISAZM, DISALB, NSTR, SFWHM, CO2MX, H2OSTR, O3STR, C_PROF, LSUNFL,
+      % LBMNAM, LFLTNM, H2OAER, CDTDIR, SOLCON CDASTM, ASTMC, ASTMX, ASTMO,
+      % AERRH, NSSALB
+      % FORMAT (3A1, I3, F4.0, F10.0, 2A10, 2A1, 4(1X, A1), F10.0, A1, F9.0, 3F10.0, I10)
+      Card = C.ReadSimpleCard(fid, [1 1 1 3 4 10 10 10 1 1 1 1 1 1 1 1 1 1 10 1 9 10 10 10 10], ...
+       {'c', 'c','c','d', 'f', 'f','10c', '10c', 'c','c', '*','c','*','c','*','c','*', 'c', 'f', 'c', 'f','f','f','f','d'}, '1A');
+      [C.DIS, C.DISAZM, C.DISALB, C.NSTR, C.SFWHM, C.CO2MX, C.H2OSTR, C.O3STR, C.C_PROF, ...
+       C.LSUNFL, C.LBMNAM, C.LFLTNM, C.H2OAER, C.CDTDIR, C.SOLCON, ...
+       C.CDASTM, C.ASTMC, C.ASTMX, C.ASTMO, C.AERRH, C.NSSALB] = Card{:};
       
     end % ReadCard1A
     function C = WriteCard1A(C, fid)
-      fprintf(fid, '%c%c%3d%c%4d%10.5f%10s%10s %c %c %c %c  %10.3f\n', ...
-        C.DIS, C.DISAZM, C.NSTR, C.LSUN, C.ISUN, C.CO2MX, C.H2OSTR, ...
-        C.O3STR, C.LSUNFL, C.LBMNAM, C.LFLTNM, C.H2OAER, C.SOLCON);
+      fprintf(fid, '%c%c%c%3d%4.0f%10.0f%10s%10s%c%c %c %c %c %c%10.0f%c%9.0f%10.0f%10.0f%10.0f%10d\n', ...
+        C.DIS, C.DISAZM, C.DISALB, C.NSTR, C.SFWHM, C.CO2MX, C.H2OSTR, C.O3STR, C.C_PROF, ...
+       C.LSUNFL, C.LBMNAM, C.LFLTNM, C.H2OAER, C.CDTDIR, C.SOLCON, ...
+       C.CDASTM, C.ASTMC, C.ASTMX, C.ASTMO, C.AERRH, C.NSSALB);
     end % WriteCard1A
     function C = DescribeCard1A(C, fid, OF)
       C.printPreCard(fid, OF, '1A')
@@ -8861,13 +8897,13 @@ classdef Mod5
       C.printCardItem(fid, OF, 'NSTR', '%d', ['DISORT (if enabled with parameters IMULT and DIS) will '...
                                                   'execute with this number of streams.\n']);
       C.printCardItem(fid, OF, 'LSUN', '''%c''');
-      switch C.LSUN
-        case {'f', 'F', ' '}
-          fprintf(fid, 'MODTRAN will use the default solar 5 cm^{-1} spectral resolution TOA irradiances.\n');
-        case {'t', 'T'}
-          fprintf(fid, 'MODTRAN will use the default solar 1 cm^{-1} binned spectral resolution TOA irradiances. Input of ISUN is mandatory.\n');
-      end
-      C.printCardItem(fid, OF, 'ISUN', '%d', ['The FWHM (Full Width at Half Maximum) of the triangular scanning function '...
+%       switch C.LSUN
+%         case {'f', 'F', ' '}
+%           fprintf(fid, 'MODTRAN will use the default solar 5 cm^{-1} spectral resolution TOA irradiances.\n');
+%         case {'t', 'T'}
+%           fprintf(fid, 'MODTRAN will use the default solar 1 cm^{-1} binned spectral resolution TOA irradiances. Input of ISUN is mandatory.\n');
+%       end
+      C.printCardItem(fid, OF, 'SFWHM', '%d', ['The FWHM (Full Width at Half Maximum) of the triangular scanning function '...
                        'used to smooth the TOA solar irradiance (wavenumbers).\n']);
       C.printCardItem(fid, OF, 'CO2MX', '%g', 'The CO_2 mixing ratio in ppmv (parts per million by volume)\n');
       C.printCardItem(fid, OF, 'H2OSTR', '''%s''', 'Vertical water vapor column modifier (g/cm^{2}, atm-cm or scaling factor).\n');
