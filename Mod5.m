@@ -13,7 +13,7 @@ classdef Mod5
 % property listing.
 %
 % For this version of Mod5, the canonical reference for MODTRAN
-% parameters is the MODTRAN 5.1a User's Manual dated July 2008.
+% parameters is the MODTRAN 5.2.0.0 User's Manual dated July 2008.
 %
 % The class Mod5 has the following properties:
 % 
@@ -596,7 +596,7 @@ classdef Mod5
     acd = [];     % Atmospheric correction data. No methods to read this data yet.
   end
   properties (Constant)
-    Rev = '$Revision$';         % The revision of the class
+    Rev = '$RevisionNode$';         % The revision node of the class
     MODTRANExe = 'Mod5.2.0.0_cons.exe'; % This is the version of MODTRAN used by this class
   end
   properties (Hidden)
@@ -7229,6 +7229,10 @@ classdef Mod5
       end
       MC.DISAZM = newDISAZM;
     end % set.DISAZM
+    function MC = set.DISALB(MC, newDISALB)
+      MC.ScalarChar(newDISALB, 'tTfF ', 'DISALB');
+      MC.DISALB = newDISALB;
+    end % set.DISALB
     function MC = set.NSTR(MC, newNSTR) % number of streams in DISORT
       MC.ScalarIntNumeric(newNSTR, [0 2 4 8 16], 'NSTR');
       if ~any(newNSTR == [0 2]) && (MC.IMULT == 0 || any(MC.DIS == 'fF '))
@@ -7278,8 +7282,12 @@ classdef Mod5
       end
       MC.O3STR = newO3STR;
     end % set.O3STR
+    function MC = set.C_PROF(MC, newC_PROF)
+      MC.ScalarChar(newC_PROF, '01234567 ', 'C_PROF');
+      MC.C_PROF = newC_PROF;
+    end % set.C_PROF
     function MC = set.LSUNFL(MC, newLSUNFL)
-      MC.ScalarChar(newLSUNFL, 'tTfF ', 'LSUNFL');
+      MC.ScalarChar(newLSUNFL, 'tTfF 1234567', 'LSUNFL');
       MC.LSUNFL = newLSUNFL;
     end % set.LSUNFL
     function MC = set.LBMNAM(MC, newLBMNAM)
@@ -7294,6 +7302,10 @@ classdef Mod5
       MC.ScalarChar(newH2OAER, 'tTfF ', 'H2OAER');
       MC.H2OAER = newH2OAER;
     end % set.H2OAER
+    function MC = set.CDTDIR(MC, newCDTDIR)
+      MC.ScalarChar(newCDTDIR, 'tTfF ', 'CDTDIR');
+      MC.CDTDIR = newCDTDIR;
+    end % set.CDTDIR
     function MC = set.SOLCON(MC, newSOLCON)
       if isempty(newSOLCON)
         newSOLCON = 0;
@@ -7302,6 +7314,10 @@ classdef Mod5
         'Input SOLCON must be scalar and numeric.');
       MC.SOLCON = newSOLCON;
     end % set.SOLCON
+    function MC = set.CDASTM(MC, newCDASTM)
+      MC.ScalarChar(newCDASTM, 'tTdDbBfF ', 'CDASTM');
+      MC.CDASTM = newCDASTM;
+    end % set.CDASTM    
     %% Card 1A1 set method (solar TOA irradiance file name)
     function MC = set.SUNFL2(MC, newSUNFL2)
       % Sets the name of the TOA solar irradiance database
@@ -8894,9 +8910,16 @@ classdef Mod5
         case {'t', 'T'}
           fprintf(fid, 'with azumuth dependent multiple scattering (if requested with IMULT).\n');
       end
+      C.printCardItem(fid, OF, 'DISALB', '''%c''');
+      switch C.DISALB
+          case {'t', 'T'}
+              fprintf(fid, 'For DISORT mutiple solar scatter radiance cases, atmospheric correction data will be computed.\n');
+          case {'f', 'F', ' '}
+              fprintf(fid, 'Atmospheric correction data will not be computed.\n');
+      end
       C.printCardItem(fid, OF, 'NSTR', '%d', ['DISORT (if enabled with parameters IMULT and DIS) will '...
                                                   'execute with this number of streams.\n']);
-      C.printCardItem(fid, OF, 'LSUN', '''%c''');
+%      C.printCardItem(fid, OF, 'LSUN', '''%c''');
 %       switch C.LSUN
 %         case {'f', 'F', ' '}
 %           fprintf(fid, 'MODTRAN will use the default solar 5 cm^{-1} spectral resolution TOA irradiances.\n');
@@ -8908,6 +8931,25 @@ classdef Mod5
       C.printCardItem(fid, OF, 'CO2MX', '%g', 'The CO_2 mixing ratio in ppmv (parts per million by volume)\n');
       C.printCardItem(fid, OF, 'H2OSTR', '''%s''', 'Vertical water vapor column modifier (g/cm^{2}, atm-cm or scaling factor).\n');
       C.printCardItem(fid, OF, 'O3STR', '''%s''', 'Vertical ozone column modifier (g/cm^{2}, atm-cm or scaling factor).\n');
+      C.printCardItem(fid, OF, 'C_PROF', '''%c''');
+      switch C.C_PROF
+          case {'0', ' '}
+              fprintf(fid, 'There will be no scaling of default molecular profiles.\n');
+          case '1'
+              fprintf(fid, 'Default profile scale factors are read in on CARD 1A5 for 10 uniformly mixed molecular species.\n');
+          case '2'
+              fprintf(fid, 'Default profile scale factors are read in on CARD 1A6 for 13 cross-section molecular species.\n');
+          case '3'
+              fprintf(fid, 'Default profile scale factors are read in on CARDs 1A5 and 1A6 for 10 uniformly mixed and 13 cross-section molecular species.\n');
+          case '4'
+              fprintf(fid, 'Default profile scale factors are read in on CARD 1A7 for 16 trace molecular species.\n');
+          case '5'
+              fprintf(fid, 'Default profile scale factors are read in on CARDs 1A5 and 1A7 for 10 uniformly mixed and 16 trace molecular species.\n');
+          case '6'
+              fprintf(fid, 'Default profile scale factors are read in on CARDs 1A6 and 1A7 for 13 cross-section and 16 trace molecular species.\n');
+          case '7'
+              fprintf(fid, 'Default profile scale factors are read in on CARDs 1A5, 1A6 and 1A7 for 10 uniformly mixed, 13 cross-section and 16 trace molecular species.\n');
+      end
       C.printCardItem(fid, OF, 'LSUNFL', '''%c''', 'If true, read solar irradiance from file named on Card 1A1.\n');
       C.printCardItem(fid, OF, 'LBMNAM', '''%c''', 'If true, read band model from file named on Card 1A2.\n');
       C.printCardItem(fid, OF, 'LFLTNM', '''%c''', 'If true, read instrument band filter data from file named on Card 1A3.\n');
