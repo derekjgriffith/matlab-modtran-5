@@ -460,6 +460,7 @@ classdef Mod5
     USRSUN  % File from which to read solar TOA irradiance (if LSUNFL set true)
     BMNAME  % File from white to read band model (if LBMNAM set true)
     FILTNM  % File (.flt) from which to read spectral channel filters (if LFLTNM set true)
+    DATDIR  % The MODTRAN data directory
     APLUS   % Flag to indicate extended user-defined aerosol input
     IHAZE   % Main aerosol control option
     CNOVAM  % Use Navy Oceanic Vertical Aerosol Model or not
@@ -609,7 +610,7 @@ classdef Mod5
   end
   properties (Hidden)
     % There are a total of ? possible card formats in MODTRAN 5
-    CardNames = {'1'  ,'1A' ,'1A1' ,'1A2','1A3','2'  ,'2A+','2A' ,'Alt2A','2B' ,'2C', ...
+    CardNames = {'1'  ,'1A' ,'1A1' ,'1A2','1A3','1A4','2','2A+','2A' ,'Alt2A','2B' ,'2C', ...
                 '2C1','2C2','2C2X','2C3', '2D','2D1','2D2','2E1','2E2'  ,'3'  ,'Alt3', ...
                 '3A1','3A2','3B1' ,'3B2','3C1','3C2','3C3','3C4','3C5'  ,'3C6','4', ...
                 '4A','4B1','4B2','4B3','4L1','4L2','5'};
@@ -618,6 +619,7 @@ classdef Mod5
                  'Spectral Data and Sensor Response Function Files, TOA Solar Irradiance', ... 1A1
                  'Spectral Data and Sensor Response Function Files, Band Model Parameter File', ... 1A2
                  'Spectral Data and Sensor Response Function Files, Instrument Filter File', ... 1A3
+                 'MODTRAN Data File Directory', ... 1A4
                  'Main Aerosol and Cloud Options, Turbidity, Rain, Ground Altitude', ... 2
                  'Flexible Aerosol Model', ... 2A+
                  'Cirrus Cloud Models', ... 2A
@@ -665,6 +667,7 @@ classdef Mod5
                 {'USRSUN'}, ... % 1A1
                 {'BMNAME'}, ... % 1A2
                 {'FILTNM'}, ... % 1A3
+                {'DATDIR'}, ... % 1A4
                 {'APLUS','IHAZE','CNOVAM','ISEASN','ARUSS','IVULCN','ICSTL','ICLD','IVSA','VIS','WSS','WHH','RAINRT','GNDALT'} ... % 2
                 {'ZAER11','ZAER12','SCALE1','ZAER21','ZAER22','SCALE2','ZAER31','ZAER32','SCALE3','ZAER41','ZAER42','SCALE4'}, ... % 2A+
                 {'CTHIK', 'CALT', 'CEXT'}, ... % 2A
@@ -4130,6 +4133,11 @@ classdef Mod5
         if strcmpi(MC(iCase).LFLTNM, 'T') % Read card 1A3
           MC(iCase) = MC(iCase).ReadCard1A3(fid);  % The whole line
         end
+        % Card 1A4 - the data directory
+        if strcmpi(MC(iCase).CDTDIR, 'T') % Read card 1A4
+          MC(iCase) = MC(iCase).ReadCard1A4(fid);  % The whole line
+        end
+        
         %% Card 2 - Main Aerosol and Cloud Options
         MC(iCase) = MC(iCase).ReadCard2(fid);
         if strcmp(MC(iCase).APLUS, 'A+') % Read card 2A+ Flexible aerosol Model
@@ -4298,6 +4306,10 @@ classdef Mod5
         end
         if strcmpi(MC(iCase).LFLTNM, 'T') % Write card 1A3
           MC(iCase) = MC(iCase).WriteCard1A3(fid);  % The whole line
+        end
+        % Card 1A4 - the data directory
+        if strcmpi(MC(iCase).CDTDIR, 'T') % Write card 1A4
+          MC(iCase) = MC(iCase).WriteCard1A4(fid);  % The whole line
         end
         
         %% Card 2 - Main Aerosol and Cloud Options
@@ -4489,6 +4501,10 @@ classdef Mod5
         end
         if strcmpi(MC(iCase).LFLTNM, 'T') % Describe card 1A3
           MC(iCase) = MC(iCase).DescribeCard1A3(fid, OFormat);  % The whole line
+        end
+        % Card 1A4 - the data directory
+        if strcmpi(MC(iCase).CDTDIR, 'T') % Describe card 1A4
+          MC(iCase) = MC(iCase).DescribeCard1A4(fid, OFormat);  % The whole line
         end
         
         %% Card 2 - Main Aerosol and Cloud Options
@@ -7376,8 +7392,8 @@ classdef Mod5
         end
       else
         % Perform some input checking
-        assert(ischar(newUSRSUN) && length(newUSRSUN) <= 80, ...
-          'Mod5:setUSRSUN:BadUSRSUN','The parameter USRSUN must be a char array of length less than 80.');
+        assert(ischar(newUSRSUN) && length(newUSRSUN) <= 256, ...
+          'Mod5:setUSRSUN:BadUSRSUN','The parameter USRSUN must be a char array of length less than 256.');
         if isempty(newUSRSUN) % Then use a file dialog to set the file
           [Filename, Pathname] = uigetfile({'*.dat', ...
             'User-Defined TOA Irradiance Files (*.dat)'; '*.*', 'All Files (*.*)'}, 'Select User-Defined Solar TOA File', MODTRANPath);
@@ -7451,8 +7467,8 @@ classdef Mod5
         end
       else
         % Perform some input checking
-        assert(ischar(newBMNAME) && length(newBMNAME) <= 80, ...
-          'Mod5:setBMNAME:BadBMNAME','The parameter BMNAME must be a char array of length less than 80.');
+        assert(ischar(newBMNAME) && length(newBMNAME) <= 256, ...
+          'Mod5:setBMNAME:BadBMNAME','The parameter BMNAME must be a char array of length less than 256.');
         if isempty(newBMNAME) % Then use a file dialog to set the file
           [Filename, Pathname] = uigetfile({'*.bin', ...
             'Band Model Binary Files (*.bin)'; '*.*', 'All Files (*.*)'}, 'Select Band Model Binary File', MODTRANPath);
@@ -7512,8 +7528,8 @@ classdef Mod5
         end
       else
         % Perform some input checking
-        assert(ischar(newFILTNM) && length(newFILTNM) <= 80, ...
-          'Mod5:setFILTNM:BadFILTNM','The parameter FILTNM must be a char array of length less than 80.');
+        assert(ischar(newFILTNM) && length(newFILTNM) <= 256, ...
+          'Mod5:setFILTNM:BadFILTNM','The parameter FILTNM must be a char array of length less than 256.');
         if isempty(newFILTNM) % Then use a file dialog to set the file
           [Filename, Pathname] = uigetfile({'*.flt', ...
             'Band Filter Function Files (*.flt)'; '*.*', 'All Files (*.*)'}, 'Select Filter Function File', MODTRANPath);
@@ -7545,6 +7561,13 @@ classdef Mod5
         end
       end
     end % set.FILTNM
+    %% Card 1A4 set method (MODTRAN data directory)
+    function MC = set.DATDIR(MC, newDATDIR)
+        % Perform some input checking
+        assert(ischar(newDATDIR) && length(newDATDIR) <= 256, ...
+          'Mod5:setDATDIR:BadDATDIR','The parameter DATDIR must be a char array of length less than 256.');
+        MC.DATDIR = strtrim(newDATDIR); 
+    end % set.DATDIR
     %% Card 2 set methods
     function MC = set.APLUS(MC, newAPLUS)
       if isempty(newAPLUS)
@@ -8981,7 +9004,7 @@ classdef Mod5
     function C = ReadCard1A1(C, fid)
       % USRSUN
       % FORMAT (A80) (If LSUNFL = True)
-      Card = C.ReadSimpleCard(fid, 80,{'80c'},'1A1');
+      Card = C.ReadSimpleCard(fid, 256,{'256c'},'1A1');
       C.LSUNFL = Card{1};
     end % ReadCard1A1
     function C = WriteCard1A1(C, fid)
@@ -8993,8 +9016,8 @@ classdef Mod5
     end % DescribeCard1A1
     function C = ReadCard1A2(C, fid)
       % BMNAME
-      % FORMAT (A80) (If LBMNAM = True)
-      Card = C.ReadSimpleCard(fid, 80,{'80c'},'1A2');
+      % FORMAT (A256) (If LBMNAM = True)
+      Card = C.ReadSimpleCard(fid, 256,{'256c'},'1A2');
       C.BMNAME = Card{1};
     end % ReadCard1A2
     function C = WriteCard1A2(C, fid)
@@ -9006,8 +9029,8 @@ classdef Mod5
     end % DescribeCard1A2
     function C = ReadCard1A3(C, fid)
       % FILTNM
-      % FORMAT (A80) (If LFLTNM = True)
-      Card = C.ReadSimpleCard(fid, 80,{'80c'},'1A3');
+      % FORMAT (A256) (If LFLTNM = True)
+      Card = C.ReadSimpleCard(fid, 256,{'256c'},'1A3');
       C.FILTNM = Card{1};
     end % ReadCard1A3 
     function C = WriteCard1A3(C, fid)
@@ -9016,7 +9039,23 @@ classdef Mod5
     function C = DescribeCard1A3(C, fid, OF)
       C.printPreCard(fid, OF, '1A3')
       C.printCardItem(fid, OF, 'FILTNM', '''%s''', 'Observation instrument spectral band definition file.\n');
-    end % DescribeCard1A3    
+    end % DescribeCard1A3  
+    
+    function C = ReadCard1A4(C, fid)
+      % DATDIR
+      % FORMAT (A256) (If CDTDIR = True)
+      Card = C.ReadSimpleCard(fid, 256,{'256c'},'1A4');
+      C.DATDIR = Card{1};
+    end % ReadCard1A4 
+    function C = WriteCard1A4(C, fid)
+      fprintf(fid, '%s\n', C.DATDIR);
+    end % WriteCard1A4
+    function C = DescribeCard1A4(C, fid, OF)
+      C.printPreCard(fid, OF, '1A4')
+      C.printCardItem(fid, OF, 'DATDIR', '''%s''', 'Pathname for the MODTRAN data files.\n');
+    end % DescribeCard1A4  
+
+    
     function C = ReadCard2(C, fid)
       % (A2, I3, A1, I4, A3, I2, 3(I5), 5F10.5
       Card = C.ReadSimpleCard(fid, [2 3 1 4 3 2 5 5 5 10 10 10 10 10], ...
