@@ -49,18 +49,26 @@ classdef Mod5
 %              SURREF: See MODTRAN5 User's Manual
 %                 DIS: See MODTRAN5 User's Manual
 %              DISAZM: See MODTRAN5 User's Manual
+%              DISALB: See MODTRAN5 User's Manual
 %                NSTR: See MODTRAN5 User's Manual
-%                LSUN: See MODTRAN5 User's Manual
-%                ISUN: See MODTRAN5 User's Manual
+%               SFWHM: See MODTRAN5 User's Manual
 %               CO2MX: See MODTRAN5 User's Manual
 %              H2OSTR: See MODTRAN5 User's Manual
+%              C_PROF: See MODTRAN5 User's Manual
 %               O3STR: See MODTRAN5 User's Manual
 %              LSUNFL: See MODTRAN5 User's Manual
 %              LBMNAM: See MODTRAN5 User's Manual
 %              LFLTNM: See MODTRAN5 User's Manual
 %              H2OAER: See MODTRAN5 User's Manual
+%              CDTDIR: See MODTRAN5 User's Manual
 %              SOLCON: See MODTRAN5 User's Manual
-%              SUNFL2: See MODTRAN5 User's Manual
+%              CDASTM: See MODTRAN5 User's Manual
+%               ASTMC: See MODTRAN5 User's Manual
+%               ASTMX: See MODTRAN5 User's Manual
+%               ASTMO: See MODTRAN5 User's Manual
+%               AERRH: See MODTRAN5 User's Manual
+%              NSSALB: See MODTRAN5 User's Manual
+%              USRSUN: See MODTRAN5 User's Manual
 %              BMNAME: See MODTRAN5 User's Manual
 %              FILTNM: See MODTRAN5 User's Manual
 %               APLUS: See MODTRAN5 User's Manual Card 2 Series
@@ -449,7 +457,7 @@ classdef Mod5
     ASTMO   % Angstrom law offset for the boundary layer and troposphere
     AERRH   % Relative humidity for the boundary layer aerosol
     NSSALB  % Controls aerosol single scattering albedo
-    SUNFL2  % File from which to read solar TOA irradiance (if LSUNFL set true)
+    USRSUN  % File from which to read solar TOA irradiance (if LSUNFL set true)
     BMNAME  % File from white to read band model (if LBMNAM set true)
     FILTNM  % File (.flt) from which to read spectral channel filters (if LFLTNM set true)
     APLUS   % Flag to indicate extended user-defined aerosol input
@@ -654,7 +662,7 @@ classdef Mod5
                 
     ParmNames = {{'MODTRN','SPEED','BINARY','LYMOLC','MODEL','ITYPE','IEMSCT','IMULT','M1','M2','M3','M4','M5','M6','MDEF','I_RD2C','NOPRNT','TPTEMP','SURREF'}, ... % 1
                 {'DIS','DISAZM','DISALB','NSTR','SFWHM','CO2MX','H2OSTR','O3STR','C_PROF','LSUNFL','LBMNAM','LFLTNM','H2OAER','CDTDIR','SOLCON','CDASTM','ASTMC','ASTMX','ASTMO','AERRH','NSSALB'}, ... % 1A
-                {'SUNFL2'}, ... % 1A1
+                {'USRSUN'}, ... % 1A1
                 {'BMNAME'}, ... % 1A2
                 {'FILTNM'}, ... % 1A3
                 {'APLUS','IHAZE','CNOVAM','ISEASN','ARUSS','IVULCN','ICSTL','ICLD','IVSA','VIS','WSS','WHH','RAINRT','GNDALT'} ... % 2
@@ -7090,7 +7098,7 @@ classdef Mod5
     % read in the order they appear in the properties section. Therefore it seems
     % to be worth issuing warnings if a property has been set and has a cross
     % dependency with a property appearing before it in the properties section.
-    % For examples, see set.SUNFL2, set.BMNAME or set.FILTNM.
+    % For examples, see set.USRSUN, set.BMNAME or set.FILTNM.
     % At a minimum, the progress target is to have set methods for all
     % the compulsory cards.
     %% Set methods for non-MODTRAN parameter properties
@@ -7319,9 +7327,9 @@ classdef Mod5
       MC.CDASTM = newCDASTM;
     end % set.CDASTM    
     %% Card 1A1 set method (solar TOA irradiance file name)
-    function MC = set.SUNFL2(MC, newSUNFL2)
+    function MC = set.USRSUN(MC, newUSRSUN)
       % Sets the name of the TOA solar irradiance database
-      % MC.SUNFL2 = ''; will open a file dialog.
+      % MC.USRSUN = ''; will open a file dialog.
       % This function needs the location of the MODTRAN executable
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
@@ -7337,76 +7345,83 @@ classdef Mod5
         end
       end
       % If the new value is the empty matrix, set it to that
-      if isempty(newSUNFL2) && isnumeric(newSUNFL2)
-        MC.SUNFL2 = [];
+      if isempty(newUSRSUN) && isnumeric(newUSRSUN)
+        MC.USRSUN = [];
         % The following as warned against by MLint, so just offer warning if 
         % MC.LSUNFL = 'F'; % Don't want MODTRAN to try to read something from non-existent place.
         if isempty(MC.LSUNFL) || upper(MC.LSUNFL(1)) == 'T'
-          warning('Mod5:setSUNFL2:LSUNFLInconsistent', ...
-            'If SUNFL2 is set to [], then LSUNFL must be set blank or ''F'' for false.');
+          warning('Mod5:setUSRSUN:LSUNFLInconsistent', ...
+            'If USRSUN is set to [], then LSUNFL must be set blank or ''F'' for false.');
         end
-      elseif isnumeric(newSUNFL2)
-        switch newSUNFL2
+      elseif isnumeric(newUSRSUN)
+        switch newUSRSUN
           case 1
-            MC.SUNFL2 = '1';
+            MC.USRSUN = '1';
           case 2
-            MC.SUNFL2 = '2';
+            MC.USRSUN = '2';
           case 3
-            MC.SUNFL2 = '3';
+            MC.USRSUN = '3';
           case 4
-            MC.SUNFL2 = '4';
+            MC.USRSUN = '4';
+          case 5
+            MC.USRSUN = '5';
+          case 6
+            MC.USRSUN = '6';
+          case 7
+            MC.USRSUN = '7';
+            
           otherwise
-            error('Mod5:setLSUNFL2:BadSUNFL2', ...
-              'Numeric values for MODTRAN parameter LSUNFL2 may be 1, 2, 3 or 4. Otherwise LSUNFL2 must be blank or a valid filename.');
+            error('Mod5:setLUSRSUN:BadUSRSUN', ...
+              'Numeric values for MODTRAN parameter LUSRSUN may be 1, 2, 3 or 4. Otherwise USRSUN must be blank or a valid filename.');
         end
       else
         % Perform some input checking
-        assert(ischar(newSUNFL2) && length(newSUNFL2) <= 80, ...
-          'Mod5:setSUNFL2:BadSUNFL2','The parameter SUNFL2 must be a char array of length less than 80.');
-        if isempty(newSUNFL2) % Then use a file dialog to set the file
+        assert(ischar(newUSRSUN) && length(newUSRSUN) <= 80, ...
+          'Mod5:setUSRSUN:BadUSRSUN','The parameter USRSUN must be a char array of length less than 80.');
+        if isempty(newUSRSUN) % Then use a file dialog to set the file
           [Filename, Pathname] = uigetfile({'*.dat', ...
             'User-Defined TOA Irradiance Files (*.dat)'; '*.*', 'All Files (*.*)'}, 'Select User-Defined Solar TOA File', MODTRANPath);
           if Filename % a valid filename was returned from the uigetfile
             % Now the first part of the pathname must match MODTRANPath
             if ~strncmpi(MODTRANPath, Pathname, length(MODTRANPath)) || length(Pathname) < length(MODTRANPath)
-              error('Mod5:setSUNFL2:BadPath',...
-                'The location of the SUNFL2 file must be within the current MODTRAN executable path %s', MODTRANPath)
+              error('Mod5:setUSRSUN:BadPath',...
+                'The location of the USRSUN file must be within the current MODTRAN executable path %s', MODTRANPath)
             else
               % Set the new filter filename to the remainder of the string
               FullFilename = [Pathname Filename];
               % Check to see if the filename is not perhaps a pre-defined TOA
               if strcmpi(Filename, 'newkur.dat')
-                MC.SUNFL2 = '1';
+                MC.USRSUN = '1';
               elseif strcmpi(Filename, 'chkur.dat')
-                MC.SUNFL2 = '2';
+                MC.USRSUN = '2';
               elseif strcmpi(Filename, 'cebchkur.dat')
-                MC.SUNFL2 = '3';
+                MC.USRSUN = '3';
               elseif strcmpi(Filename, 'thkur.dat')
-                MC.SUNFL2 = '4';
+                MC.USRSUN = '4';
               else
-                MC.SUNFL2 = FullFilename(length(MODTRANPath)+1:end);
+                MC.USRSUN = FullFilename(length(MODTRANPath)+1:end);
               end
               % Check status of LSUNFL
               if ~isempty(MC.LSUNFL) && any(upper(MC.LSUNFL(1)) == 'F ')
-                warning('Mod5:setSUNFL2:LSUNFLInconsistent', ...
-                  'If SUNFL2 is set to a valid file, then LSUNFL must be set ''t'' or ''T'' for true.');
+                warning('Mod5:setUSRSUN:LSUNFLInconsistent', ...
+                  'If USRSUN is set to a valid file, then LSUNFL must be set ''t'' or ''T'' for true.');
               end
             end
           end
         else
-          if ~all(newSUNFL2)==' '  % the input is not just blanks
+          if ~all(newUSRSUN)==' '  % the input is not just blanks
             % Check existence of the file
-            FullFilename = strtrim([MODTRANPath newSUNFL2]);
+            FullFilename = strtrim([MODTRANPath newUSRSUN]);
             if ~exist(FullFilename, 'file')
-              warning('Mod5:setSUNFL2:FileNotExist', ...
-                'The binary band model file (parameter SUNFL2) %s was not found. Check this before running MODTRAN.', FullFilename);
+              warning('Mod5:setUSRSUN:FileNotExist', ...
+                'The binary band model file (parameter USRSUN) %s was not found. Check this before running MODTRAN.', FullFilename);
             end
           end
           % and set the property anyway
-          MC.SUNFL2 = strtrim(newSUNFL2);
+          MC.USRSUN = strtrim(newUSRSUN);
         end
       end
-    end % set.SUNFL2
+    end % set.USRSUN
     %% Card 1A2 set method (band model file name)
     function MC = set.BMNAME(MC, newBMNAME)
       % Sets the name of the binary file for the band model
@@ -8964,17 +8979,17 @@ classdef Mod5
       end
     end % DescribeCard1A
     function C = ReadCard1A1(C, fid)
-      % SUNFL2
+      % USRSUN
       % FORMAT (A80) (If LSUNFL = True)
       Card = C.ReadSimpleCard(fid, 80,{'80c'},'1A1');
       C.LSUNFL = Card{1};
     end % ReadCard1A1
     function C = WriteCard1A1(C, fid)
-      fprintf(fid, '%s\n', C.SUNFL2);
+      fprintf(fid, '%s\n', C.USRSUN);
     end % WriteCard1A1
     function C = DescribeCard1A1(C, fid, OF)
       C.printPreCard(fid, OF, '1A1');
-      C.printCardItem(fid, OF, 'SUNFL2', '''%s''', 'Solar TOA irradiance database.\n');
+      C.printCardItem(fid, OF, 'USRSUN', '''%s''', 'Solar TOA irradiance database.\n');
     end % DescribeCard1A1
     function C = ReadCard1A2(C, fid)
       % BMNAME
