@@ -461,6 +461,13 @@ classdef Mod5
     BMNAME  % File from white to read band model (if LBMNAM set true)
     FILTNM  % File (.flt) from which to read spectral channel filters (if LFLTNM set true)
     DATDIR  % The MODTRAN data directory
+    S_UMIX  % Scale factors for the default vertical profiles of 10 uniformly mixed molecular species
+    S_XSEC  % Scale factors for the default vertical profiles of 13 cross-section molecular species
+    S_TRAC  % Scale factors for the default vertical profiles of 16 trace molecular species
+    AWAVLN  % Wavelength grid for boundary layer (and tropospheric) aerosol single scattering albedo
+    ASSALB  % Boundary layer (and tropospheric) aerosol spectral single scattering albedo values
+    ACOALB  % Aerosol single scattering co-albedo (one minus the albedo) scaling factor
+    RHASYM  % Relative humidity used to define the aerosol asymmetry factor [%]
     APLUS   % Flag to indicate extended user-defined aerosol input
     IHAZE   % Main aerosol control option
     CNOVAM  % Use Navy Oceanic Vertical Aerosol Model or not
@@ -577,7 +584,7 @@ classdef Mod5
     PARAMS3   % BRDF parameter 3 for wavelengths WVSURF
     PARAMS4   % BRDF parameter 4 for wavelengths WVSURF
     SALBFL    % Gives name of file defining spectral albedo of the target
-    CSALB     % Gives number of name of predefined spectral albedo data
+    CSALB     % Gives number or name of predefined spectral albedo data
     IRPT = 0; % MODTRAN control flag for running next sub-case or terminating.
     RunStartTime = '';   % The starting date/time of the MODTRAN run for this case.
     RunEndTime = '';     % The finishin date/time of the MODTRAN run for this case.
@@ -610,16 +617,22 @@ classdef Mod5
   end
   properties (Hidden)
     % There are a total of ? possible card formats in MODTRAN 5
-    CardNames = {'1'  ,'1A' ,'1A1' ,'1A2','1A3','1A4','2','2A+','2A' ,'Alt2A','2B' ,'2C', ...
-                '2C1','2C2','2C2X','2C3', '2D','2D1','2D2','2E1','2E2'  ,'3'  ,'Alt3', ...
-                '3A1','3A2','3B1' ,'3B2','3C1','3C2','3C3','3C4','3C5'  ,'3C6','4', ...
-                '4A','4B1','4B2','4B3','4L1','4L2','5'};
+    CardNames = {'1'  ,'1A' ,'1A1' ,'1A2','1A3','1A4','1A5', '1A6','1A7','1B', 'Alt1B'...
+                 '2','2A+','2A' ,'Alt2A','2B' ,'2C', ...
+                 '2C1','2C2','2C2X','2C3', '2D','2D1','2D2','2E1','2E2'  ,'3'  ,'Alt3', ...
+                 '3A1','3A2','3B1' ,'3B2','3C1','3C2','3C3','3C4','3C5'  ,'3C6','4', ...
+                 '4A','4B1','4B2','4B3','4L1','4L2','5'};
     CardDescr = {'Main Radiation and Transport Driver, Model, Algorithm, Mode', ... 1
                  'Main Radiation and Transport Driver, Multi-Scatter, Solar, CO2', ... 1A
                  'Spectral Data and Sensor Response Function Files, TOA Solar Irradiance', ... 1A1
                  'Spectral Data and Sensor Response Function Files, Band Model Parameter File', ... 1A2
                  'Spectral Data and Sensor Response Function Files, Instrument Filter File', ... 1A3
                  'MODTRAN Data File Directory', ... 1A4
+                 'Scale Factors for 10 Uniformly Mixed Molecular Species', ... 1A5
+                 'Scale Factors for the Default Vertical Profiles of 13 Cross-section Molecular Species', ... 1A6
+                 'Scale Factors for the Default Vertical Profiles of 16 Trace Molecular Species', ... 1A7
+                 'Boundary Layer (and Tropospheric) Aerosol Spectral Single Scattering Albedo', ... 1B
+                 'Aerosol Single Scattering Co-albedo Scaling Factor and Relative Humidity for Assymetry Factor', ... Alt1B
                  'Main Aerosol and Cloud Options, Turbidity, Rain, Ground Altitude', ... 2
                  'Flexible Aerosol Model', ... 2A+
                  'Cirrus Cloud Models', ... 2A
@@ -668,6 +681,11 @@ classdef Mod5
                 {'BMNAME'}, ... % 1A2
                 {'FILTNM'}, ... % 1A3
                 {'DATDIR'}, ... % 1A4
+                {'S_UMIX'}, ... % 1A5
+                {'S_XSEC'}, ... % 1A6
+                {'S_TRAC'}, ... % 1A7
+                {'AWAVLN', 'ASSALB'}, ... % 1B
+                {'ACOALB', 'RHASYM'}, ... % Alt1B
                 {'APLUS','IHAZE','CNOVAM','ISEASN','ARUSS','IVULCN','ICSTL','ICLD','IVSA','VIS','WSS','WHH','RAINRT','GNDALT'} ... % 2
                 {'ZAER11','ZAER12','SCALE1','ZAER21','ZAER22','SCALE2','ZAER31','ZAER32','SCALE3','ZAER41','ZAER42','SCALE4'}, ... % 2A+
                 {'CTHIK', 'CALT', 'CEXT'}, ... % 2A
@@ -4137,7 +4155,21 @@ classdef Mod5
         if strcmpi(MC(iCase).CDTDIR, 'T') % Read card 1A4
           MC(iCase) = MC(iCase).ReadCard1A4(fid);  % The whole line
         end
-        
+        % Card 1A5 - scale factors for the default vertical profiles of 10
+        % uniformly mixed molecular species
+        if any(MC(iCase).C_PROF == '1357')
+          MC(iCase) = MC(iCase).ReadCard1A5(fid);  
+        end
+        % Card 1A6 - scale factors for the default vertical profiles of 13
+        % cross-section molecular species
+        if any(MC(iCase).C_PROF == '2367')
+          MC(iCase) = MC(iCase).ReadCard1A6(fid);  
+        end
+        % Card 1A7 - scale factors for the default vertical profiles of 16
+        % trace molecular species
+        if any(MC(iCase).C_PROF == '4567')
+          MC(iCase) = MC(iCase).ReadCard1A7(fid);  
+        end
         %% Card 2 - Main Aerosol and Cloud Options
         MC(iCase) = MC(iCase).ReadCard2(fid);
         if strcmp(MC(iCase).APLUS, 'A+') % Read card 2A+ Flexible aerosol Model
@@ -4311,7 +4343,21 @@ classdef Mod5
         if strcmpi(MC(iCase).CDTDIR, 'T') % Write card 1A4
           MC(iCase) = MC(iCase).WriteCard1A4(fid);  % The whole line
         end
-        
+        % Card 1A5 - scale factors for the default vertical profiles of 10
+        % uniformly mixed molecular species
+        if any(MC(iCase).C_PROF == '1357')
+          MC(iCase) = MC(iCase).WriteCard1A5(fid);  
+        end
+        % Card 1A6 - scale factors for the default vertical profiles of 13
+        % cross-section molecular species
+        if any(MC(iCase).C_PROF == '2367')
+          MC(iCase) = MC(iCase).WriteCard1A6(fid);  
+        end
+        % Card 1A7 - scale factors for the default vertical profiles of 16
+        % trace molecular species
+        if any(MC(iCase).C_PROF == '4567')
+          MC(iCase) = MC(iCase).WriteCard1A7(fid);  
+        end
         %% Card 2 - Main Aerosol and Cloud Options
         MC(iCase) = MC(iCase).WriteCard2(fid);
         if strcmp(MC(iCase).APLUS, 'A+') % Write card 2A+ Flexible aerosol Model
@@ -4506,7 +4552,21 @@ classdef Mod5
         if strcmpi(MC(iCase).CDTDIR, 'T') % Describe card 1A4
           MC(iCase) = MC(iCase).DescribeCard1A4(fid, OFormat);  % The whole line
         end
-        
+        % Card 1A5 - scale factors for the default vertical profiles of 10
+        % uniformly mixed molecular species
+        if any(MC(iCase).C_PROF == '1357')
+          MC(iCase) = MC(iCase).DescribeCard1A5(fid, OFormat);  
+        end
+        % Card 1A6 - scale factors for the default vertical profiles of 13
+        % cross-section molecular species
+        if any(MC(iCase).C_PROF == '2367')
+          MC(iCase) = MC(iCase).DescribeCard1A6(fid, OFormat);  
+        end
+        % Card 1A7 - scale factors for the default vertical profiles of 16
+        % trace molecular species
+        if any(MC(iCase).C_PROF == '4567')
+          MC(iCase) = MC(iCase).DescribeCard1A7(fid, OFormat);  
+        end
         %% Card 2 - Main Aerosol and Cloud Options
         % MC(iCase) = MC(iCase).DescribeCard2(fid);
         if strcmp(MC(iCase).APLUS, 'A+') % Describe card 2A+ Flexible aerosol Model
@@ -7183,8 +7243,8 @@ classdef Mod5
       % Validation of IEMSCT
       assert(isscalar(MC) && isscalar(newIEMSCT), 'Mod5:setIEMSCT:MustBeScalar', ...
         'Inputs to set.IEMSCT must be scalar.');
-      assert(isnumeric(newIEMSCT) && any(newIEMSCT == [0 1 2 3]), 'Mod5:setIEMSCT:BadInput', ...
-        'New IEMSCT (radiance/transmittance/irradiance mode) value in set.IEMSCT must be one of 0,1,2 or 3.');
+      assert(isnumeric(newIEMSCT) && any(newIEMSCT == [0 1 2 3 4]), 'Mod5:setIEMSCT:BadInput', ...
+        'New IEMSCT (radiance/transmittance/irradiance mode) value in set.IEMSCT must be one of 0,1,2,3 or 4.');
       MC.IEMSCT = newIEMSCT;
     end % set.IEMSCT
     function MC = set.IMULT(MC, newIMULT) % Multiple scattering
@@ -7199,7 +7259,7 @@ classdef Mod5
       MC.M1 = newM1;
     end % set.M1
     function MC = set.M2(MC, newM2) % Water Vapour profile
-      MC.ScalarIntNumeric(newM2, 0:6, 'M2');
+      MC.ScalarIntNumeric(newM2, -6:6, 'M2');
       MC.M2 = newM2;
     end % set.M2
     function MC = set.M3(MC, newM3) % Ozone profile
@@ -9040,7 +9100,6 @@ classdef Mod5
       C.printPreCard(fid, OF, '1A3')
       C.printCardItem(fid, OF, 'FILTNM', '''%s''', 'Observation instrument spectral band definition file.\n');
     end % DescribeCard1A3  
-    
     function C = ReadCard1A4(C, fid)
       % DATDIR
       % FORMAT (A256) (If CDTDIR = True)
@@ -9054,8 +9113,55 @@ classdef Mod5
       C.printPreCard(fid, OF, '1A4')
       C.printCardItem(fid, OF, 'DATDIR', '''%s''', 'Pathname for the MODTRAN data files.\n');
     end % DescribeCard1A4  
-
-    
+    function C = ReadCard1A5(C, fid)
+        % S_UMIX(IMOL), IMOL = 4, 13
+        % FORMAT (10F5.0) If C_PROF = 1, 3, 5 or 7
+        Card = C.ReadSimpleCard(fid, [5 5 5 5 5 5 5 5 5 5], ...
+            {'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f'}, '1A5');
+       [A4, A5, A6, A7, A8, A9, A10, A11, A12, A13] = Card{:};
+       C.S_UMIX(4:13) = [A4, A5, A6, A7, A8, A9, A10, A11, A12, A13];
+    end % ReadCard1A5
+    function C = WriteCard1A5(C, fid)
+        fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_UMIX(4:13));
+    end % WriteCard1A5
+    function C = DescribeCard1A5(C, fid, OF)
+      C.printPreCard(fid, OF, '1A5')
+      C.printCardItem(fid, OF, 'S_UMIX', '''[%g %g %g %g %g %g %g %g %g %g]''', ...
+          'Scale factors for the default vertical profiles of 10 uniformly mixed molecular species.\n');
+    end % DescribeCard1A5
+    function C = ReadCard1A6(C, fid)
+        % S_XSEC(IMOL), IMOL = 1, 13
+        % FORMAT (13F5.0) If C_PROF = 2, 3, 6 or 7
+        Card = C.ReadSimpleCard(fid, [5 5 5 5 5 5 5 5 5 5 5 5 5], ...
+            {'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f'}, '1A6');
+       [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13] = Card{:};
+       C.S_XSEC(1:13) = [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13];
+    end % ReadCard1A6
+    function C = WriteCard1A6(C, fid)
+        fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_XSEC(1:13));
+    end % WriteCard1A6
+    function C = DescribeCard1A6(C, fid, OF)
+      C.printPreCard(fid, OF, '1A6')
+      C.printCardItem(fid, OF, 'S_XSEC', '''[%g %g %g %g %g %g %g %g %g %g %g %g %g]''', ...
+          'Scale factors for the default vertical profiles of 13 cross-section molecular species.\n');
+    end % DescribeCard1A6
+    function C = ReadCard1A7(C, fid)
+        % S_TRAC(IMOL), IMOL = 1, 16
+        % FORMAT (16F5.0) If C_PROF = 4, 5, 6 or 7
+        Card = C.ReadSimpleCard(fid, [5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5], ...
+            {'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f'}, '1A7');
+       [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13 A14, A15, A16] = Card{:};
+       C.S_TRAC(1:16) = [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16];
+    end % ReadCard1A7
+    function C = WriteCard1A7(C, fid)
+        fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_TRAC(1:16));
+    end % WriteCard1A7
+    function C = DescribeCard1A7(C, fid, OF)
+      C.printPreCard(fid, OF, '1A7')
+      C.printCardItem(fid, OF, 'S_TRAC', '''[%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g]''', ...
+          'Scale factors for the default vertical profiles of 16 trace molecular species.\n');
+    end % DescribeCard1A7
+   
     function C = ReadCard2(C, fid)
       % (A2, I3, A1, I4, A3, I2, 3(I5), 5F10.5
       Card = C.ReadSimpleCard(fid, [2 3 1 4 3 2 5 5 5 10 10 10 10 10], ...
