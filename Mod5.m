@@ -7628,6 +7628,32 @@ classdef Mod5
           'Mod5:setDATDIR:BadDATDIR','The parameter DATDIR must be a char array of length less than 256.');
         MC.DATDIR = strtrim(newDATDIR); 
     end % set.DATDIR
+    %% Cards 1A5, 1A6 and 1A7 - profile scaling factors
+    function MC = set.S_UMIX(MC, newS_UMIX)
+        if ~isempty(newS_UMIX)
+            assert(isnumeric(newS_UMIX) && isvector(newS_UMIX) && numel(newS_UMIX) == 10, 'Mod5:setS_UMIX:BadS_UMIX', ...
+                'Input S_UMIX must be a numeric vector of 10 elements.');
+            Temp = zeros(1,10);
+            Temp(4:13) = newS_UMIX;
+            newS_UMIX = Temp;
+        end
+        MC.S_UMIX = newS_UMIX;
+    end % set.S_UMIX
+    function MC = set.S_XSEC(MC, newS_XSEC)
+        if ~isempty(newS_UMIX)
+            assert(isnumeric(newS_XSEC) && isvector(newS_XSEC) && numel(newS_XSEC) == 13, 'Mod5:setS_XSEC:BadS_XSEC', ...
+                'Input S_XSEC must be a numeric vector of 13 elements.');
+        end
+        MC.S_XSEC = newS_XSEC;
+    end % set.S_XSEC
+    function MC = set.S_TRAC(MC, newS_TRAC)
+        if ~isempty(newS_TRAC)
+            assert(isnumeric(newS_TRAC) && isvector(newS_TRAC) && numel(newS_TRAC) == 16, 'Mod5:setS_TRAC:BadS_TRAC', ...
+                'Input S_TRAC must be a numeric vector of 16 elements.');
+        end
+        MC.S_TRAC = newS_TRAC;
+    end % set.S_XSEC
+    
     %% Card 2 set methods
     function MC = set.APLUS(MC, newAPLUS)
       if isempty(newAPLUS)
@@ -9161,6 +9187,12 @@ classdef Mod5
       C.printCardItem(fid, OF, 'S_TRAC', '''[%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g]''', ...
           'Scale factors for the default vertical profiles of 16 trace molecular species.\n');
     end % DescribeCard1A7
+    function C = ReadCard1B(C, fid)
+    end % ReadCard1B
+    function C= WriteCard1B(C, fid)
+    end % WriteCard1B
+    function C = DescribeCard1B(C, fid, OF)
+    end % DescribeCard1B
    
     function C = ReadCard2(C, fid)
       % (A2, I3, A1, I4, A3, I2, 3(I5), 5F10.5
