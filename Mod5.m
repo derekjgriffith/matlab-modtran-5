@@ -4170,6 +4170,13 @@ classdef Mod5
         if any(MC(iCase).C_PROF == '4567')
           MC(iCase) = MC(iCase).ReadCard1A7(fid);  
         end
+        %% Card 1B or Alternative Card Alt1B
+        if MC(iCase).NSSALB > 0
+            MC(iCase) = MC(iCase).ReadCard1B(fid);
+        elseif MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
+            MC(iCase) = MC(iCase).ReadCardAlt1B(fid);
+        end
+        
         %% Card 2 - Main Aerosol and Cloud Options
         MC(iCase) = MC(iCase).ReadCard2(fid);
         if strcmp(MC(iCase).APLUS, 'A+') % Read card 2A+ Flexible aerosol Model
@@ -4357,6 +4364,12 @@ classdef Mod5
         % trace molecular species
         if any(MC(iCase).C_PROF == '4567')
           MC(iCase) = MC(iCase).WriteCard1A7(fid);  
+        end
+        %% Card 1B or Alternative Card Alt1B
+        if MC(iCase).NSSALB > 0
+            MC(iCase) = MC(iCase).WriteCard1B(fid);
+        elseif MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
+            MC(iCase) = MC(iCase).WriteCardAlt1B(fid);
         end
         %% Card 2 - Main Aerosol and Cloud Options
         MC(iCase) = MC(iCase).WriteCard2(fid);
@@ -4567,6 +4580,13 @@ classdef Mod5
         if any(MC(iCase).C_PROF == '4567')
           MC(iCase) = MC(iCase).DescribeCard1A7(fid, OFormat);  
         end
+        %% Card 1B or Alternative Card Alt1B
+        if MC(iCase).NSSALB > 0
+            MC(iCase) = MC(iCase).DescribeCard1B(fid, OFormat);
+        elseif MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
+            MC(iCase) = MC(iCase).DescribeCardAlt1B(fid, OFormat);
+        end
+        
         %% Card 2 - Main Aerosol and Cloud Options
         % MC(iCase) = MC(iCase).DescribeCard2(fid);
         if strcmp(MC(iCase).APLUS, 'A+') % Describe card 2A+ Flexible aerosol Model
@@ -7227,8 +7247,8 @@ classdef Mod5
       % Validation of MODEL
       assert(isscalar(MC) && isscalar(newMODEL), 'Mod5:setMODEL:MustBeScalar', ...
         'Inputs to set.MODEL must be scalar.');
-      assert(isnumeric(newMODEL) && any(newMODEL == [0 1 2 3 4 5 6 7]), 'Mod5:setMODEL:BadInput', ...
-        'New MODEL (atmospheric model) value in set.MODEL must be one of 0,1,2,3,4,5,6 or 7.');
+      assert(isnumeric(newMODEL) && any(newMODEL == [0 1 2 3 4 5 6 7 8]), 'Mod5:setMODEL:BadInput', ...
+        'New MODEL (atmospheric model) value in set.MODEL must be one of 0,1,2,3,4,5,6,7 or 8.');
       MC.MODEL = newMODEL;
     end % set.MODEL
     function MC = set.ITYPE(MC, newITYPE) % Line of sight type
@@ -7287,7 +7307,7 @@ classdef Mod5
       MC.I_RD2C = newI_RD2C;
     end % set.I_RD2C
     function MC = set.NOPRNT(MC, newNOPRNT) % Control outputs to tape6 and tape8
-      MC.ScalarIntNumeric(newNOPRNT, -2:1, 'NOPRNT');
+      MC.ScalarIntNumeric(newNOPRNT, -2:3, 'NOPRNT');
       MC.NOPRNT = newNOPRNT;
     end % set.NOPRNT
     function MC = set.SURREF(MC, newSURREF) % Surface reflectance
@@ -7297,7 +7317,7 @@ classdef Mod5
     end % set.SURREF
     %% Card 1A set methods
     function MC = set.DIS(MC, newDIS)
-      MC.ScalarChar(newDIS, 'tTfF ', 'DIS');
+      MC.ScalarChar(newDIS, 'tTfFsS ', 'DIS');
       if any(newDIS == 'tT') && MC.IMULT == 0
         warning('Mod5:setDISAZM:CheckIMULT', ...
           'DISORT can only be used if multi-scatter is enabled. Check the IMULT parameter.')
@@ -7640,7 +7660,7 @@ classdef Mod5
         MC.S_UMIX = newS_UMIX;
     end % set.S_UMIX
     function MC = set.S_XSEC(MC, newS_XSEC)
-        if ~isempty(newS_UMIX)
+        if ~isempty(newS_XSEC)
             assert(isnumeric(newS_XSEC) && isvector(newS_XSEC) && numel(newS_XSEC) == 13, 'Mod5:setS_XSEC:BadS_XSEC', ...
                 'Input S_XSEC must be a numeric vector of 13 elements.');
         end
@@ -7652,7 +7672,7 @@ classdef Mod5
                 'Input S_TRAC must be a numeric vector of 16 elements.');
         end
         MC.S_TRAC = newS_TRAC;
-    end % set.S_XSEC
+    end % set.S_TRAC
     
     %% Card 2 set methods
     function MC = set.APLUS(MC, newAPLUS)
@@ -9145,14 +9165,14 @@ classdef Mod5
         Card = C.ReadSimpleCard(fid, [5 5 5 5 5 5 5 5 5 5], ...
             {'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f', 'f'}, '1A5');
        [A4, A5, A6, A7, A8, A9, A10, A11, A12, A13] = Card{:};
-       C.S_UMIX(4:13) = [A4, A5, A6, A7, A8, A9, A10, A11, A12, A13];
+       C.S_UMIX = [A4, A5, A6, A7, A8, A9, A10, A11, A12, A13];
     end % ReadCard1A5
     function C = WriteCard1A5(C, fid)
         fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_UMIX(4:13));
     end % WriteCard1A5
     function C = DescribeCard1A5(C, fid, OF)
-      C.printPreCard(fid, OF, '1A5')
-      C.printCardItem(fid, OF, 'S_UMIX', '''[%g %g %g %g %g %g %g %g %g %g]''', ...
+      C.printPreCard(fid, OF, '1A5');
+      C.printCardItem(fid, OF, 'S_UMIX', '[%g %g %g %g %g %g %g %g %g %g]', ...
           'Scale factors for the default vertical profiles of 10 uniformly mixed molecular species.\n');
     end % DescribeCard1A5
     function C = ReadCard1A6(C, fid)
@@ -9167,9 +9187,9 @@ classdef Mod5
         fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_XSEC(1:13));
     end % WriteCard1A6
     function C = DescribeCard1A6(C, fid, OF)
-      C.printPreCard(fid, OF, '1A6')
-      C.printCardItem(fid, OF, 'S_XSEC', '''[%g %g %g %g %g %g %g %g %g %g %g %g %g]''', ...
-          'Scale factors for the default vertical profiles of 13 cross-section molecular species.\n');
+      C.printPreCard(fid, OF, '1A6');
+      C.printCardItem(fid, OF, 'S_XSEC', '[%g %g %g %g %g %g %g %g %g %g %g %g %g]', ...
+          'Scale factors for the default vertical profiles of 10 uniformly mixed species.\n');
     end % DescribeCard1A6
     function C = ReadCard1A7(C, fid)
         % S_TRAC(IMOL), IMOL = 1, 16
@@ -9183,16 +9203,51 @@ classdef Mod5
         fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_TRAC(1:16));
     end % WriteCard1A7
     function C = DescribeCard1A7(C, fid, OF)
-      C.printPreCard(fid, OF, '1A7')
-      C.printCardItem(fid, OF, 'S_TRAC', '''[%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g]''', ...
+      C.printPreCard(fid, OF, '1A7');
+      C.printCardItem(fid, OF, 'S_TRAC', '[%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g]', ...
           'Scale factors for the default vertical profiles of 16 trace molecular species.\n');
     end % DescribeCard1A7
     function C = ReadCard1B(C, fid)
+        %     (AWAVLN(ISSALB), ASSALB(ISSALB), ISSALB=1, NSSALB)
+        %     FORMAT ((8F10.0)) (If NSSALB > 0)
+        Card = C.ReadSimpleCard(fid, repmat(10, 1, C.NSSALB), ...
+            repmat({'f'}, 1, C.NSSALB), '1B');
+        C.AWAVLN = Card{1:2:end};
+        C.ASSALB = Card{2:2:end};
     end % ReadCard1B
     function C= WriteCard1B(C, fid)
+    %     FORMAT ((8F10.0)) (If NSSALB > 0)
+      Temp = zeros(1, numel(C.AWAVLN)+numel(C.ASSALB));
+      Temp(1:2:end) = C.AWAVLN;
+      Temp(2:2:end) = C.ASSALB;
+      fprintf(fid, [repmat('%10.5f', 1, numel(Temp)) '\n'], Temp);     
     end % WriteCard1B
     function C = DescribeCard1B(C, fid, OF)
+      C.printPreCard(fid, OF, '1B');
+      C.printCardItem(fid, OF, 'AWAVLN', ['[' repmat('%g ', 1, numel(C.AWAVLN)) ']'], ...
+          'Wavelength grid (in microns) for boundary layer (and tropospheric) aerosol single scattering albedo.\n');
+      C.printCardItem(fid, OF, 'ASSALB', ['[' repmat('%g ', 1, numel(C.ASSALB)) ']'], ...
+          'Boundary layer (and tropospheric) aerosol spectral single scattering albedo\n');
+        
     end % DescribeCard1B
+    function C = ReadCard1AltB(C, fid)
+        % ACOALB, RHASYM
+        % FORMAT (2F10.5) (If NSSALB < 0 and ASTMX > 0.)
+        Card = C.ReadSimpleCard(fid, [10 10], ...
+            {'f', 'f'}, 'Alt1B');
+        C.ACOALB = Card{1};
+        C.RHASYM = Card{2};
+    end % ReadCardAlt1B
+    function C= WriteCardAlt1B(C, fid)
+        fprintf(fid, '%10.5f%10.5f\n', C.ACOALB, C.RHASYM);
+    end % WriteCardAlt1B
+    function C = DescribeCardAlt1B(C, fid, OF)
+      C.printPreCard(fid, OF, 'Alt1B');
+      C.printCardItem(fid, OF, 'ACOALB', '%g', ...
+          'Aerosol single scattering co-albedo (one minus the albedo) scaling factor.');
+      C.printCardItem(fid, OF, 'RHASYM', '%g', ...
+          'Relative humidity used to define the aerosol asymmetry factor [%].'); 
+    end % DescribeCardAlt1B
    
     function C = ReadCard2(C, fid)
       % (A2, I3, A1, I4, A3, I2, 3(I5), 5F10.5
