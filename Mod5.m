@@ -4903,6 +4903,9 @@ classdef Mod5
       % First write the file mod5root.in in the MODTRANPath
       
       modrootfid = fopen([MODTRANPath 'mod5root.in'], 'wt');
+      if modrootfid < 0
+          error('Mod5:Run:CantOpenmod5root','Cannot open the file mod5root.in. Check that you have write permissions in %s.', MODTRANPath);
+      end
       try
         fprintf(modrootfid, '%s\n', MODCase(1).CaseName);
         fclose(modrootfid);
