@@ -184,6 +184,8 @@ classdef Mod5
 %              VRFRAC: See MODTRAN5 User's Manual
 %               NSURF: See MODTRAN5 User's Manual
 %              AATEMP: See MODTRAN5 User's Manual
+%                DH2O: See MODTRAN5 User's Manual
+%              MLTRFL: See MODTRAN5 User's Manual
 %               CBRDF: See MODTRAN5 User's Manual
 %              NWVSRF: See MODTRAN5 User's Manual
 %              SURFZN: See MODTRAN5 User's Manual
@@ -589,6 +591,8 @@ classdef Mod5
     VRFRAC    % Controls spherical index of refraction calculation
     NSURF     % Control for area-averaged reflectance in target region
     AATEMP    % Area-averaged ground surface temperature
+    DH2O      % Liquid water option, water layer thickness input [mm] on ground.
+    MLTRFL    % Embedded surface moisture attenuation model or surface water layer model control.
     CBRDF     % Gives name or number of BRDF parametrization (if SURREF = 'BRDF')
     NWVSRF    % Number of BRDF spectral grid points
     SURFZN    % Zenith angle of surface normal for BRDF calculation (only 0 is supported in MODTRAN 4)
@@ -733,7 +737,7 @@ classdef Mod5
                 {'F'}, ... % 3C5
                 {'F'}, ... % 3C6
                 {'V1','V2','DV','FWHM','YFLAG','XFLAG','DLIMIT','FLAGS','MLFLX','VRFRAC'}, ... % 4
-                {'NSURF','AATEMP'}, ... % 4A
+                {'NSURF','AATEMP','DH2O','MLTRFL'}, ... % 4A
                 {'CBRDF'}, ... % 4B1
                 {'NWVSRF','SURFZN','SURFAZ'}, ... % 4B2
                 {'WVSURF', 'PARAMS1', 'PARAMS2', 'PARAMS3', 'PARAMS4'}, ... % 4B3
@@ -10153,7 +10157,7 @@ classdef Mod5
     function C = WriteCard4(C, fid)
       % Note - all the example cases with PcModWin4 use F10.3 here
       % while the User's manual prescribes F10.0. Using F10.3
-      fprintf(fid, '%10.3f%10.3f%10.3f%10.3f%c%c%8s%7s%3d%10.2\n', ...
+      fprintf(fid, '%10.3f%10.3f%10.3f%10.3f%c%c%8s%7s%3d%10.2f\n', ...
         C.V1, C.V2, C.DV, C.FWHM, C.YFLAG, C.XFLAG, C.DLIMIT, C.FLAGS, C.MLFLX, C.VRFRAC);
     end % WriteCard4
     function C = DescribeCard4(C, fid, OF)
@@ -10303,14 +10307,22 @@ classdef Mod5
       
     end % WriteCard4Ato4L2
     function C = ReadCard4A(C, fid)
-      % NSURF, AATEMP
+      % NSURF, AATEMP ( MODTRAN 4)
       % FORMAT (I1, F9.0) (If SURREF = 'BRDF' or 'LAMBER')
-      Card = C.ReadSimpleCard(fid, [1 9], {'d','f'}, '4A');
-      [C.NSURF, C.AATEMP] = Card{:};
+      % MODTRAN 5 as follows
+      % NSURF, AATEMP, DH2O, MLTRFL (If SURREF = 'BRDF' or 'LAMBER')
+      % FORMAT (I1, 2F9.0, A1)
+      Card = C.ReadSimpleCard(fid, [1 9 9 1], {'d','f','f','c'}, '4A');
+      [C.NSURF, C.AATEMP, C.DH2O, C.MLTRFL] = Card{:};
     end % ReadCard4A
     function C = WriteCard4A(C, fid)
-      fprintf(fid, '%1d%9.0f\n', C.NSURF, C.AATEMP);
+      fprintf(fid, '%1d%9.2f%9.3f%c\n', C.NSURF, C.AATEMP, C.DH2O, C.MLTRFL);
     end % WriteCard4A
+    function C = DescribeCard4A(C, fid, OF)
+         C.printPreCard(fid, OF, '4A');   
+         % To be implemented.
+         fprintf(fid, '%% Please implement the function DescribeCard4A to get output here.\n');
+    end % DescribeCard4A
     function C = ReadCard4B1(C, fid, iNSURF)
       % CBRDF
       % FORMAT (A80) (If SURREF = 'BRDF')
