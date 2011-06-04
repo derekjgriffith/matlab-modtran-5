@@ -180,6 +180,8 @@ classdef Mod5
 %               XFLAG: See MODTRAN5 User's Manual, Units for .plt (plot file)
 %              DLIMIT: See MODTRAN5 User's Manual, Plot file delimiter
 %               FLAGS: See MODTRAN5 User's Manual, V1/V2 Units and convolution control
+%               MLFLX: See MODTRAN5 User's Manual, Levels of flux outputs
+%              VRFRAC: See MODTRAN5 User's Manual
 %               NSURF: See MODTRAN5 User's Manual
 %              AATEMP: See MODTRAN5 User's Manual
 %               CBRDF: See MODTRAN5 User's Manual
@@ -583,6 +585,8 @@ classdef Mod5
     XFLAG     % Controls units in plot file
     DLIMIT    % Delimiter for multiple plots in the plot file
     FLAGS = '       '; % Control flags for spectral range units and convolution
+    MLFLX     % Number of atmospheric levels for which spectral fluxes [FLAGS(7:7) = 'T' or 'F'] are output, starting from the ground.
+    VRFRAC    % Controls spherical index of refraction calculation
     NSURF     % Control for area-averaged reflectance in target region
     AATEMP    % Area-averaged ground surface temperature
     CBRDF     % Gives name or number of BRDF parametrization (if SURREF = 'BRDF')
@@ -728,7 +732,7 @@ classdef Mod5
                 {'F'}, ... % 3C4
                 {'F'}, ... % 3C5
                 {'F'}, ... % 3C6
-                {'V1','V2','DV','FWHM','YFLAG','XFLAG','DLIMIT','FLAGS'}, ... % 4
+                {'V1','V2','DV','FWHM','YFLAG','XFLAG','DLIMIT','FLAGS','MLFLX','VRFRAC'}, ... % 4
                 {'NSURF','AATEMP'}, ... % 4A
                 {'CBRDF'}, ... % 4B1
                 {'NWVSRF','SURFZN','SURFAZ'}, ... % 4B2
@@ -4688,28 +4692,31 @@ classdef Mod5
         %% More cases in the file or terminate MODTRAN
         MC(iCase) = MC(iCase).DescribeCard5(fid, OFormat); % Card 5 is also compulsory
         % if IRPT is blank or empty, MODTRAN will terminate
-        FileFinished = (isempty(MC(iCase).IRPT) || MC(iCase).IRPT == 0);
-        while ~FileFinished
-          iCase = iCase + 1;
-          switch abs(MC(iCase - 1).IRPT)
-            case 1 % Describe complete new set of cards
-              break; % Describe from Card 1 again (entirely new case)
-            case 3 % Copy previous case and read subset of cards
-              MC(iCase) = MC(iCase - 1);
-              % Describe full 3 series, subsidiary 4-series
-              % MC(iCase) = MC(iCase).DescribeCard3Series(fid);
-              % MC(iCase) = MC(iCase).DescribeCard4Ato4L2(fid);
-            case 4 % Copy previous case and read subset of cards
-              MC(iCase) = MC(iCase - 1);
-              % Describe full 4-series as required
-              % MC(iCase) = MC(iCase).DescribeCard4(fid); % Describe card 4 as well
-              % MC(iCase) = MC(iCase).DescribeCard4Ato4L2(fid);
-              
-            otherwise
-            error('Mod5:BadIRPT','Invalid value of IRPT encountered at end of case. File read format is probably out of alignment.')
-          end
-          % MC(iCase) = MC(iCase).DescribeCard5(fid); % WRITE Card 5 again  
-        end
+        FileFinished = true;
+%        FileFinished = (isempty(MC(iCase).IRPT) || MC(iCase).IRPT == 0);
+%         while ~FileFinished
+%           iCase = iCase + 1;
+%           switch abs(MC(iCase - 1).IRPT)
+%             case 1 % Describe complete new set of cards
+%               break; % Describe from Card 1 again (entirely new case)
+%             case 3 % Describe subset of cards
+%               % MC(iCase) = MC(iCase - 1);
+%               % Describe full 3 series, subsidiary 4-series
+%               MC(iCase) = MC(iCase).DescribeCard3Series(fid);
+%               MC(iCase) = MC(iCase).DescribeCard4Ato4L2(fid);
+%             case 4 % Copy previous case and read subset of cards
+%               % MC(iCase) = MC(iCase - 1);
+%               % Describe full 4-series as required
+%               MC(iCase) = MC(iCase).DescribeCard4(fid); % Describe card 4 as well
+%               MC(iCase) = MC(iCase).DescribeCard4Ato4L2(fid);
+%               
+%             otherwise
+%             error('Mod5:BadIRPT','Invalid value of IRPT encountered at end of case. File read format is probably out of alignment.')
+%           end
+%           MC(iCase) = MC(iCase).DescribeCard5(fid); % Describe Card 5 again  
+%           FileFinished = (isempty(MC(iCase).IRPT) || MC(iCase).IRPT == 0);
+%           
+%         end
        end
        if fid ~= 1
         fclose(fid);
@@ -10137,14 +10144,17 @@ classdef Mod5
       % V1, V2, DV, FWHM, YFLAG, XFLAG, DLIMIT, FLAGS
       % FORMAT (4F10.0, 2A1, A8, A6) (MODTRAN3.7)
       % FORMAT (4F10.0, 2A1, A8, A7) (MODTRAN4.0)
-      Card = C.ReadSimpleCard(fid, [10 10 10 10 1 1 8 7], {'f','f','f','f','c','c','8c','7c'}, '4');
-      [C.V1, C.V2, C.DV, C.FWHM, C.YFLAG, C.XFLAG, C.DLIMIT, C.FLAGS] = Card{:};
+      % MODTRAN 5 is as follows
+      % V1, V2, DV, FWHM, YFLAG, XFLAG, DLIMIT, FLAGS, MLFLX, VRFRAC
+      % FORMAT (4F10.0, 2A1, A8, A7, I3, F10.0)
+      Card = C.ReadSimpleCard(fid, [10 10 10 10 1 1 8 7 3 10], {'f','f','f','f','c','c','8c','7c','d','f'}, '4');
+      [C.V1, C.V2, C.DV, C.FWHM, C.YFLAG, C.XFLAG, C.DLIMIT, C.FLAGS, C.MLFLX, C.VRFRAC] = Card{:};
     end % ReadCard4
     function C = WriteCard4(C, fid)
       % Note - all the example cases with PcModWin4 use F10.3 here
       % while the User's manual prescribes F10.0. Using F10.3
-      fprintf(fid, '%10.3f%10.3f%10.3f%10.3f%c%c%8s%7s\n', ...
-        C.V1, C.V2, C.DV, C.FWHM, C.YFLAG, C.XFLAG, C.DLIMIT, C.FLAGS);
+      fprintf(fid, '%10.3f%10.3f%10.3f%10.3f%c%c%8s%7s%3d%10.2\n', ...
+        C.V1, C.V2, C.DV, C.FWHM, C.YFLAG, C.XFLAG, C.DLIMIT, C.FLAGS, C.MLFLX, C.VRFRAC);
     end % WriteCard4
     function C = DescribeCard4(C, fid, OF)
       % Card 4 is spectral range and control flags
@@ -10234,6 +10244,15 @@ classdef Mod5
       end
       C.printCardItem(fid, OF, 'DLIMIT', '''%s''', 'Delimiter string for multiple plots in single plot file.\n');
       C.printCardItem(fid, OF, 'FLAGS', '''%s''', 'Control flags.\n');
+      C.printCardItem(fid, OF, 'MLFLX', '%d', 'Number of atmospheric levels for which spectral fluxes [FLAGS(7:7) = ''T'' or ''F''] are output, starting from the ground.\n');
+      C.printCardItem(fid, OF, 'VRFRAC', '%g');
+      if isempty(C.VRFRAC) || C.VRFRAC == 0
+          fprintf(fid, 'Index of refraction profile for spherical refraction is performed at central spectral frequency value for input bandpass.\n');
+      elseif C.VRFRAC > 0
+          fprintf(fid, 'Spectral frequency [cm^-1] at which index of refraction profile is calculated for spherical refraction.\n');
+      else
+          fprintf(fid, 'No spherical refraction calculation.\n');
+      end
     end % DescribeCard4
     function MC = ReadCard4Ato4L2(MC, fid)
       % Read cards 4A through to 4L2 as required.
