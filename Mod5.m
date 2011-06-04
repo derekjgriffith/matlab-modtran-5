@@ -115,6 +115,10 @@ classdef Mod5
 %                IRD1: See MODTRAN5 User's Manual
 %                IRD2: See MODTRAN5 User's Manual
 %              HMODEL: See MODTRAN5 User's Manual
+%                 REE: See MODTRAN5 User's Manual
+%              NMOLYC: See MODTRAN5 User's Manual
+%              E_MASS: See MODTRAN5 User's Manual
+%              AIRMWT: See MODTRAN5 User's Manual
 %                  ZM: See MODTRAN5 User's Manual
 %                   P: See MODTRAN5 User's Manual
 %                   T: See MODTRAN5 User's Manual
@@ -122,6 +126,7 @@ classdef Mod5
 %              JCHARX: See MODTRAN5 User's Manual
 %                WMOL: See MODTRAN5 User's Manual
 %               WMOLX: See MODTRAN5 User's Manual
+%               WMOLY: See MODTRAN5 User's Manual
 %               AHAZE: See MODTRAN5 User's Manual
 %              EQLWCZ: See MODTRAN5 User's Manual
 %               RRATZ: See MODTRAN5 User's Manual
@@ -4214,6 +4219,9 @@ classdef Mod5
             if MC(iCase).MDEF == 2 && MC(iCase).IRD1 == 1
               MC(iCase) = MC(iCase).ReadCard2C2X(fid, iML);
             end
+            if MC(iCase).NMOLYC > 0 && MC(iCase).IRD1 == 1
+              MC(iCase) = MC(iCase).ReadCard2C2Y(fid, iML);   
+            end
             if MC(iCase).IRD2 == 1
               MC(iCase) = MC(iCase).ReadCard2C3(fid, iML);
             end
@@ -4412,6 +4420,10 @@ classdef Mod5
             if MC(iCase).MDEF == 2 && MC(iCase).IRD1 == 1
               MC(iCase) = MC(iCase).WriteCard2C2X(fid, iML);
             end
+            if MC(iCase).NMOLYC > 0 && MC(iCase).IRD1 == 1
+              MC(iCase) = MC(iCase).WriteCard2C2Y(fid, iML);   
+            end
+            
             if MC(iCase).IRD2 == 1
               MC(iCase) = MC(iCase).WriteCard2C3(fid, iML);
             end
@@ -4632,6 +4644,9 @@ classdef Mod5
             if MC(iCase).MDEF == 2 && MC(iCase).IRD1 == 1
               % MC(iCase) = MC(iCase).DescribeCard2C2X(fid, iML);
             end
+            if MC(iCase).NMOLYC > 0 && MC(iCase).IRD1 == 1
+              MC(iCase) = MC(iCase).DescribeCard2C2Y(fid, iML, OFormat);   
+            end            
             if MC(iCase).IRD2 == 1
               % MC(iCase) = MC(iCase).DescribeCard2C3(fid, iML);
             end
@@ -9272,7 +9287,6 @@ classdef Mod5
       C.printCardItem(fid, OF, 'RHASYM', '%g', ...
           'Relative humidity used to define the aerosol asymmetry factor [%].'); 
     end % DescribeCardAlt1B
-   
     function C = ReadCard2(C, fid)
       % (A2, I3, A1, I4, A3, I2, 3(I5), 5F10.5
       Card = C.ReadSimpleCard(fid, [2 3 1 4 3 2 5 5 5 10 10 10 10 10], ...
@@ -9343,7 +9357,6 @@ classdef Mod5
       C.printPreCard(fid, OF, '2C');
       % To be implemented  
     end % DescribeCard2C
-    
     function C = ReadCard2CY(C, fid)
         % YNAME(I), I=1, NMOLYC
         % FORMAT((8A10)) (MODEL = 0,7,8; I_RD2C = 1; MDEF = 2; NMOLYC>0)
@@ -9369,7 +9382,7 @@ classdef Mod5
         % Is handling of this card really dependent on MDEF = 2
         % This card could span multiple lines in the input file
         MaxPerLine = 8; % Maximum number of entries per line
-        for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to read
+        for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to write
             if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
                 nYNAME = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
             else 
@@ -9416,10 +9429,16 @@ classdef Mod5
     end % WriteCard2C1
     function C = ReadCard2C2(C, fid, iML)
       % WMOL(J), J=4, 12 FORMAT (8E10.3, /E10.3)
-      Card = C.ReadSimpleCard(fid, [10 10 10 10 10 10 10 10 10], ...
-        {'e','e','e','e','e','e','e','e','e'}, '2C2');
-      [A4, A5, A6, A7, A8, A9, A10, A11, A12] = Card{:};
-      C.WMOL(iML, 4:12) = [A4, A5, A6, A7, A8, A9, A10, A11, A12];
+      Card = C.ReadSimpleCard(fid, [10 10 10 10 10 10 10 10], ...
+        {'e','e','e','e','e','e','e','e'}, '2C2');
+      [A4, A5, A6, A7, A8, A9, A10, A11] = Card{:};
+      C.WMOL(iML, 4:11) = [A4, A5, A6, A7, A8, A9, A10, A11];
+      % Second line
+      Card = C.ReadSimpleCard(fid, [10], ...
+        {'e'}, '2C2');
+      A12 = Card{:};
+      C.WMOL(iML, 12) = A12;
+      
     end % ReadCard2C2
     function C = WriteCard2C2(C, fid, iML)
       if ispc
@@ -9434,12 +9453,18 @@ classdef Mod5
     function C = ReadCard2C2X(C, fid, iML)
       %(WMOLX(J), J=1, 13) (If MDEF=2 & IRD1=1)
       % FORMAT (8E10.3, /5E10.3)      
-      Card = C.ReadSimpleCard(fid, [10 10 10 10 10 10 10 10 10 10 10 10 10], ...
-        {'e','e','e','e','e','e','e','e','e','e','e','e','e'}, '2C2X');
+      Card = C.ReadSimpleCard(fid, [10 10 10 10 10 10 10 10], ...
+        {'e','e','e','e','e','e','e','e'}, '2C2X');
       [WMOLX1, WMOLX2, WMOLX3, WMOLX4, WMOLX5, WMOLX6, WMOLX7, ...
-       WMOLX8, WMOLX9, WMOLX10, WMOLX11, WMOLX12, WMOLX13] = Card{:};
-      C.WMOLX(iML,:) = [WMOLX1, WMOLX2, WMOLX3, WMOLX4, WMOLX5, WMOLX6, WMOLX7, ...
-       WMOLX8, WMOLX9, WMOLX10, WMOLX11, WMOLX12, WMOLX13];
+       WMOLX8] = Card{:};
+      C.WMOLX(iML,1:8) = [WMOLX1, WMOLX2, WMOLX3, WMOLX4, WMOLX5, WMOLX6, WMOLX7, ...
+       WMOLX8];
+      % Second line
+      Card = C.ReadSimpleCard(fid, [10 10 10 10 10], ...
+        {'e','e','e','e','e'}, '2C2X');
+      [WMOLX9, WMOLX10, WMOLX11, WMOLX12, WMOLX13] = Card{:};
+      C.WMOLX(iML,9:13) = [WMOLX9, WMOLX10, WMOLX11, WMOLX12, WMOLX13];
+   
     end % ReadCard2C2X
     function C = WriteCard2C2X(C, fid, iML)
       if ispc
@@ -9451,6 +9476,48 @@ classdef Mod5
         fprintf(fid, '%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E\n%10.3E%10.3E%10.3E%10.3E%10.3E\n', C.WMOLX(iML, :));
       end
     end % WriteCard2C2X
+    function C = ReadCard2C2Y(C, fid, iML)
+        % (WMOLY(J), J = 1, NMOLYC)
+        % FORMAT ((8F10.0)) (If NMOLYC > 0 & IRD1 = 1)
+         MaxPerLine = 8; % Maximum number of entries per line
+        for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to read
+            if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
+                nYMOLYC = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
+            else 
+                nYMOLYC = MaxPerLine;
+            end
+            Card = C.ReadSimpleCard(fid, repmat(10, 1, nYMOLYC), repmat({'f'}, 1, nYMOLYC), '2C2Y');
+            for iName = 1:nYMOLYC
+                C.WMOLY(iML, (iLine - 1) * MaxPerLine + iName) = Card{iName};
+            end
+        end       
+    end % ReadCard2C2Y    
+    function C = WriteCard2C2Y(C, fid, iML)
+        % (WMOLY(J), J = 1, NMOLYC)
+        % FORMAT ((8F10.0)) (If NMOLYC > 0 & IRD1 = 1)
+        MaxPerLine = 8; % Maximum number of entries per line
+        for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to write
+            if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
+                nYMOLYC = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
+            else 
+                nYMOLYC = MaxPerLine;
+            end
+            for iName = 1:nYMOLYC
+                mol = sprintf('%10.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                
+                if ispc
+                    mol = strrep(mol, 'E+0', 'E+');
+                    mol = strrep(mol, 'E-0', 'E-');
+                end
+               fprintf(fid, '%10s', mol); 
+            end
+            fprintf(fid, '\n');
+        end       
+    end % WriteCard2C2Y
+    function C = DescribeCard2C2Y(C, fid, iML, OF)
+      C.printPreCard(fid, OF, '2C2Y');
+      % To be implemented  
+        
+    end % DescribeCard2C2Y
     function C = ReadCard2C3(C, fid, iML)
       % FORMAT (10X, 3F10.3, 5I5)
       Card = C.ReadSimpleCard(fid, [10 10 10 10 5 5 5 5 5], {'*','f','f','f','d','d','d','d','d'}, '2C3');
