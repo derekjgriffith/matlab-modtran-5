@@ -512,6 +512,11 @@ classdef Mod5
     IRD1      % Controls reading of additional light molecule abundances in user-defined atmospheric profiles
     IRD2      % Controls reading of Card 2C3, AHAZE, EQLWCZ ...
     HMODEL    % Name or description of user-defined atmospheric profile
+    REE       % Earth radius in kilometers (default according to MODEL). This input is only read in when MODEL = 8.
+    NMOLYC    % Number of user-defined species with specified names, concentrations, and molecular weights.
+    E_MASS    % Planetary mass in Earth masses. If a value of zero is input, E_MASS is set to 1. Used in the hydrostatic equation when MODEL=8.
+    AIRMWT    % The molecular weight of air at the surface in g/mol.
+    YNAME     % Array of names of user-defined species.
     ZM        % Layer boundary altitudes for user-defined atmospheres 
     P         % Pressure at layer boundaries in user-defined atmospheric profile
     T         % Temperatures at layer boundaries in user-defined atmospheric profile 
@@ -519,6 +524,7 @@ classdef Mod5
     JCHARX    % Flags indicating units or canned atmosphere default for heavy molecules in user-defined atmospheric components 
     WMOL      % Light molecule abundances in user-defined atmospheric profiles
     WMOLX     % Heavy molecule abundances in user-defined atmospheric profiles
+    WMOLY     % User-defined species densities
     AHAZE     % Aerosol or cloud scaling factor at altitudes ZM
     EQLWCZ    % Equivalent liquid water content at altitudes ZM for aerosol, cloud or fog
     RRATZ     % Rain rate (mm/hour) at altitudes ZM
@@ -618,8 +624,8 @@ classdef Mod5
   properties (Hidden)
     % There are a total of ? possible card formats in MODTRAN 5
     CardNames = {'1'  ,'1A' ,'1A1' ,'1A2','1A3','1A4','1A5', '1A6','1A7','1B', 'Alt1B'...
-                 '2','2A+','2A' ,'Alt2A','2B' ,'2C', ...
-                 '2C1','2C2','2C2X','2C3', '2D','2D1','2D2','2E1','2E2'  ,'3'  ,'Alt3', ...
+                 '2','2A+','2A' ,'Alt2A','2B' ,'2C','2CY', ...
+                 '2C1','2C2','2C2X','2C2Y', '2C3', '2D','2D1','2D2','2E1','2E2'  ,'3'  ,'Alt3', ...
                  '3A1','3A2','3B1' ,'3B2','3C1','3C2','3C3','3C4','3C5'  ,'3C6','4', ...
                  '4A','4B1','4B2','4B3','4L1','4L2','5'};
     CardDescr = {'Main Radiation and Transport Driver, Model, Algorithm, Mode', ... 1
@@ -639,9 +645,11 @@ classdef Mod5
                  'Water/Ice Cloud Models', ... Alt2A
                  'Army Vertical Structure Algorithm (VSA), Fog, Haze', ... 2B
                  'User-Defined Atmospheric Profiles, Control Card', ... 2C
+                 'Names of User-defined Atmospheric Species', ... 2CY
                  'User-Defined Atmospheric Profiles, Layers, Temperature, Pressure, Species', ... 2C1
                  'User-Defined Atmospheric Profiles, Molecular Species', ... 2C2
                  'User-Defined Atmospheric Profiles, Molecular Species', ... 2C2X
+                 'User-Defined Atmospheric Species Densities', ... 2C2Y
                  'User-Defined Atmospheric Profiles, Aerosols, Cloud, Rain', ... 2C3
                  'User-Defined Aerosol and Cloud Parameters, Altitude Region Control', ... 2D
                  'User-Defined Aerosol and Cloud Parameters, AWCCON and Layer Title', ... 2D1
@@ -691,10 +699,12 @@ classdef Mod5
                 {'CTHIK', 'CALT', 'CEXT'}, ... % 2A
                 {'CTHIK','CALT','CEXT','NCRALT','NCRSPC','CWAVLN','CCOLWD','CCOLIP','CHUMID','ASYMWD','ASYMIP'}, ... % Alt2A
                 {'ZCVSA','ZTVSA','ZINVSA'}, ... % 2B
-                {'ML','IRD1','IRD2','HMODEL'}, ... % 2C
+                {'ML','IRD1','IRD2','HMODEL','REE','NMOLYC','E_MASS','AIRMT'}, ... % 2C
+                {'YNAME'}, ... % 2CY
                 {'ZM','P','T','JCHAR','JCHARX'}, ... % 2C1
                 {'WMOL'}, ... % 2C2
                 {'WMOLX'}, ... % 2C2X
+                {'WMOLY'}, ... % 2C2Y
                 {'AHAZE', 'EQLWCZ','RRATZ','IHA1','ICLD1','IVUL1','ISEA1','ICHR1'}, ... % 2C3
                 {'IREG'}, ... % 2D
                 {'AWCCON','TITLE'}, ... % 2D1
@@ -4192,9 +4202,12 @@ classdef Mod5
           MC(iCase) = MC(iCase).ReadCard2B(fid);
         end
         if any(MC(iCase).MODEL == [0 7 8]) && MC(iCase).I_RD2C == 1 % Read Card 2C
-          MC(iCase) = MC(iCase).ReadCard2C(fid); 
+          MC(iCase) = MC(iCase).ReadCard2C(fid);
+          if MC(iCase).NMOLYC > 0 % && MC(iCase).MDEF == 2 % There is an issue here
+              MC(iCase) = MC(iCase).ReadCard2CY(fid);
+          end
           for iML = 1:MC(iCase).ML % Read CARDs 2C1 through 2C3 (as required) repeated ML times.
-            MC(iCase) = MC(iCase).ReadCard2C1(fid, iML);
+            MC(iCase) = MC(iCase).ReadCard2C1(fid, iML);            
             if MC(iCase).IRD1 == 1
               MC(iCase) = MC(iCase).ReadCard2C2(fid, iML);
             end
@@ -4386,7 +4399,11 @@ classdef Mod5
           MC(iCase) = MC(iCase).WriteCard2B(fid);
         end
         if any(MC(iCase).MODEL == [0 7 8]) && MC(iCase).I_RD2C == 1 % Write Card 2C
-          MC(iCase) = MC(iCase).WriteCard2C(fid); 
+          MC(iCase) = MC(iCase).WriteCard2C(fid);
+          if MC(iCase).NMOLYC > 0 % && MC(iCase).MDEF == 2 % There is an issue here
+              MC(iCase) = MC(iCase).WriteCard2CY(fid);
+          end
+          
           for iML = 1:MC(iCase).ML % Write CARDs 2C1 through 2C3 (as required) repeated ML times.
             MC(iCase) = MC(iCase).WriteCard2C1(fid, iML);
             if MC(iCase).IRD1 == 1
@@ -4602,7 +4619,11 @@ classdef Mod5
           % MC(iCase) = MC(iCase).DescribeCard2B(fid);
         end
         if any(MC(iCase).MODEL == [0 7 8]) && MC(iCase).I_RD2C == 1 % Describe Card 2C
-          % MC(iCase) = MC(iCase).DescribeCard2C(fid); 
+          % MC(iCase) = MC(iCase).DescribeCard2C(fid);
+          if  MC(iCase).NMOLYC > 0 % && MC(iCase).MDEF == 2 % There is an issue here
+              MC(iCase) = MC(iCase).DescribeCard2CY(fid, OFormat);
+          end
+          
           for iML = 1:MC(iCase).ML % Describe CARDs 2C1 through 2C3 (as required) repeated ML times.
             % MC(iCase) = MC(iCase).DescribeCard2C1(fid, iML);
             if MC(iCase).IRD1 == 1
@@ -9192,7 +9213,7 @@ classdef Mod5
     function C = DescribeCard1A6(C, fid, OF)
       C.printPreCard(fid, OF, '1A6');
       C.printCardItem(fid, OF, 'S_XSEC', '[%g %g %g %g %g %g %g %g %g %g %g %g %g]', ...
-          'Scale factors for the default vertical profiles of 10 uniformly mixed species.\n');
+          'Scale factors for the default vertical profiles of 13 cross-section molecular species\n');
     end % DescribeCard1A6
     function C = ReadCard1A7(C, fid)
         % S_TRAC(IMOL), IMOL = 1, 16
@@ -9305,17 +9326,66 @@ classdef Mod5
       fprintf(fid, '%10.3f%10.3f%10.3f\n', C.ZCVSA, C.ZTVSA, C.ZINVSA);
     end % WriteCard2B
     function C = ReadCard2C(C, fid)
-      % FORMAT(3I5, A65)
-      Card = C.ReadSimpleCard(fid, [5 5 5 65], {'d','d','d','65c'}, '2C');
-      [C.ML, C.IRD1, C.IRD2, C.HMODEL] = Card{:};
+      % Old FORMAT(3I5, A65)
+      % ML, IRD1, IRD2, HMODEL, REE, NMOLYC, E_MASS, AIRMWT       
+      % New FORMAT (3I5, A20, F10.0, I5, 2F10.0) (MODEL = 0, 7 or 8; I_RD2C = 1)      
+      Card = C.ReadSimpleCard(fid, [5 5 5 20 10 5 10 10], {'d','d','d','20c', 'f', 'd','f', 'f'}, '2C');
+      [C.ML, C.IRD1, C.IRD2, C.HMODEL, C.REE, C.NMOLYC, C.E_MASS, C.AIRMWT] = Card{:};
       % Put the atmosphere title into the subcase short description
       if isempty(C.CaseDescr)
         C.CaseDescr = strtrim(C.HMODEL);
       end
     end % ReadCard2C
     function C = WriteCard2C(C, fid)
-      fprintf(fid, '%5d%5d%5d%65s\n',C.ML, C.IRD1, C.IRD2, C.HMODEL);
+      fprintf(fid, '%5d%5d%5d%20s%10.3f%5d%10.6f%10.5f\n',C.ML, C.IRD1, C.IRD2, C.HMODEL, C.REE, C.NMOLYC, C.E_MASS, C.AIRMWT);
     end % WriteCard2C
+    function C = DescribeCard2C(C, fid, OF)
+      C.printPreCard(fid, OF, '2C');
+      % To be implemented  
+    end % DescribeCard2C
+    
+    function C = ReadCard2CY(C, fid)
+        % YNAME(I), I=1, NMOLYC
+        % FORMAT((8A10)) (MODEL = 0,7,8; I_RD2C = 1; MDEF = 2; NMOLYC>0)
+        % Is handling of this card really dependent on MDEF = 2
+        % This card could span multiple lines in the input file
+        MaxPerLine = 8; % Maximum number of entries per line
+        C.YNAME = ''; % Need this to make the property char rather than double
+        for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to read
+            if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
+                nYNAME = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
+            else 
+                nYNAME = MaxPerLine;
+            end
+            Card = C.ReadSimpleCard(fid, repmat(10, 1, nYNAME), repmat({'10c'}, 1, nYNAME), '2CY');
+            for iName = 1:nYNAME
+                C.YNAME((iLine - 1) * MaxPerLine + iName, :) = char(Card{iName});
+            end
+        end
+    end % ReadCard2CY
+    function C = WriteCard2CY(C, fid)
+        % YNAME(I), I=1, NMOLYC
+        % FORMAT((8A10)) (MODEL = 0,7,8; I_RD2C = 1; MDEF = 2; NMOLYC>0)
+        % Is handling of this card really dependent on MDEF = 2
+        % This card could span multiple lines in the input file
+        MaxPerLine = 8; % Maximum number of entries per line
+        for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to read
+            if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
+                nYNAME = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
+            else 
+                nYNAME = MaxPerLine;
+            end
+            for iName = 1:nYNAME
+                fprintf(fid, '%10s', C.YNAME((iLine - 1) * MaxPerLine + iName,:));
+            end
+            fprintf(fid, '\n');
+        end
+        
+    end % WriteCard2CY
+    function C = DescribeCard2CY(C, fid, OF)
+      C.printPreCard(fid, OF, '2CY');
+      % To be implemented  
+    end % DescribeCard2CY
     function C = ReadCard2C1(C, fid, iML)
       % F10.3, 5E10.3, 14A1, 1X, A1
       Card = C.ReadSimpleCard(fid, [10 10 10 10 10 10 14 1 1], ...
