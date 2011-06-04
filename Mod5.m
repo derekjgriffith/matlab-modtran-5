@@ -9150,7 +9150,7 @@ classdef Mod5
       % USRSUN
       % FORMAT (A80) (If LSUNFL = True)
       Card = C.ReadSimpleCard(fid, 256,{'256c'},'1A1');
-      C.LSUNFL = Card{1};
+      C.USRSUN = Card{1};
     end % ReadCard1A1
     function C = WriteCard1A1(C, fid)
       fprintf(fid, '%s\n', C.USRSUN);
