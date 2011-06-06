@@ -146,7 +146,11 @@ classdef Mod5
 %                 CLD: See MODTRAN5 User's Manual
 %              CLDICE: See MODTRAN5 User's Manual
 %                  RR: See MODTRAN5 User's Manual
+%                PCLD: See MODTRAN5 User's Manual
 %              WAVLEN: See MODTRAN5 User's Manual
+%               CFILE: See MODTRAN5 User's Manual
+%              CLDTYP: See MODTRAN5 User's Manual
+%              CIRTYP: See MODTRAN5 User's Manual
 %                  H1: See MODTRAN5 User's Manual Card 3 Series
 %                  H2: See MODTRAN5 User's Manual
 %               ANGLE: See MODTRAN5 User's Manual
@@ -550,10 +554,14 @@ classdef Mod5
     ABSC      % Aerosol or cloud absorption coefficient, normalized so that EXTC for a wavelength of 0.55 mm is 1.0 km-1
     ASYM      % Aerosol or cloud asymmetry parameter
     ZCLD      % Altitude above ground level of layer boundary I for the user-defined cloud/rain profile in km
+    PCLD      % Not described in Rev 5.2 Manual - Probably cloud pressure
     CLD       % Liquid water drop density at altitude ZCLD
     CLDICE    % Ice particle density at altitude ZCLD
     RR        % Rain rate at altitude ZCLD
     WAVLEN    % Wavelengths in spectral grid for user-defined clouds
+    CFILE     % Cloud spectral data file name
+    CLDTYP    % Water cloud type
+    CIRTYP    % Ice cloud type
     H1        % Initial altitude of LOS (observer/sensor) (km)
     H2        % Final altitude or tangent height of path (km)
     ANGLE     % Initial zenith angle of LOS (degrees)
@@ -638,7 +646,7 @@ classdef Mod5
     % There are a total of ? possible card formats in MODTRAN 5
     CardNames = {'1'  ,'1A' ,'1A1' ,'1A2','1A3','1A4','1A5', '1A6','1A7','1B', 'Alt1B'...
                  '2','2A+','2A' ,'Alt2A','2B' ,'2C','2CY', ...
-                 '2C1','2C2','2C2X','2C2Y', '2C3', '2D','2D1','2D2','2E1','2E2'  ,'3'  ,'Alt3', ...
+                 '2C1','2C2','2C2X','2C2Y', '2C3', '2D','2D1','2D2','2E1', 'Alt2E1','2E2','Alt2E2','3'  ,'Alt3', ...
                  '3A1','3A2','3B1' ,'3B2','3C1','3C2','3C3','3C4','3C5'  ,'3C6','4', ...
                  '4A','4B1','4B2','4B3','4L1','4L2','5'};
     CardDescr = {'Main Radiation and Transport Driver, Model, Algorithm, Mode', ... 1
@@ -668,7 +676,9 @@ classdef Mod5
                  'User-Defined Aerosol and Cloud Parameters, AWCCON and Layer Title', ... 2D1
                  'User-Defined Aerosol and Cloud Parameters, Extinction, Absorption, Assymetry', ... 2D2
                  'User-Defined Cloud Parameters, Layer Altitudes and Content', ... 2E1
+                 'User-Defined Cloud Parameters, Layer Pressures and Content', ... Alt2E1
                  'User-Defined Cloud Parameters, Spectral Data', ... 2E2
+                 'File Name of Cloud Spectral Data and Nominated Cloud Types', ... Alt2E2
                  'Line-Of-Sight (LOS) Geometry, Heights, Zenith Angle, Range', ... 3
                  'Line-Of-Sight (LOS) and Transmitted Solar/Lunar Irradiance, Heights, Day-Of-Year, Source', ... Alt3
                  'Solar/Lunar Scattering Geometry, Control, Phase Function Control', ... 3A1
@@ -723,7 +733,9 @@ classdef Mod5
                 {'AWCCON','TITLE'}, ... % 2D1
                 {'VARSPC','EXTC','ABSC','ASYM'}, ... % 2D2
                 {'ZCLD','CLD','CLDICE','RR'}, ... % 2E1
+                {'PCLD','CLD','CLDICE','RR'}, ... % Alt2E1
                 {'WAVLEN','EXTC','ABSC','ASYM','EXTC','ABSC','ASYM'}, ... % 2E2
+                {'CFILE','CLDTYP','CIRTYP'}, ... % Alt2E2
                 {'H1','H2','ANGLE','RANGE','BETA','RO','LENN','PHI'}, ... % 3
                 {'H1','H2','ANGLE','IDAY','RO','ISOURC','ANGLEM'}, ... % Alt3
                 {'IPARM','IPH','IDAY','ISOURC'}, ... % 3A1
@@ -4254,10 +4266,15 @@ classdef Mod5
             MC(iCase) = MC(iCase).ReadCard2E1(fid, iNCRALT);
           end
         end
-        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRSPC >= 2 % Read Card 2E2 NCRSPC times
-          for iNCRSPC = MC(iCase).NCRSPC
-            MC(iCase) = MC(iCase).ReadCard2E2(fid, iNCRSPC);
-          end
+        
+        if any(MC(iCase).ICLD == 1:10)
+            if MC(iCase).NCRSPC >= 2
+                for iNCRSPC = MC(iCase).NCRSPC % Read Card 2E2 NCRSPC times
+                    MC(iCase) = MC(iCase).ReadCard2E2(fid, iNCRSPC);
+                end
+            elseif MC(iCase).NCRSPC == 1
+                MC(iCase) = MC(iCase).ReadCardAlt2E2(fid);
+            end
         end
         %% Card 3 - Line of Sight Geometry 
         MC(iCase) = MC(iCase).ReadCard3Series(fid);
@@ -4458,10 +4475,20 @@ classdef Mod5
             MC(iCase) = MC(iCase).WriteCard2E1(fid, iNCRALT);
           end
         end
-        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRSPC >= 2 % Write Card 2E2 NCRSPC times
-          for iNCRSPC = MC(iCase).NCRSPC
-            MC(iCase) = MC(iCase).WriteCard2E2(fid, iNCRSPC);
-          end
+%         if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRSPC >= 2 % Write Card 2E2 NCRSPC times
+%           for iNCRSPC = MC(iCase).NCRSPC
+%             MC(iCase) = MC(iCase).WriteCard2E2(fid, iNCRSPC);
+%           end
+%         end
+        
+        if any(MC(iCase).ICLD == 1:10)
+            if MC(iCase).NCRSPC >= 2
+                for iNCRSPC = MC(iCase).NCRSPC % Write Card 2E2 NCRSPC times
+                    MC(iCase) = MC(iCase).WriteCard2E2(fid, iNCRSPC);
+                end
+            elseif MC(iCase).NCRSPC == 1
+                MC(iCase) = MC(iCase).WriteCardAlt2E2(fid);
+            end
         end
         
         %% Card 3 - Line of Sight Geometry 
@@ -4681,12 +4708,22 @@ classdef Mod5
             % MC(iCase) = MC(iCase).DescribeCard2E1(fid, iNCRALT);
           end
         end
-        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRSPC >= 2 % Describe Card 2E2 NCRSPC times
-          for iNCRSPC = MC(iCase).NCRSPC
-            % MC(iCase) = MC(iCase).DescribeCard2E2(fid, iNCRSPC);
-          end
-        end
+%         if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRSPC >= 2 % Describe Card 2E2 NCRSPC times
+%           for iNCRSPC = MC(iCase).NCRSPC
+%             % MC(iCase) = MC(iCase).DescribeCard2E2(fid, iNCRSPC);
+%           end
+%         end
         
+        if any(MC(iCase).ICLD == 1:10)
+            if MC(iCase).NCRSPC >= 2
+                for iNCRSPC = MC(iCase).NCRSPC % Describe Card 2E2 NCRSPC times
+                    %MC(iCase) = MC(iCase).DescribeCard2E2(fid, iNCRSPC, OFormat);
+                end
+            elseif MC(iCase).NCRSPC == 1
+                MC(iCase) = MC(iCase).DescribeCardAlt2E2(fid, OFormat);
+            end
+        end
+
         %% Card 3 - Line of Sight Geometry 
         MC(iCase) = MC(iCase).DescribeCard3Series(fid, OFormat);
         
@@ -9657,6 +9694,28 @@ classdef Mod5
       fprintf(fid, '%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f\n', C.WAVLEN(iNCRSPC), C.EXTC(6, iNCRSPC), C.ABSC(6, iNCRSPC), ...
         C.ASYM(6, iNCRSPC), C.EXTC(7, iNCRSPC), C.ABSC(7, iNCRSPC), C.ASYM(7, iNCRSPC));
     end % WriteCard2E2
+    function C = ReadCardAlt2E2(C, fid)
+        % CFILE, CLDTYP, CIRTYP
+        %  FORMAT ((A256)) (If ICLD = 1 - 10, NCRSPC = 1)
+        % Note : Three cards of up to 256 characters each
+        Card = C.ReadSimpleCard(fid, 256, {'256c'}, 'Alt2E2');
+        C.CFILE = strtrim(Card{1});
+        Card = C.ReadSimpleCard(fid, 256, {'256c'}, 'Alt2E2');
+        C.CLDTYP = strtrim(Card{1});
+        Card = C.ReadSimpleCard(fid, 256, {'256c'}, 'Alt2E2');
+        C.CIRTYP = strtrim(Card{1});
+    end % ReadCardAlt2E2
+    function C = WriteCardAlt2E2(C, fid)
+      fprintf(fid, '%s\n', C.CFILE);
+      fprintf(fid, '%s\n', C.CLDTYP);
+      fprintf(fid, '%s\n', C.CIRTYP);
+
+    end % WriteCardAlt2E2
+    function C = DescribeCardAlt2E2(C, fid, OF)
+       C.printPreCard(fid, OF, 'Alt2E2');
+       % To be implemented
+       fprintf(fid, '%% Please implement the function DescribeCardAlt2E2 to get output here.\n');
+    end % DescribeCardAlt2E2
     function MC = ReadCard3Series(MC, fid)
       % ReadCard3Series : Read all 3-series cards, Line of Sight Geometry
       % Card 3 - Line of Sight Geometry
