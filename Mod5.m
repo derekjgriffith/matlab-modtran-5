@@ -4261,10 +4261,17 @@ classdef Mod5
             end
           end
         end
-        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Read Card 2E1 NCRALT times
-          for iNCRALT = 1:MC(iCase).NCRALT  % Read a copy of card 2E1 for each altitude
-            MC(iCase) = MC(iCase).ReadCard2E1(fid, iNCRALT);
-          end
+        
+        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Should this be 2 or 3 ?!!
+            if MC(iCase).MODEL < 8
+                for iNCRALT = 1:MC(iCase).NCRALT  % Read a copy of card 2E1 for each altitude
+                    MC(iCase) = MC(iCase).ReadCard2E1(fid, iNCRALT);
+                end
+            elseif MC(iCase).MODEL == 8
+                for iNCRALT = 1:MC(iCase).NCRALT  % Read a copy of card Alt2E1 for each altitude
+                    MC(iCase) = MC(iCase).ReadCardAlt2E1(fid, iNCRALT);
+                end                
+            end
         end
         
         if any(MC(iCase).ICLD == 1:10)
@@ -4470,11 +4477,24 @@ classdef Mod5
           end
         end
         
-        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Write Card 2E1 NCRALT times
-          for iNCRALT = 1:MC(iCase).NCRALT  % Write a copy of card 2E1 for each altitude
-            MC(iCase) = MC(iCase).WriteCard2E1(fid, iNCRALT);
-          end
+%         if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Write Card 2E1 NCRALT times
+%           for iNCRALT = 1:MC(iCase).NCRALT  % Write a copy of card 2E1 for each altitude
+%             MC(iCase) = MC(iCase).WriteCard2E1(fid, iNCRALT);
+%           end
+%         end
+        
+        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Should this be 2 or 3 ?!!
+            if MC(iCase).MODEL < 8
+                for iNCRALT = 1:MC(iCase).NCRALT  % Write a copy of card 2E1 for each altitude
+                    MC(iCase) = MC(iCase).WriteCard2E1(fid, iNCRALT);
+                end
+            elseif MC(iCase).MODEL == 8
+                for iNCRALT = 1:MC(iCase).NCRALT  % Write a copy of card Alt2E1 for each altitude
+                    MC(iCase) = MC(iCase).WriteCardAlt2E1(fid, iNCRALT);
+                end                
+            end
         end
+        
 %         if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRSPC >= 2 % Write Card 2E2 NCRSPC times
 %           for iNCRSPC = MC(iCase).NCRSPC
 %             MC(iCase) = MC(iCase).WriteCard2E2(fid, iNCRSPC);
@@ -4703,11 +4723,24 @@ classdef Mod5
           end
         end
         
-        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Describe Card 2E1 NCRALT times
-          for iNCRALT = 1:MC(iCase).NCRALT  % Describe a copy of card 2E1 for each altitude
-            % MC(iCase) = MC(iCase).DescribeCard2E1(fid, iNCRALT);
-          end
+%         if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Describe Card 2E1 NCRALT times
+%           for iNCRALT = 1:MC(iCase).NCRALT  % Describe a copy of card 2E1 for each altitude
+%             % MC(iCase) = MC(iCase).DescribeCard2E1(fid, iNCRALT);
+%           end
+%         end
+        
+        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Should this be 2 or 3 ?!!
+            if MC(iCase).MODEL < 8
+                for iNCRALT = 1:MC(iCase).NCRALT  % Describe a copy of card 2E1 for each altitude
+                    MC(iCase) = MC(iCase).DescribeCard2E1(fid, iNCRALT, OFormat);
+                end
+            elseif MC(iCase).MODEL == 8
+                for iNCRALT = 1:MC(iCase).NCRALT  % Describe a copy of card Alt2E1 for each altitude
+                    MC(iCase) = MC(iCase).DescribeCardAlt2E1(fid, iNCRALT, OFormat);
+                end                
+            end
         end
+        
 %         if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRSPC >= 2 % Describe Card 2E2 NCRSPC times
 %           for iNCRSPC = MC(iCase).NCRSPC
 %             % MC(iCase) = MC(iCase).DescribeCard2E2(fid, iNCRSPC);
@@ -9664,7 +9697,7 @@ classdef Mod5
     end % WriteCard2D2    
     function C = ReadCard2E1(C, fid, iNCRALT)
       % (ZCLD(I, 0), CLD(I, 0), CLDICE(I, 0), RR(I, 0), I = 1, NCRALT)
-      % FORMAT((4F10.5)) (If ICLD = 1 - 10, NCRALT <= 3)
+      % FORMAT((4F10.5)) (If ICLD = 1 - 10, NCRALT >= 3)
       % Not too sure about this one either
       Card = C.ReadSimpleCard(fid, [10 10 10 10],{'f','f','f','f'}, '2E1');
       [tZCLD, tCLD, tCLDICE, tRR] = Card{:};
@@ -9675,7 +9708,35 @@ classdef Mod5
     end % ReadCard2E1
     function C = WriteCard2E1(C, fid, iNCRALT)
       fprintf(fid, '%10.5f%10.5f%10.5f%10.5f\n', C.ZCLD(iNCRALT,1), C.CLD(iNCRALT,1), C.CLDICE(iNCRALT,1), C.RR(iNCRALT,1));
-    end % WriteCard2E1
+    end % WriteCard2E
+    function C = DescribeCard2E1(C, fid, iNCRALT, OF)
+       C.printPreCard(fid, OF, '2E1');
+       % To be implemented
+       fprintf(fid, '%% Please implement the function DescribeCard2E1 to get output here.\n');
+    end % DescribeCard2E1
+    
+    function C = ReadCardAlt2E1(C, fid, iNCRALT)
+        % This card is identical to Card 2E1, except read PCLD instead of
+        % ZCLD.
+      % (PCLD(I, 0), CLD(I, 0), CLDICE(I, 0), RR(I, 0), I = 1, NCRALT)
+      % FORMAT((4F10.5)) (If ICLD = 1 - 10, NCRALT >= 3)
+      % Not too sure about this one either
+      Card = C.ReadSimpleCard(fid, [10 10 10 10],{'f','f','f','f'}, 'Alt2E1');
+      [tPCLD, tCLD, tCLDICE, tRR] = Card{:};
+      C.PCLD(iNCRALT,1) = tPCLD;
+      C.CLD(iNCRALT,1) = tCLD;
+      C.CLDICE(iNCRALT,1) = tCLDICE;
+      C.RR(iNCRALT,1)= tRR;
+    end % ReadCardAlt2E1
+    function C = WriteCardAlt2E1(C, fid, iNCRALT)
+      fprintf(fid, '%10.5f%10.5f%10.5f%10.5f\n', C.PCLD(iNCRALT,1), C.CLD(iNCRALT,1), C.CLDICE(iNCRALT,1), C.RR(iNCRALT,1));
+    end % WriteCardAlt2E1
+    function C = DescribeCardAlt2E1(C, fid, iNCRALT, OF)
+       C.printPreCard(fid, OF, 'Alt2E1');
+       % To be implemented
+       fprintf(fid, '%% Please implement the function DescribeCardAlt2E1 to get output here.\n');
+    end % DescribeCardAlt2E1
+    
     function C = ReadCard2E2(C, fid, iNCRSPC)
       % (WAVLEN(I), EXTC(6, I), ABSC(6, I), ASYM(6, I), EXTC(7, I),
       % ABSC(7, I), ASYM(7, I), I = 1, NCRSPC)(if ICLD = 1 - 10, NCRSPC <= 2)
