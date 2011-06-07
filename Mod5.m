@@ -3618,7 +3618,7 @@ classdef Mod5
       %
       % Usage
       %
-      %   [Data, FiltDescr] = Mod5.ReadChn(Filename)
+      %   [Data, FiltDescr, ColHeads] = Mod5.ReadChn(Filename)
       %
       % If the filename is not given or is empty, a file open dialog will
       % be presented.
@@ -3679,7 +3679,7 @@ classdef Mod5
           % Check if line starts with ----
           if ischar(lin) && strncmp(strtrim(lin), '----', 4);
             % Determine the number and position of columns using this line
-            ColStart = regexp(lin, '\s\S') + 1; % transitions from space to non-space
+            ColStart = regexp([' ' lin], '\s\S'); % transitions from space to non-space
             % All but the last column is numeric data
             TheFormat = repmat('%f ', 1, length(ColStart) - 1);
             % Read in the block of data
@@ -3692,7 +3692,7 @@ classdef Mod5
             while ~feof(fid)
               lin = fgetl(fid);
               [A,count] = sscanf(lin, TheFormat);
-              if count ~= length(ColStart)-1
+              if count ~= length(ColStart) - 1
                 break; % out of the while loop reading the current block
               end
               iChan = iChan + 1;
