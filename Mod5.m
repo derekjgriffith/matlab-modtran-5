@@ -9330,17 +9330,53 @@ classdef Mod5
     function C = ReadCard1B(C, fid)
         %     (AWAVLN(ISSALB), ASSALB(ISSALB), ISSALB=1, NSSALB)
         %     FORMAT ((8F10.0)) (If NSSALB > 0)
-        Card = C.ReadSimpleCard(fid, repmat(10, 1, C.NSSALB), ...
-            repmat({'f'}, 1, C.NSSALB), '1B');
-        C.AWAVLN = Card{1:2:end};
-        C.ASSALB = Card{2:2:end};
+        % Presumably this data could span multiple lines
+        % The commented code can deal only with a single line of data
+%         Card = C.ReadSimpleCard(fid, repmat(10, 1, C.NSSALB), ...
+%             repmat({'f'}, 1, C.NSSALB), '1B');
+%         C.AWAVLN = Card{1:2:end};
+%         C.ASSALB = Card{2:2:end};
+%         
+        MaxPerLine = 8; % Maximum number of entries per line
+        TotalFields = 2*C.NSSALB;
+        for iLine = 1:ceil(TotalFields/MaxPerLine) % This is the number of lines to read
+            if iLine == ceil(TotalFields/MaxPerLine) % Last line
+                nFields = mod(TotalFields, MaxPerLine); % May read less than MaxPerLine
+            else 
+                nFields = MaxPerLine;
+            end
+            Card = C.ReadSimpleCard(fid, repmat(10, 1, nFields), repmat({'f'}, 1, nFields), '1B');
+            for iField = 1:2:nFields
+                C.AWAVLN((iLine - 1) * MaxPerLine + (iField+1)/2) = Card{iField};
+                C.ASSALB((iLine - 1) * MaxPerLine + (iField+1)/2) = Card{iField+1};
+            end
+        end             
     end % ReadCard1B
-    function C= WriteCard1B(C, fid)
+    function C = WriteCard1B(C, fid)
     %     FORMAT ((8F10.0)) (If NSSALB > 0)
-      Temp = zeros(1, numel(C.AWAVLN)+numel(C.ASSALB));
-      Temp(1:2:end) = C.AWAVLN;
-      Temp(2:2:end) = C.ASSALB;
-      fprintf(fid, [repmat('%10.5f', 1, numel(Temp)) '\n'], Temp);     
+    % The commented code can only handle a single line of data
+%       Temp = zeros(1, numel(C.AWAVLN)+numel(C.ASSALB));
+%       Temp(1:2:end) = C.AWAVLN;
+%       Temp(2:2:end) = C.ASSALB;
+%       fprintf(fid, [repmat('%10.5f', 1, numel(Temp)) '\n'], Temp); 
+        % The following code can handle multiple lines of data
+        MaxPerLine = 8; % Maximum number of entries per line
+        TotalFields = 2*C.NSSALB;        
+        for iLine = 1:ceil(TotalFields/MaxPerLine) % This is the number of lines to write
+            if iLine == ceil(TotalFields/MaxPerLine) % Last line
+                nFields = mod(TotalFields, MaxPerLine); % May read less than MaxPerLine
+            else 
+                nFields = MaxPerLine;
+            end
+            CardData = zeros(1, nFields);
+            % Compile the line
+            for iField = 1:2:nFields
+                CardData(iField) = C.AWAVLN((iLine - 1) * MaxPerLine + (iField+1)/2);
+                CardData(iField+1) = C.ASSALB((iLine - 1) * MaxPerLine + (iField+1)/2);
+            end
+            % Write the line
+            fprintf(fid, [repmat('%10.5f', 1, numel(CardData)) '\n'], CardData);
+        end             
     end % WriteCard1B
     function C = DescribeCard1B(C, fid, OF)
       C.printPreCard(fid, OF, '1B');
@@ -9358,7 +9394,7 @@ classdef Mod5
         C.ACOALB = Card{1};
         C.RHASYM = Card{2};
     end % ReadCardAlt1B
-    function C= WriteCardAlt1B(C, fid)
+    function C = WriteCardAlt1B(C, fid)
         fprintf(fid, '%10.5f%10.5f\n', C.ACOALB, C.RHASYM);
     end % WriteCardAlt1B
     function C = DescribeCardAlt1B(C, fid, OF)
@@ -9560,7 +9596,7 @@ classdef Mod5
     function C = ReadCard2C2Y(C, fid, iML)
         % (WMOLY(J), J = 1, NMOLYC)
         % FORMAT ((8F10.0)) (If NMOLYC > 0 & IRD1 = 1)
-         MaxPerLine = 8; % Maximum number of entries per line
+        MaxPerLine = 8; % Maximum number of entries per line
         for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to read
             if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
                 nYMOLYC = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
@@ -9714,7 +9750,6 @@ classdef Mod5
        % To be implemented
        fprintf(fid, '%% Please implement the function DescribeCard2E1 to get output here.\n');
     end % DescribeCard2E1
-    
     function C = ReadCardAlt2E1(C, fid, iNCRALT)
         % This card is identical to Card 2E1, except read PCLD instead of
         % ZCLD.
@@ -9736,7 +9771,6 @@ classdef Mod5
        % To be implemented
        fprintf(fid, '%% Please implement the function DescribeCardAlt2E1 to get output here.\n');
     end % DescribeCardAlt2E1
-    
     function C = ReadCard2E2(C, fid, iNCRSPC)
       % (WAVLEN(I), EXTC(6, I), ABSC(6, I), ASYM(6, I), EXTC(7, I),
       % ABSC(7, I), ASYM(7, I), I = 1, NCRSPC)(if ICLD = 1 - 10, NCRSPC <= 2)
