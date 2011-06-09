@@ -3613,12 +3613,12 @@ classdef Mod5
 
         end
     end % PlotFlxImg
-    function [Data, FiltDescr, ColHeads] = ReadChn(Filename)
+    function [Data, FiltDescr, ColHeads, CookedHeads, Units] = ReadChn(Filename)
       % ReadChn : Read data from a .chn spectral channel output from MODTRAN
       %
       % Usage
       %
-      %   [Data, FiltDescr, ColHeads] = Mod5.ReadChn(Filename)
+      %   [Data, FiltDescr, ColHeads, CookedHeads, Units] = Mod5.ReadChn(Filename)
       %
       % If the filename is not given or is empty, a file open dialog will
       % be presented.
@@ -3680,6 +3680,8 @@ classdef Mod5
           if ischar(lin) && strncmp(strtrim(lin), '----', 4);
             % Determine the number and position of columns using this line
             ColStart = regexp([' ' lin], '\s\S'); % transitions from space to non-space
+            ColEnd = regexp(deblank(lin), '\S\s'); % Transitions from non-space to space
+            [ThisCookedHeads, ThisUnits] = Mod5.CookChnHeaders(ThisColHeads, ColStart, ColEnd);
             % All but the last column is numeric data
             TheFormat = repmat('%f ', 1, length(ColStart) - 1);
             % Read in the block of data
@@ -3687,10 +3689,18 @@ classdef Mod5
             iBlock = iBlock + 1;
             % Assign the ColHeads
             ColHeads{iBlock} = ThisColHeads;
+            % Assign the Cooked headers and units
+            CookedHeads{iBlock} = ThisCookedHeads;
+            Units{iBlock} = ThisUnits;
             ThisColHeads = '';
             iChan = 0; % Filter channel counter
             while ~feof(fid)
               lin = fgetl(fid);
+              % Check for asterisks occurring within the numeric fields
+              BTAsterisk = regexp(lin(1:min(ColStart(end), numel(lin))), '[0-9]\*'); % Look for a digit followed by an asterisk
+              if ~isempty(BTAsterisk)
+                  lin(BTAsterisk+1) = ' ';
+              end
               [A,count] = sscanf(lin, TheFormat);
               if count ~= length(ColStart) - 1
                 break; % out of the while loop reading the current block
@@ -3700,13 +3710,13 @@ classdef Mod5
               Data{iBlock}(iChan,:) = A';
               % Put the comment into the FiltDescr output
               if length(ColStart) > 1
-                FiltDescr{iChan, iBlock} = lin(ColStart(end):end); % From last rising edge 
+                FiltDescr{iBlock}{iChan} = lin(ColStart(end):end); % From last rising edge 
               else
-                FiltDescr{iChan, iBlock} = '';
+                FiltDescr{iBlock}{iChan} = '';
               end
             end
-          elseif ischar(lin) && ~isempty(strtrim(lin))
-            % Process header data
+          elseif ischar(lin) && ~isempty(strtrim(lin)) && isempty(strfind(lin, 'Brightness temperatures with a "*"'))
+            % Process as header data
             ThisColHeads = strvcat(ThisColHeads, lin); 
           end
         end
@@ -3831,7 +3841,86 @@ classdef Mod5
                 stop(istop) = stop(istop) + 1;
             end
         end
-    end % Dilate      
+    end % Dilate  
+    function [CookedHeads, Units] = CookChnHeaders(Heads, Start, Stop)
+       % CookChnHeaders : Try to cook up some reasonable headers
+       % Devise headers that are easily converted to fieldnames
+       % Extract units in a form that will look pretty on plots
+       Start(1) = 1; % Force start of first header at start of line 
+       for iLine = 1:size(Heads,1)
+            beststart = Start;
+            beststart(beststart > length(Heads(iLine, :))) = length(Heads(iLine, :)); % constrain to maximum of Heads(iLine, :) 
+            if numel(Start) == numel(Stop)
+                beststop = Stop;
+            elseif numel(Stop) == numel(Start)-1
+                beststop = [Stop length(Heads(iLine, :))];
+            else
+                error('Mod5:CookChnHeaders','Number of Start positions must be the same as, or one more than Stop positions.')
+            end
+            beststop(end) = length(Heads(iLine, :));
+            beststop(beststop > length(Heads(iLine, :))) = length(Heads(iLine, :));
+            % Attempt to expand the headers
+            [beststart, beststop] = Mod5.DilateHeaders(beststart, beststop, Heads(iLine, :));
+            for iBit = 1:numel(Start)
+                HeadBits{iLine, iBit} = strtrim(Heads(iLine, beststart(iBit):beststop(iBit))); 
+            end
+       end
+       % Compile the bits from mutiple header lines in the file
+       CookedHeads = repmat({''},1,numel(Start));
+       for iBit = 1:numel(Start)
+           CookedHeads{iBit} = HeadBits{1, iBit};
+           for iLine = 2:size(Heads,1)
+               CookedHeads{iBit} = [CookedHeads{iBit} ' ' HeadBits{iLine, iBit}];
+           end
+       end
+       CookedHeads = strtrim(CookedHeads); % Remove leading and trailing blanks
+       % Fix a few specific problems, including headers that span multiple
+       % columns
+       % Want all headers to be alpha only, possibly with units in trailing
+       % set of parentheses
+       CookedHeads = strrep(CookedHeads, '1ST', 'FIRST');
+       CookedHeads = strrep(CookedHeads, 'NANOMETERS', 'NM');
+       CookedHeads = strrep(CookedHeads, 'WAVNUMBERS', 'CM-1');
+       CookedHeads = strrep(CookedHeads, 'BRIGHT- ', 'BRIGHT');
+       CookedHeads = strrep(CookedHeads, 'CHAN NEL', 'CHANNEL');
+       CookedHeads = strrep(CookedHeads, '+', 'PLUS');
+       CookedHeads = strrep(CookedHeads, 'LOSPLUSSUN', 'LOS PLUS SUN');
+       CookedHeads = strrep(CookedHeads, '.', ''); % Remove any fullstops
+       CookedHeads = strrep(CookedHeads, 'SPECTRAL (W SR-1 (PER CM-1)', 'SPECTRAL WAVENUMBER RADIANCE (W SR-1 CM-2 PER CM-1)');
+       CookedHeads = strrep(CookedHeads, 'RADIANCE CM-2 / XXXX) (PER', 'SPECTRAL RADIANCE (W SR-1 CM-2 PER');
+       CookedHeads = strrep(CookedHeads, 'CHANNEL ENT WIDTH', 'FULL CHAN EQUIV WIDTH');
+       CookedHeads = strrep(CookedHeads, 'FULL EQUIVAL (CM-1)', 'FULL CHAN EQUIV WAVENUMBER WIDTH (CM-1)');
+       CookedHeads = strrep(CookedHeads, 'TRANSMITTED IRRADIANCE (PER CM-1)', 'TRANSMIT SPECTRAL SOLAR WAVENUMBER IRRAD (W CM-2 PER CM-1');
+       CookedHeads = strrep(CookedHeads, 'SPECTRAL SOLAR (W CM-2 / XXXX) (PER', 'TRANSMIT SPECTRAL SOLAR IRRAD (W CM-2 PER');
+       % Now also try to get consistency in unit expression - what a mess
+       CookedHeads = strrep(CookedHeads, ' SR-1', '/sr');
+       CookedHeads = strrep(CookedHeads, ' CM-2', '/cm^2');
+       CookedHeads = strrep(CookedHeads, 'CM-1', 'cm^{-1}');
+       CookedHeads = strrep(CookedHeads, 'NM', 'nm');
+       CookedHeads = strrep(CookedHeads, ' PER ', '/');
+       CookedHeads = strrep(CookedHeads, 'MICRONS', 'µm');
+       CookedHeads = strrep(CookedHeads, 'MICRON', 'µm');
+       % Run through the headers and strip out the units
+       Units = repmat({''}, 1, numel(CookedHeads));
+       for iHead = 1:numel(CookedHeads)
+           if CookedHeads{iHead}(end) == ')'
+               % Find the last opening bracket
+               iOpenParens = strfind(CookedHeads{iHead}, '(');
+               Units{iHead} = CookedHeads{iHead}(iOpenParens(end)+1:end-1);
+               CookedHeads{iHead} = deblank(CookedHeads{iHead}(1:iOpenParens(end)-1));
+           end
+           % If there is anything else in parentheses, dump it
+           [iOpenParens, iCloseParens] = regexp(CookedHeads{iHead}, '\(.*\)');
+           for iParens = numel(iOpenParens):-1:1
+               CookedHeads{iHead}(iOpenParens(iParens):iCloseParens(iParens)) = [];
+           end
+           CookedHeads{iHead} = strrep(CookedHeads{iHead}, '  ', ' '); % Remove any double spaces remaining
+       end
+       % And for a final dramatic gesture, replace all spaces with
+       % underscores
+       CookedHeads = strrep(CookedHeads, ' ', '_');
+       % The cooked headers should now make eminent fieldnames
+    end % CookChnHeaders
     function Goodness = GoodFit(NewWv)
       % GoodFit : Experiment, leave well alone
       global OldRefl OldWv NewRefl
@@ -8739,7 +8828,7 @@ classdef Mod5
           'The %s.chn output file found for this case appears to precede the start time of the run and has therefore been ignored.', ...
           MODCase(1).CaseName);
       else % Read the data from the .chn file and distribute to the sub-cases
-        [Data, Descr, ColHeads] = Mod5.ReadChn([MODCase(1).CaseName '.chn']);
+        [Data, Descr, ColHeads, CookedHeads, Units] = Mod5.ReadChn([MODCase(1).CaseName '.chn']);
         iBlock = 0;
         for iCase = 1:numel(MODCase)
           if upper(MODCase(iCase).LFLTNM) == 'T'
@@ -8750,58 +8839,13 @@ classdef Mod5
               return; % Abandon data distribution
             end
             MODCase(iCase).chn.ColHeads = ColHeads{iBlock};
-            MODCase(iCase).chn.ChanNumber = Data{iBlock}(:,1);
-            MODCase(iCase).chn.ChanDescr = Descr(:,iBlock);
-            switch MODCase(iCase).IEMSCT
-              case 0 % Transmittance mode
-                if isempty(strfind(ColHeads{iBlock}(2,:),'EXTINCTION'))
-                  warning('Mod5:ProcessChn:UnexpectedHeaders', ...
-                    'Extinction data was expected in .chn data for case %s(%i), but headers do not concur.', MODCase(iCase).CaseName, ...
-                    MODCase(iCase).CaseIndex);
-                end
-                MODCase(iCase).chn.AveExtinct = Data{iBlock}(:,2);
-                MODCase(iCase).chn.ChanExtinctUnits = 'cm^-1';
-                MODCase(iCase).chn.ChanExtinct = Data{iBlock}(:,3);
-                MODCase(iCase).chn.EquivWidthFreq = Data{iBlock}(:,4);
-                MODCase(iCase).chn.EquivWidthNm = Data{iBlock}(:,5);
-                MODCase(iCase).chn.SpecMinNm = Data{iBlock}(:,6);
-                MODCase(iCase).chn.SpecMaxNm = Data{iBlock}(:,7);
-              case {1 2 4} % Radiance modes, mode 4 is actually MODTRAN 5
-                if isempty(strfind(ColHeads{iBlock}(1,:),'RADIANCE'))
-                  warning('Mod5:ProcessChn:UnexpectedHeaders', ...
-                    'Radiance data was expected in chn data for case %s(%i), but headers do not concur.', MODCase(iCase).CaseName, ...
-                    MODCase(iCase).CaseIndex);
-                end
-                % Distribute the 8 columns of data to this subcase
-                MODCase(iCase).chn.SpecRadFreqUnits = 'W/sr/cm^2/cm^-1';
-                MODCase(iCase).chn.SpecRadFreq = Data{iBlock}(:,2);
-                MODCase(iCase).chn.SpecRadNmUnits = 'W/sr/cm^2/nm';
-                MODCase(iCase).chn.SpecRadNm = Data{iBlock}(:,3);
-                MODCase(iCase).chn.ChanRadUnits = 'W/sr/cm^2';
-                MODCase(iCase).chn.ChanRad = Data{iBlock}(:,4);
-                MODCase(iCase).chn.EquivWidthFreq = Data{iBlock}(:,5);
-                MODCase(iCase).chn.EquivWidthNm = Data{iBlock}(:,6);
-                MODCase(iCase).chn.SpecMinNm = Data{iBlock}(:,7);
-                MODCase(iCase).chn.SpecMaxNm = Data{iBlock}(:,8);
-                % And the description of the channel
-              case 3 % Irradiance mode
-                if isempty(strfind(ColHeads{iBlock}(2,:),'IRRADIANCE'))
-                  warning('Mod5:ProcessChn:UnexpectedHeaders', ...
-                    'Irradiance data was expected in .chn data for case %s(%i), but headers do not concur.', MODCase(iCase).CaseName, ...
-                    MODCase(iCase).CaseIndex);
-                end                
-                MODCase(iCase).chn.SpecIrradFreqUnits = 'W/cm^2/cm^-1';
-                MODCase(iCase).chn.SpecIrradFreq = Data{iBlock}(:,2);
-                MODCase(iCase).chn.SpecIrradNmUnits = 'W/cm^2/nm';
-                MODCase(iCase).chn.SpecIrradNm = Data{iBlock}(:,3);
-                MODCase(iCase).chn.ChanIrradUnits = 'W/cm^2';
-                MODCase(iCase).chn.ChanIrrad = Data{iBlock}(:,4);
-                MODCase(iCase).chn.EquivWidthFreq = Data{iBlock}(:,5);
-                MODCase(iCase).chn.EquivWidthNm = Data{iBlock}(:,6);
-                MODCase(iCase).chn.SpecMinNm = Data{iBlock}(:,7);
-                MODCase(iCase).chn.SpecMaxNm = Data{iBlock}(:,8);
-                
-              otherwise
+            MODCase(iCase).chn.CookedHeads = CookedHeads{iBlock};
+            MODCase(iCase).chn.Units = Units{iBlock};
+            MODCase(iCase).chn.ChanDescr = Descr{iBlock}';
+            theData = Data{iBlock};
+            MODCase(iCase).chn.Data = theData; % Numeric data that is
+            for iCol = 1:size(theData,2)
+                MODCase(iCase).chn.(genvarname(CookedHeads{iBlock}{iCol})) = theData(:,iCol);
             end
           end
         end
