@@ -3636,6 +3636,13 @@ classdef Mod5
       % ColHeads is a cell array of strings, one for each channel block
       % as well.
       %
+      % CookedHeads are a set of headers cooked up from the column headers
+      % in the .chn file. They are intended to be fit as fieldnames for the
+      % data.
+      %
+      % Units is a cell array of strings, one per block which gives the
+      % units of the quantities read from the .chn file.
+      %
       
       Data = {};
       FiltDescr = {};
@@ -5678,78 +5685,70 @@ classdef Mod5
         plothandle = MODCase.Plot7ByCase(SubCases, PlotWhat, 'sc7');
       end
     end % PlotSc7
-    function plothandle = PlotChn(MODCase, SubCases)
-      % PlotChn : Bar plot of spectral channel outputs (.chn) from MODTRAN
+    function plothandle = PlotChn(MODCase, PlotWhat, SubCases, varargin)
+      % PlotChn : Plots of spectral channel outputs (.chn) from MODTRAN
       %
       % Usage :
-      %   plothandle = PlotChn(MODCase, SubCases)
+      %   plothandle = PlotChn(MODCase, PlotWhat, SubCases)
       %
       % MODCase is the case for which to plot the channels.
+      % PlotWhat is a string or cell array of strings naming the data
+      % columns (fieldnames) to be plotted.
+      %
       % SubCases allows selection of subcases. If SubCases is missing
       %  or empty, all subcases are plotted on a single bar plot.
       %
-      % This function is not able to plot cases that have different
-      % numbers of channels in the .chn data. Therefore present only
-      % a subset of cases with the same filters and channels represented
-      % in the .flt and .chn data.
+      % The data is always plotted with the first spectral moment on the
+      % x-axis.
       
       if ~exist('SubCases', 'var') || isempty(SubCases)
         SubCases = 1:numel(MODCase);
       end
-     
+      assert(all(SubCases <= numel(MODCase)), 'Mod5:PlotChn:BadSubCases', ...
+          'Input SubCases to PlotChn must have all elements <= numel(inputMOD5).');
+      if exist('PlotWhat', 'var') && ~isempty(PlotWhat)
+          assert(ischar(PlotWhat) || iscellstr(PlotWhat), 'Mod5:PlotChn:BadPlotWhat', ...
+              'Input PlotWhat to PlotChn must be a string or cell array of strings.');
+          if ischar(PlotWhat)
+              PlotWhat = {PlotWhat}; % Make it a cell array
+          end
+      else
+          error('Mod5:PlotChn:NoPlotWhat','Input PlotWhat to PlotChn is required.')
+      end
       assert(isnumeric(SubCases) && all(round(SubCases(:)) == SubCases(:)) && all(SubCases(:) >= 1) && all(SubCases(:) <= numel(MODCase)), ...
         'Mod5:PlotChn:BadSubCases','Input SubCases to PlotChn must be integral, less than number of elements in the Mod5.');
-      plothandle = [];
-      Channels = [];
-      ChanRads = [];
-      ChanIrrads = [];
-      ChanExtincts = [];
-      ChanDesc = {};
-      iFigure = 0;
-      for iSubCase =SubCases
-        if ~isempty(MODCase(iSubCase).chn)
-          Channels = [Channels MODCase(iSubCase).chn.ChanNumber];
-          NextLegend = [MODCase(iSubCase).CaseName '(' num2str(MODCase(iSubCase).CaseIndex) ')'];
-          ChanDesc = [ChanDesc NextLegend];
-          switch MODCase(iSubCase).IEMSCT
-            case 0 % Transmittance cases
-              ChanExtincts = [ChanExtincts MODCase(iSubCase).chn.ChanExtinct];
-            case {1 2 4} % Radiance Cases
-              ChanRads = [ChanRads MODCase(iSubCase).chn.ChanRad];
-            case 3 % Irradiance
-              ChanIrrads = [ChanIrrads MODCase(iSubCase).chn.ChanIrrad];
+      plothandle = figure;
+      hold all
+      % Only quantities having the same units may be plotted on the same
+      % axes.
+      % Run through the desired plots and desired subcases
+      iPlotted = 0;
+      for iPlotWhat = 1:numel(PlotWhat)
+          for iCase = 1:numel(SubCases)
+              if isfield(MODCase(SubCases(iCase)).chn, PlotWhat{iPlotWhat})
+                 if ~exist('TheUnits', 'var')
+                   iUnit = strmatch(PlotWhat{iPlotWhat}, MODCase(SubCases(iCase)).chn.CookedHeads);  
+                   TheUnits = MODCase(SubCases(iCase)).chn.Units{iUnit};
+                   SpectralUnits = MODCase(SubCases(iCase)).chn.Units{1};
+                 end
+                 iUnit = strmatch(PlotWhat{iPlotWhat}, MODCase(SubCases(iCase)).chn.CookedHeads);
+                 if strcmp(TheUnits,MODCase(SubCases(iCase)).chn.Units{iUnit})
+                     % Units match, so plot the stuff, regardless
+                     plot(MODCase(SubCases(iCase)).chn.FIRST_SPECTRAL_MOMENT, ...
+                          MODCase(SubCases(iCase)).chn.(PlotWhat{iPlotWhat}), 'O');
+                     iPlotted = iPlotted + 1; 
+                 end
+              end
           end
-        end  
       end
-      if ~isempty(ChanExtincts)
-        iFigure = iFigure + 1;
-        plothandle(iFigure) = figure;
-        bar(Channels, ChanExtincts);
-        title('Band (Channel) Extinctions');
-        grid;
-        xlabel('Channel Number');
-        ylabel('Channel Extinction (cm^{-1})');
-        legend(ChanDesc, 'Location', 'best');        
-      end
-      if ~isempty(ChanRads) % There is something to plot
-        iFigure = iFigure + 1;
-        plothandle(iFigure) = figure;
-        bar(Channels, ChanRads);
-        title('Band (Channel) Radiance');
-        grid;
-        xlabel('Channel Number');
-        ylabel('Band Radiance (W/sr/cm^2)');
-        legend(ChanDesc, 'Location', 'best');
-      end
-      if ~isempty(ChanIrrads)
-        iFigure = iFigure + 1;
-        plothandle(iFigure) = figure;
-        bar(Channels, ChanIrrads);
-        title('Band (Channel) Irradiance');
-        grid;
-        xlabel('Channel Number');
-        ylabel('Band Irradiance (W/cm^2)');
-        legend(ChanDesc, 'Location', 'best');
+      hold off;
+      if iPlotted == 0
+          warning('Mod5:PlotChn:NothingToPlot','PlotChn found nothing to plot with these inputs.');
+          delete(plothandle);
+      else
+          grid;
+          xlabel(['First Spectral Moment (' SpectralUnits ')']);
+          ylabel(['Channel Quantity (' TheUnits ')']);
       end
     end % PlotChn
     function plothandles = PlotAtm(MODCase, PlotWhat)
