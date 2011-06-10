@@ -6303,7 +6303,7 @@ classdef Mod5
       for iC = 1:numel(MC) % Run through the sub-cases
         if iCSALB(iC) > 0 % Set up CSALB for this sub-case
           % If not a radiance case, issue warning
-          if ~any(MC(iC).IEMSCT == [1 2])
+          if ~any(MC(iC).IEMSCT == [1 2 4])
             warning('Mod5:AttachAlb:NotRadianceCase','Sub-case %i is not a radiance case. Albedo data has been attached anyway.', iC);
           end
           % Determine limiting wavelengths of the case
@@ -8797,7 +8797,7 @@ classdef Mod5
                   MODCase(iCase).psc.Headers{2} = 'TRANS';                
                   MODCase(iCase).psc.yLabel = 'Transmittance';
                   MODCase(iCase).psc.TRANS = PlotData{iBlock, 2};
-                case {1, 2} % Radiances
+                case {1, 2, 4} % Radiances
                   MODCase(iCase).psc.Headers{2} = 'TOTALRAD';                
                   MODCase(iCase).psc.yLabel = ['Radiance (' MODCase(iCase).psc.RadianceUnits ')'];
                   MODCase(iCase).psc.TOTALRAD = PlotData{iBlock, 2};
@@ -9077,6 +9077,8 @@ classdef Mod5
         case 1, fprintf(fid, 'spectral thermal radiance (no sun/moon contributions) along the LOS.\n');
         case 2, fprintf(fid, 'spectral thermal plus solar/lunar radiance along the LOS (if IMULT = 0, only single scatter solar radiance is included).\n');
         case 3, fprintf(fid, 'directly transmitted spectral solar/lunar irradiance along the LOS.\n');
+        case 3, fprintf(fid, 'spectral solar / lunar radiance with no thermal scatter. Thermal path and surface emission is included..\n');
+            
       end
       C.printCardItem(fid, OF, 'IMULT', '%d', 'MODTRAN executes ');
       switch C.IMULT
@@ -9863,7 +9865,7 @@ classdef Mod5
       else
         MC = MC.ReadCard3(fid); % Read normal form of Card 3
       end
-      if MC.IEMSCT == 2
+      if any(MC.IEMSCT == [2 4])
         MC = MC.ReadCard3A1(fid);
         MC = MC.ReadCard3A2(fid);
       end
@@ -9893,7 +9895,7 @@ classdef Mod5
       else
         MC = MC.WriteCard3(fid); % Write normal form of Card 3
       end
-      if MC.IEMSCT == 2
+      if any(MC.IEMSCT == [2 4])
         MC = MC.WriteCard3A1(fid);
         MC = MC.WriteCard3A2(fid);
       end
@@ -9921,7 +9923,7 @@ classdef Mod5
       else
         MC = MC.DescribeCard3(fid, OF); % Describe normal form of Card 3
       end
-      if MC.IEMSCT == 2
+      if any(MC.IEMSCT == [2 4])
         MC = MC.DescribeCard3A1(fid, OF);
         MC = MC.DescribeCard3A2(fid, OF);
       end
