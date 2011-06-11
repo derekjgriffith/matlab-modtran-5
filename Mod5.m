@@ -9090,7 +9090,7 @@ classdef Mod5
         case 1, fprintf(fid, 'spectral thermal radiance (no sun/moon contributions) along the LOS.\n');
         case 2, fprintf(fid, 'spectral thermal plus solar/lunar radiance along the LOS (if IMULT = 0, only single scatter solar radiance is included).\n');
         case 3, fprintf(fid, 'directly transmitted spectral solar/lunar irradiance along the LOS.\n');
-        case 3, fprintf(fid, 'spectral solar / lunar radiance with no thermal scatter. Thermal path and surface emission is included..\n');
+        case 4, fprintf(fid, 'spectral solar / lunar radiance with no thermal scatter. Thermal path and surface emission is included..\n');
             
       end
       C.printCardItem(fid, OF, 'IMULT', '%d', 'MODTRAN executes ');
