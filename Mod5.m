@@ -5723,6 +5723,7 @@ classdef Mod5
       % axes.
       % Run through the desired plots and desired subcases
       iPlotted = 0;
+      TheLegends = {};
       for iPlotWhat = 1:numel(PlotWhat)
           for iCase = 1:numel(SubCases)
               if isfield(MODCase(SubCases(iCase)).chn, PlotWhat{iPlotWhat})
@@ -5730,13 +5731,21 @@ classdef Mod5
                    iUnit = strmatch(PlotWhat{iPlotWhat}, MODCase(SubCases(iCase)).chn.CookedHeads);  
                    TheUnits = MODCase(SubCases(iCase)).chn.Units{iUnit};
                    SpectralUnits = MODCase(SubCases(iCase)).chn.Units{1};
+                   TheTitle = MODCase(SubCases(iCase)).CaseName;
+                   if ~isempty(MODCase(SubCases(iCase)).CaseDescr)
+                       TheTitle = MODCase(SubCases(iCase)).CaseDescr;
+                   end
                  end
                  iUnit = strmatch(PlotWhat{iPlotWhat}, MODCase(SubCases(iCase)).chn.CookedHeads);
                  if strcmp(TheUnits,MODCase(SubCases(iCase)).chn.Units{iUnit})
                      % Units match, so plot the stuff, regardless
                      plot(MODCase(SubCases(iCase)).chn.FIRST_SPECTRAL_MOMENT, ...
                           MODCase(SubCases(iCase)).chn.(PlotWhat{iPlotWhat}), 'O');
-                     iPlotted = iPlotted + 1; 
+%                      bar(MODCase(SubCases(iCase)).chn.FIRST_SPECTRAL_MOMENT, ...
+%                           MODCase(SubCases(iCase)).chn.(PlotWhat{iPlotWhat}));
+                      
+                     iPlotted = iPlotted + 1;
+                     TheLegends{iPlotted} = strrep(['(' num2str(SubCases(iCase)) ')' PlotWhat{iPlotWhat}],'_',' ');
                  end
               end
           end
@@ -5747,8 +5756,13 @@ classdef Mod5
           delete(plothandle);
       else
           grid;
+          if isempty(TheUnits)
+              TheUnits = 'unitless';
+          end
           xlabel(['First Spectral Moment (' SpectralUnits ')']);
           ylabel(['Channel Quantity (' TheUnits ')']);
+          legend(TheLegends{:}, 'Location', 'best');
+          title(TheTitle);
       end
     end % PlotChn
     function plothandles = PlotAtm(MODCase, PlotWhat)
