@@ -39,7 +39,7 @@ Sat1.CaseDescr = 'Example 2 : Simple EO Camera Case';
 % Set up Card 1 (mandatory - main radiative transport)
 Sat1.MODTRN = 'M';     % MODTRAN band model
 Sat1.SPEED = 'S';      % Slow algorithm
-Sat1.BINARY = 't';     % Output will be ASCII
+Sat1.BINARY = 'f';     % Output will be ASCII
 Sat1.LYMOLC = ' ';     % Exclude 16 auxiliary trace gases
 Sat1.MODEL = 3;        % Mid-latitude winter canned atmosphere 
 Sat1.ITYPE = 3;        % Slant path to ground
@@ -67,7 +67,7 @@ Sat1.SURREF = '0.5';   % Earth reflectance (albedo) 50% right across spectrum
 Sat1.DIS = 'f';        % Not using DISORT multiple scattering algorithm
 Sat1.DISAZM = 'f';     % Therefore also not using azimuth dependence in DISORT
 Sat1.NSTR = 2;         % Isaacs 2-stream multiple scattering model
-Sat1.LSUN = 'f';       % Use default 5 cm^-1 TOA solar irradiance data
+%Sat1.LSUN = 'f';       % Use default 5 cm^-1 TOA solar irradiance data
 Sat1.ISUN = 0;         % Don't smooth the solar irradiance data before use
 Sat1.CO2MX = 370;      % CO2 mixing ratio, 370 ppm by volume
 Sat1.H2OSTR = '0.';    % No scaling of canned water vapor profile (MODEL/M2)
