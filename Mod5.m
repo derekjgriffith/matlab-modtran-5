@@ -124,6 +124,7 @@ classdef Mod5
 %                   T: See MODTRAN5 User's Manual
 %               JCHAR: See MODTRAN5 User's Manual
 %              JCHARX: See MODTRAN5 User's Manual
+%              JCHARY: See MODTRAN5 User's Manual
 %                WMOL: See MODTRAN5 User's Manual
 %               WMOLX: See MODTRAN5 User's Manual
 %               WMOLY: See MODTRAN5 User's Manual
@@ -535,6 +536,7 @@ classdef Mod5
     T         % Temperatures at layer boundaries in user-defined atmospheric profile 
     JCHAR     % Flags indicating units or canned atmosphere default for light modelcues in user-defined atmospheric components
     JCHARX    % Flags indicating units or canned atmosphere default for heavy molecules in user-defined atmospheric components 
+    JCHARY    % Flags indicating units of user-defined atmospheric species concentrations
     WMOL      % Light molecule abundances in user-defined atmospheric profiles
     WMOLX     % Heavy molecule abundances in user-defined atmospheric profiles
     WMOLY     % User-defined species densities
@@ -724,7 +726,7 @@ classdef Mod5
                 {'ZCVSA','ZTVSA','ZINVSA'}, ... % 2B
                 {'ML','IRD1','IRD2','HMODEL','REE','NMOLYC','E_MASS','AIRMT'}, ... % 2C
                 {'YNAME'}, ... % 2CY
-                {'ZM','P','T','JCHAR','JCHARX'}, ... % 2C1
+                {'ZM','P','T','JCHAR','JCHARX','JCHARY'}, ... % 2C1
                 {'WMOL'}, ... % 2C2
                 {'WMOLX'}, ... % 2C2X
                 {'WMOLY'}, ... % 2C2Y
@@ -9576,33 +9578,38 @@ classdef Mod5
       % To be implemented  
     end % DescribeCard2CY
     function C = ReadCard2C1(C, fid, iML)
-      % F10.3, 5E10.3, 14A1, 1X, A1
-      Card = C.ReadSimpleCard(fid, [10 10 10 10 10 10 14 1 1], ...
-        {'f','e','e','e','e','e','14c','*','c'}, '2C1');
-      [tZM, tP, tT, WMOL1, WMOL2, WMOL3, tJCHAR, tJCHARX] = Card{:};
+      % F10.3, 5E10.3, 14A1, 1X, 2A1
+      Card = C.ReadSimpleCard(fid, [10 10 10 10 10 10 14 1 1 1], ...
+        {'f','e','e','e','e','e','14c','*','c','c'}, '2C1');
+      [tZM, tP, tT, WMOL1, WMOL2, WMOL3, tJCHAR, tJCHARX, tJCHARY] = Card{:};
       C.ZM(iML,1) = tZM;
       C.P(iML,1) = tP;
       C.T(iML,1) = tT;
       C.JCHAR(iML,:) = tJCHAR;
       C.JCHAR = char(C.JCHAR);
       C.JCHARX(iML) = tJCHARX;
+      C.JCHARY(iML) = tJCHARY;
       C.JCHARX = char(C.JCHARX);
+      C.JCHARY = char(C.JCHARY);
       C.WMOL(iML,1:3) = [WMOL1 WMOL2 WMOL3];
     end % ReadCard2C1
     function C = WriteCard2C1(C, fid, iML)
       % Note : Using %E produces three digits in the exponent 0.00E+000 - Will MODTRAN read this correctly ???????
       if ispc
-        lin = sprintf('%10.3f%11.3E%11.3E%11.3E%11.3E%11.3E%14s %c', ...
-          C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1:3), char(C.JCHAR(iML,:)), char(C.JCHARX(iML)));
+        lin = sprintf('%10.3f%11.3E%11.3E%11.3E%11.3E%11.3E%14s %c%c', ...
+          C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1:3), char(C.JCHAR(iML,:)), char(C.JCHARX(iML)), char(C.JCHARY(iML)));
         lin = strrep(lin, 'E+0', 'E+');
         lin = strrep(lin, 'E-0', 'E-');
         fprintf(fid, '%s\n', lin);
       else
-      fprintf(fid, '%10.3f%10.3E%10.3E%10.3E%10.3E%10.3E%14s %c\n', ...
-            C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1:3), char(C.JCHAR(iML,:)), char(C.JCHARX(iML)));
+      fprintf(fid, '%10.3f%10.3E%10.3E%10.3E%10.3E%10.3E%14s %c%c\n', ...
+            C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1:3), char(C.JCHAR(iML,:)), char(C.JCHARX(iML)), char(C.JCHARY(iML)));
       end
-      
     end % WriteCard2C1
+    function C = DescribeCard2C1(C, fid, iML, OF)
+      C.printPreCard(fid, OF, ['Alt1B for layer ' num2str(iML)]);
+      fprintf(fid, '%% Implement method DescribeCard2C1 to get output here.\n');
+    end % DescribeCard2C1
     function C = ReadCard2C2(C, fid, iML)
       % WMOL(J), J=4, 12 FORMAT (8E10.3, /E10.3)
       Card = C.ReadSimpleCard(fid, [10 10 10 10 10 10 10 10], ...
