@@ -648,7 +648,7 @@ classdef Mod5
     % There are a total of ? possible card formats in MODTRAN 5
     CardNames = {'1'  ,'1A' ,'1A1' ,'1A2','1A3','1A4','1A5', '1A6','1A7','1B', 'Alt1B'...
                  '2','2A+','2A' ,'Alt2A','2B' ,'2C','2CY', ...
-                 '2C1','2C2','2C2X','2C2Y', '2C3', '2D','2D1','2D2','2E1', 'Alt2E1','2E2','Alt2E2','3'  ,'Alt3', ...
+                 '2C1','2C2','2C2X','2C2Y', '2C3', 'Alt2C3', '2D','2D1','2D2','2E1', 'Alt2E1','2E2','Alt2E2','3'  ,'Alt3', ...
                  '3A1','3A2','3B1' ,'3B2','3C1','3C2','3C3','3C4','3C5'  ,'3C6','4', ...
                  '4A','4B1','4B2','4B3','4L1','4L2','5'};
     CardDescr = {'Main Radiation and Transport Driver, Model, Algorithm, Mode', ... 1
@@ -674,6 +674,7 @@ classdef Mod5
                  'User-Defined Atmospheric Profiles, Molecular Species', ... 2C2X
                  'User-Defined Atmospheric Species Densities', ... 2C2Y
                  'User-Defined Atmospheric Profiles, Aerosols, Cloud, Rain', ... 2C3
+                 'User-Defined Atmospheric Profiles, Aerosols, Cloud, Rain', ... Alt2C3
                  'User-Defined Aerosol and Cloud Parameters, Altitude Region Control', ... 2D
                  'User-Defined Aerosol and Cloud Parameters, AWCCON and Layer Title', ... 2D1
                  'User-Defined Aerosol and Cloud Parameters, Extinction, Absorption, Assymetry', ... 2D2
@@ -731,6 +732,7 @@ classdef Mod5
                 {'WMOLX'}, ... % 2C2X
                 {'WMOLY'}, ... % 2C2Y
                 {'AHAZE', 'EQLWCZ','RRATZ','IHA1','ICLD1','IVUL1','ISEA1','ICHR1'}, ... % 2C3
+                {'AHAZE', 'RRATZ', 'AHAZE'}, ... % Alt2C3
                 {'IREG'}, ... % 2D
                 {'AWCCON','TITLE'}, ... % 2D1
                 {'VARSPC','EXTC','ABSC','ASYM'}, ... % 2D2
@@ -4342,6 +4344,8 @@ classdef Mod5
             end
             if MC(iCase).IRD2 == 1
               MC(iCase) = MC(iCase).ReadCard2C3(fid, iML);
+            elseif MC(iCase).IRD2 == 2
+              MC(iCase) = MC(iCase).ReadCardAlt2C3(fid, iML);
             end
           end
         end % End dealing with cards 2C, 2C1, 2C2, 2C2X and 2C3 
@@ -4556,6 +4560,8 @@ classdef Mod5
             
             if MC(iCase).IRD2 == 1
               MC(iCase) = MC(iCase).WriteCard2C3(fid, iML);
+            elseif MC(iCase).IRD2 == 2
+              MC(iCase) = MC(iCase).WriteCardAlt2C3(fid, iML);
             end
           end
         end % End dealing with cards 2C, 2C1, 2C2, 2C2X and 2C3 
@@ -4801,7 +4807,9 @@ classdef Mod5
               MC(iCase) = MC(iCase).DescribeCard2C2Y(fid, iML, OFormat);   
             end            
             if MC(iCase).IRD2 == 1
-              % MC(iCase) = MC(iCase).DescribeCard2C3(fid, iML);
+              % MC(iCase) = MC(iCase).DescribeCard2C3(fid, iML, OFormat);
+            elseif MC(iCase).IRD2 == 2
+              MC(iCase) = MC(iCase).DescribeCardAlt2C3(fid, iML, OFormat);
             end
           end
         end % End dealing with cards 2C, 2C1, 2C2, 2C2X and 2C3 
@@ -9697,12 +9705,12 @@ classdef Mod5
         end       
     end % WriteCard2C2Y
     function C = DescribeCard2C2Y(C, fid, iML, OF)
-      C.printPreCard(fid, OF, '2C2Y');
+      C.printPreCard(fid, OF, ['2C2Y for layer ' num2str(iML)]);
       % To be implemented  
-        
+      fprintf(fid, '%% Implement method DescribeCard2C2Y to get output here.\n');
     end % DescribeCard2C2Y
     function C = ReadCard2C3(C, fid, iML)
-      % FORMAT (10X, 3F10.3, 5I5)
+      % FORMAT (10X, 3F10.3, 5I5)  if IRD2 == 1
       Card = C.ReadSimpleCard(fid, [10 10 10 10 5 5 5 5 5], {'*','f','f','f','d','d','d','d','d'}, '2C3');
       [tAHAZE, tEQLWCZ, tRRATZ, tIHA1, tICLD1, tIVUL1, tISEA1, tICHR1] = Card{:};
       C.AHAZE(iML,1) = tAHAZE;
@@ -9718,8 +9726,26 @@ classdef Mod5
       fprintf(fid, '          %10.3f%10.3f%10.3f%5d%5d%5d%5d%5d\n', ...
               C.AHAZE(iML,1), C.EQLWCZ(iML,1), C.RRATZ(iML,1), C.IHA1(iML,1), ...
               C.ICLD1(iML,1), C.IVUL1(iML,1), C.ISEA1(iML,1), C.ICHR1(iML,1));
-
     end % WriteCard2C3
+    function C = ReadCardAlt2C3(C, fid, iML)
+        % FORMAT (10X, F10.0, 10X, 4F10.0)  if IRD2 == 2
+        Card = ReadSimpleCard(fid, [10, 10, 10, 10, 10, 10, 10], {'*', 'f', '*', 'f', 'f', 'f', 'f'}, 'Alt2C3');
+        [tAHAZE1, tRRATZ, tAHAZE2, tAHAZE3, tAHAZE4] = Card{:};
+        C.AHAZE(iML,1) = tAHAZE1;
+        C.RRATZ(iML,1) = tRRATZ;
+        C.AHAZE(iML,2) = tAHAZE2;
+        C.AHAZE(iML,3) = tAHAZE3;
+        C.AHAZE(iML,4) = tAHAZE4;
+    end % ReadCardAlt2C3
+    function C = WriteCardAlt2C3(C, fid, iML)
+        fprintf(fid, '          %10.3f          %10.3f%10.3f%10.3f%10.3f\n', ...
+            C.AHAZE(iML,1), C.RRATZ(iML,1), C.AHAZE(iML,2), C.AHAZE(iML,3), C.AHAZE(iML,4)); 
+    end % WriteCardAlt2C3
+    function C = DescribeCardAlt2C3(C, fid, iML, OF)
+      C.printPreCard(fid, OF, ['Alt2C3 for layer ' num2str(iML)]);
+      % To be implemented
+      fprintf(fid, '%% Implement method DescribeCardAlt2C3 to get output here.\n');
+    end % DescribeCardAlt2C3
     function C = ReadCard2D(C, fid)
       % FORMAT (4I5)
       Card = C.ReadSimpleCard(fid, [5 5 5 5], {'d','d','d','d'}, '2D');
