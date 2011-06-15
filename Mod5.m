@@ -5179,8 +5179,10 @@ classdef Mod5
           MODCase(1).RunStartTime = datestr(MODCase(1).RunStartSerTime);
           MODCase(1).RunEndTime = datestr(MODCase(1).RunEndSerTime);
           % Check result string - there should be the characters '100.0 %' in the last few
-          if ~isempty(tMODSays) && isempty(strfind(tMODSays(end-25:end), 'Completed:'))
-            warning('Mod5:Run:MODTRANTerminationSuspect', 'MODTRAN may have terminated abnormally.\n%s', tMODSays);
+          if ~isempty(tMODSays) && (~isempty(strfind(upper(tMODSays), 'ERROR')) || ...
+                                    ~isempty(strfind(upper(tMODSays), 'ABNORMALLY')))
+            warning('Mod5:Run:MODTRANTerminationSuspect', ...
+                'MODTRAN may have terminated abnormally with the following message:\n%s', tMODSays);
           end
           % Presumably all cases completed, not sure how to verify this besides analysing tape6
           for iCase = 1:numel(MODCase) % This needs rethinking - what really is the status of the individual cases
@@ -5199,6 +5201,7 @@ classdef Mod5
             MODCase(iCase).chn = [];     % Spectral channel computations for computing band radiance
             MODCase(iCase).flx = [];     % Spectral flux calculations (big - don't specify this for nothing)
             MODCase(iCase).clr = [];     % Cooling rates.
+            MODCase(iCase).acd = [];     % Atmospheric correction data
             if iCase > 1 % Make run times for those cases the same ?
               MODCase(iCase).RunStartSerTime = MODCase(1).RunStartSerTime;
               MODCase(iCase).RunDuration = MODCase(1).RunDuration;
@@ -5241,6 +5244,8 @@ classdef Mod5
           cd(CurrentDir);
         catch MODTRANError
           cd(CurrentDir); % Change back to current directory prior to run
+          warning('Mod5:Run:OutputProcessingFailed', ...
+              'MODTRAN Run or Processing of MODTRAN outputs failed. Check the tape6 (.tp6) output file for clues.');
           rethrow(MODTRANError);
         end
       else
