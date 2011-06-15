@@ -7807,10 +7807,10 @@ classdef Mod5
           end
         else
           % Check existence of the file
-          FullFilename = strtrim([MODTRANPath newBMNAME]);
-          if ~exist(FullFilename, 'file')
+          FullFilespec = strtrim([MODTRANPath 'DATA\' strtrim(newBMNAME) '*.*']);
+          if isempty(dir(FullFilespec))
             warning('Mod5:setBMNAME:FileNotExist', ...
-              'The binary band model file (parameter BMNAME) %s was not found. Check this before running MODTRAN.', FullFilename);
+              'The binary band model file (parameter BMNAME) %s was not found. Check this before running MODTRAN.', FullFilespec);
           end
           % and set the property anyway
           MC.BMNAME = strtrim(newBMNAME);
