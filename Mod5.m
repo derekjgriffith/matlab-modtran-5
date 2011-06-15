@@ -7547,9 +7547,16 @@ classdef Mod5
       MC.ScalarIntNumeric(newNOPRNT, -2:3, 'NOPRNT');
       MC.NOPRNT = newNOPRNT;
     end % set.NOPRNT
+    function MC = set.TPTEMP(MC, newTPTEMP)
+        if ~isempty(newTPTEMP)
+            assert(isnumeric(newTPTEMP) && isscalar(newTPTEMP), 'Mod5:setTPTEMP:BadTPTEMP', ...
+                'Input TPTEMP on Card 1 must be scalar and numeric.');
+        end
+        MC.TPTEMP = newTPTEMP;
+    end % set.TPTEMP
     function MC = set.SURREF(MC, newSURREF) % Surface reflectance
-      assert(isscalar(MC) && ischar(newSURREF) && length(newSURREF(:)) <= 7, 'Mod5:setSURREF:BadInput', ...
-        'Case input to set.SURREF must be scalar, SURREF must be a string of length 7 or less.');
+      assert(ischar(newSURREF) && length(newSURREF(:)) <= 7, 'Mod5:setSURREF:BadInput', ...
+        'Input SURREF must be a string of length 7 characters or less.');
       MC.SURREF = newSURREF;
     end % set.SURREF
     %% Card 1A set methods
@@ -9735,7 +9742,8 @@ classdef Mod5
     end % WriteCard2C3
     function C = ReadCardAlt2C3(C, fid, iML)
         % FORMAT (10X, F10.0, 10X, 4F10.0)  if IRD2 == 2
-        Card = ReadSimpleCard(fid, [10, 10, 10, 10, 10, 10, 10], {'*', 'f', '*', 'f', 'f', 'f', 'f'}, 'Alt2C3');
+        Card = C.ReadSimpleCard(fid, [10, 10, 10, 10, 10, 10, 10], ...
+            {'*', 'f', '*', 'f', 'f', 'f', 'f'}, 'Alt2C3');
         [tAHAZE1, tRRATZ, tAHAZE2, tAHAZE3, tAHAZE4] = Card{:};
         C.AHAZE(iML,1) = tAHAZE1;
         C.RRATZ(iML,1) = tRRATZ;
