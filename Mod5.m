@@ -9707,10 +9707,12 @@ classdef Mod5
                 nYMOLYC = MaxPerLine;
             end
             for iName = 1:nYMOLYC
-                mol = sprintf('%10.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                
                 if ispc
+                    mol = sprintf('%11.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                
                     mol = strrep(mol, 'E+0', 'E+');
                     mol = strrep(mol, 'E-0', 'E-');
+                else
+                    mol = sprintf('%10.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                
                 end
                fprintf(fid, '%10s', mol); 
             end
