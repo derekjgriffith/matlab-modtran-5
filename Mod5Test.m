@@ -1,10 +1,14 @@
-function Result = Mod5Test(InputDir, OutputDir, CompareDir)
+function Result = Mod5Test(InputDir, OutputDir)
 % Mod5Test : Test reading, writing of MODTRAN 5 cases
 %
 % This function reads all the .tp5 files in the InputDir and
 % writes the same files to the OutputDir. It will also write 
 % the file mod5root.in listing all the test cases to the MODTRAN
 % executable directory.
+
+% Copyright 2011, DPSS, CSIR, $Author:$
+% $Id:$
+
 Result = [];
 persistent MODTRANPath MODTRANExe
 %% Deal with location of the MODTRAN executable
@@ -34,17 +38,18 @@ if ~exist('OutputDir', 'var') || isempty(OutputDir)
     end
 end
 
-if ~exist('CompareDir', 'var') || isempty(CompareDir)
-    CompareDir = uigetdir(MODTRANPath, 'Select the Directory for the Comparison Output');
-    if CompareDir(1) == 0
-        return;
-    end    
-end
 %% Read and write all cases
 TheCases = dir([InputDir '\*.tp5']);
-
-for iCase = 1:numel(TheCases)
-    ThisMod5 = Mod5([InputDir '\' TheCases(iCase).name]);
-    ThisMod5.Write([OutputDir '\' TheCases(iCase).name]);
+try
+    fid = fopen([MODTRANPath 'mod5root.in'], 'wt'); % Will write to mod5root.in
+    for iCase = 1:numel(TheCases)
+        ThisMod5 = Mod5([InputDir '\' TheCases(iCase).name]);
+        ThisMod5.Write([OutputDir '\' TheCases(iCase).name]);
+        fprintf(fid, '%s\n', [OutputDir '\' TheCases(iCase).name]);
+    end
+    fclose(fid);
+catch TestingFailed
+    fclose(fid);
+    rethrow(TestingFailed);
 end
 end
