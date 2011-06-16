@@ -66,17 +66,27 @@ Sat1.SURREF = '0.5';   % Earth reflectance (albedo) 50% right across spectrum
 % Set up Card 1A (mandatory - main radiative transport continued)
 Sat1.DIS = 'f';        % Not using DISORT multiple scattering algorithm
 Sat1.DISAZM = 'f';     % Therefore also not using azimuth dependence in DISORT
+Sat1.DISALB = 'f';     % Don't calculate atmospheric correction data
 Sat1.NSTR = 2;         % Isaacs 2-stream multiple scattering model
-%Sat1.LSUN = 'f';       % Use default 5 cm^-1 TOA solar irradiance data
-Sat1.ISUN = 0;         % Don't smooth the solar irradiance data before use
+Sat1.SFWHM = 0;        % Default solar irradiance data
 Sat1.CO2MX = 370;      % CO2 mixing ratio, 370 ppm by volume
 Sat1.H2OSTR = '0.';    % No scaling of canned water vapor profile (MODEL/M2)
 Sat1.O3STR = '0.';     % No scaling of canned ozone profile (MODEL/M3)
+Sat1.C_PROF = '0';     % No scaling of default molecular species profiles
 Sat1.LSUNFL = 'f';     % Don't read alternative solar irradiance data
 Sat1.LBMNAM = 'f';     % Don't read alternative band model file
 Sat1.LFLTNM = 't';     % Must read filter file specified
 Sat1.H2OAER = 'f';     % Don't bother to modify aerosol properties on the basis of H2OSTR
+Sat1.CDTDIR = 'f';     % Data files are in the default location
 Sat1.SOLCON = -1;      % Unity scaling of TOA solar irradiance, but apply seasonal correction
+Sat1.CDASTM = ' ';     % No Angstrom law manipulations
+% Not really necessary to set the Angstrom law data since it will not be
+% used
+% Sat1.ASTMC
+% Sat1.ASTMX
+% Sat1.ASTMO
+% Sat1.AERRH
+Sat1.NSSALB = 0;       % Use reference aerosol single-scattering albedo
 
 % Deal with EO camera band filters
 % Create two bandpass filters with gaussian edges
@@ -181,6 +191,9 @@ Sat1.PlotSc7({'SOLSCAT','SINGSCAT', 'GRNDRFLT','DRCTRFLT', 'TOTALRAD'});
 
 % Plot some of the raw data for interest, single scattered path radiance, direct reflected and total radiance
 Sat1.PlotTp7({'SINGSCAT', 'DRCTRFLT', 'TOTALRAD'});
+
+% Plot a few of the channel outputs
+Sat1.PlotChn({'PATH_TOTAL_SCAT_SOLAR','TOTAL_TRANSM_GRND_REFLECT'})
 
 %% Example 3 : Direct Solar Irradiance Case
 close all
