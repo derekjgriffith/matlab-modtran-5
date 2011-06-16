@@ -764,6 +764,8 @@ classdef Mod5
   end % Properties (Hidden)
   properties (Hidden, Transient)
               DebugFlag = 0; % if set true, debug printing of case file reading is provided.
+              % Parameters that sepend on MODTRAN compile time options
+              parmNYMOLC = 16;
   end % Properties (Hidden, Transient)
   methods (Access = public, Static)
     function [MODTRANExe, MODTRANPath] = SetMODTRANExe(MODTRANExe)
@@ -4340,7 +4342,14 @@ classdef Mod5
               MC(iCase) = MC(iCase).ReadCard2C2X(fid, iML);
             end
             if MC(iCase).NMOLYC > 0 && MC(iCase).IRD1 == 1
-              MC(iCase) = MC(iCase).ReadCard2C2Y(fid, iML);   
+              MC(iCase) = MC(iCase).ReadCard2C2Y(fid, iML);
+            elseif MC(iCase).NMOLYC == 0 && MC(iCase).IRD1 == 1 && MC(iCase).LYMOLC == '+'
+                % Temporarily set NMOLYC to the number of LYMOLC species
+                MC(iCase).NMOLYC = MC(iCase).parmNYMOLC;
+                % Read the series 2C2Y
+                MC(iCase) = MC(iCase).ReadCard2C2Y(fid, iML);
+                % Set it back to zero
+                MC(iCase).NMOLYC = 0;
             end
             if MC(iCase).IRD2 == 1
               MC(iCase) = MC(iCase).ReadCard2C3(fid, iML);
@@ -4555,7 +4564,14 @@ classdef Mod5
               MC(iCase) = MC(iCase).WriteCard2C2X(fid, iML);
             end
             if MC(iCase).NMOLYC > 0 && MC(iCase).IRD1 == 1
-              MC(iCase) = MC(iCase).WriteCard2C2Y(fid, iML);   
+              MC(iCase) = MC(iCase).WriteCard2C2Y(fid, iML);
+            elseif MC(iCase).NMOLYC == 0 && MC(iCase).IRD1 == 1 && MC(iCase).LYMOLC == '+'
+                % Temporarily set NMOLYC to the number of LYMOLC species
+                MC(iCase).NMOLYC = MC(iCase).parmNYMOLC;
+                % Write the series 2C2Y
+                MC(iCase) = MC(iCase).WriteCard2C2Y(fid, iML);
+                % Set it back to zero
+                MC(iCase).NMOLYC = 0;              
             end
             
             if MC(iCase).IRD2 == 1
@@ -4804,7 +4820,14 @@ classdef Mod5
               % MC(iCase) = MC(iCase).DescribeCard2C2X(fid, iML);
             end
             if MC(iCase).NMOLYC > 0 && MC(iCase).IRD1 == 1
-              MC(iCase) = MC(iCase).DescribeCard2C2Y(fid, iML, OFormat);   
+              MC(iCase) = MC(iCase).DescribeCard2C2Y(fid, iML, OFormat);
+            elseif MC(iCase).NMOLYC == 0 && MC(iCase).IRD1 == 1 && MC(iCase).LYMOLC == '+'
+                % Temporarily set NMOLYC to the number of LYMOLC species
+                MC(iCase).NMOLYC = MC(iCase).parmNYMOLC;
+                % Read the series 2C2Y
+                MC(iCase) = MC(iCase).DescribeCard2C2Y(fid, iML, OFormat);
+                % Set it back to zero
+                MC(iCase).NMOLYC = 0;              
             end            
             if MC(iCase).IRD2 == 1
               % MC(iCase) = MC(iCase).DescribeCard2C3(fid, iML, OFormat);
@@ -9424,6 +9447,9 @@ classdef Mod5
         for iLine = 1:ceil(TotalFields/MaxPerLine) % This is the number of lines to read
             if iLine == ceil(TotalFields/MaxPerLine) % Last line
                 nFields = mod(TotalFields, MaxPerLine); % May read less than MaxPerLine
+                if nFields == 0
+                    nFields = MaxPerline;
+                end
             else 
                 nFields = MaxPerLine;
             end
@@ -9447,6 +9473,9 @@ classdef Mod5
         for iLine = 1:ceil(TotalFields/MaxPerLine) % This is the number of lines to write
             if iLine == ceil(TotalFields/MaxPerLine) % Last line
                 nFields = mod(TotalFields, MaxPerLine); % May read less than MaxPerLine
+                if nFields == 0
+                    nFields = MaxPerline;
+                end                
             else 
                 nFields = MaxPerLine;
             end
@@ -9566,6 +9595,9 @@ classdef Mod5
         for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to read
             if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
                 nYNAME = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
+                if nYNAME == 0
+                    nYNAME = MaxPerline;
+                end
             else 
                 nYNAME = MaxPerLine;
             end
@@ -9584,6 +9616,9 @@ classdef Mod5
         for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to write
             if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
                 nYNAME = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
+                if nYNAME == 0
+                    nYNAME = MaxPerline;
+                end
             else 
                 nYNAME = MaxPerLine;
             end
@@ -9687,6 +9722,9 @@ classdef Mod5
         for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to read
             if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
                 nYMOLYC = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
+                if nYMOLYC == 0
+                    nYMOLYC = MaxPerLine;
+                end
             else 
                 nYMOLYC = MaxPerLine;
             end
@@ -9703,6 +9741,9 @@ classdef Mod5
         for iLine = 1:ceil(C.NMOLYC/MaxPerLine) % This is the number of lines to write
             if iLine == ceil(C.NMOLYC/MaxPerLine) % Last line
                 nYMOLYC = mod(C.NMOLYC, MaxPerLine); % May read less than MaxPerLine
+                if nYMOLYC == 0
+                    nYMOLYC = MaxPerLine;
+                end                
             else 
                 nYMOLYC = MaxPerLine;
             end
