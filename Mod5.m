@@ -10730,9 +10730,10 @@ classdef Mod5
     function Pass = ScalarChar(MC, Value, ValidChar, Caller)
       Pass = isscalar(MC) && isscalar(Value) && ischar(Value) && any(Value == ValidChar);
       if ~Pass
-        fprintf(2, 'Inputs to set.%s must be scalar and new value must be one of ', Caller);
-        for iChar = 1:length(ValidChar)
-          fprintf(2, '''%c ''', ValidChar(iChar));
+        fprintf(2, 'Inputs to set.%s must be a scalar character and new value must be one of ', Caller);
+        fprintf(2, '''%c''', ValidChar(1));
+        for iChar = 2:length(ValidChar)
+          fprintf(2, ',''%c''', ValidChar(iChar));
         end
         fprintf(2, '\n');
         error(['Mod5:set' Caller ':BadInput'],'Bad input to set.%s encountered.', Caller);
