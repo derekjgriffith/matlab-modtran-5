@@ -10340,7 +10340,7 @@ classdef Mod5
     end % ReadCard3C1
     function C = WriteCard3C1(C, fid)
       for I = 1:C.NANGLS
-        fprintf(fid, ' %9.0f', C.ANGF(I));
+        fprintf(fid, ' %9.4f', C.ANGF(I));
       end
       fprintf(fid, '\n');
     end % WriteCard3C1
@@ -10355,7 +10355,7 @@ classdef Mod5
     end % ReadCard3C2
     function C = WriteCard3C2(C, fid)
       for I = 1:C.NWLF
-        fprintf(fid, ' %9.0f', C.WLF(I));
+        fprintf(fid, ' %9.3f', C.WLF(I));
       end
       fprintf(fid, '\n');
     end % WriteCard3C1    
