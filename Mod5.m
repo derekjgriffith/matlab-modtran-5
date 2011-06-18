@@ -3807,7 +3807,7 @@ classdef Mod5
             ColEnd = regexp(deblank(lin), '\S\s'); % Transitions from non-space to space
             [ThisCookedHeads, ThisUnits] = Mod5.CookAcdHeaders(ThisColHeads, ColStart, ColEnd);
             % All but the last column is numeric data
-            TheFormat = repmat('%f ', 1, length(ColStart) - 1);
+            TheFormat = repmat('%f ', 1, length(ColStart));
             % Read in the block of data
             % First Increment the block counter
             iBlock = iBlock + 1;
@@ -3818,16 +3818,22 @@ classdef Mod5
             Units{iBlock} = ThisUnits;
             ThisColHeads = '';
             iChan = 0; % Filter channel counter
-            while ~feof(fid)
-              lin = fgetl(fid);
-              [A,count] = sscanf(lin, TheFormat);
-              if count ~= length(ColStart)
-                break; % out of the while loop reading the current block
-              end
-              iChan = iChan + 1;
-              % Put the data into the block
-              Data{iBlock}(iChan,:) = A';
-            end
+            % The following commented code reads line by line, which can be
+            % slow ...
+%             while ~feof(fid)
+%               lin = fgetl(fid);
+%               [A,count] = sscanf(lin, TheFormat);
+%               if count ~= length(ColStart)
+%                 break; % out of the while loop reading the current block
+%               end
+%               iChan = iChan + 1;
+%               % Put the data into the block
+%               Data{iBlock}(iChan,:) = A';
+%             end
+            % The alternative is to use textscan, which is much faster, but will not allow
+            % for more flexible processing.
+            BlockData = textscan(fid, TheFormat);
+            Data{iBlock} = [BlockData{:}];
           elseif ischar(lin) && ~isempty(strtrim(lin))
             % Process as header data
             ThisColHeads = strvcat(ThisColHeads, lin); 
