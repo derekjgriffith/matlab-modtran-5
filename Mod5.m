@@ -3739,6 +3739,106 @@ classdef Mod5
         rethrow(FileReadFailed);
       end
     end % ReadChn
+    function [Data, ColHeads, CookedHeads, Units] = ReadAcd(Filename)
+        % ReadAcd : Read atmospheric correction data
+        %
+        % Usage :
+        %   [Data, ColHeads, CookedHeads, Units] = ReadAcd(Filename)
+        %
+        % Read MODTRAN 5 atmospheric correction data from a .acd format
+        % MODTRAN output file. If the input Filename is missing or empty, a
+        % file/open dialog is presented.
+        %
+        % The numeric data is returned in a cell array (Data), with a numeric
+        % matrix in each cell, one cell per block in the file.
+        %
+        % The unmodified text column headers in the file are returned in a cell
+        % array ColHeads, again with one cell array of strings for each
+        % data block in the file. 
+        %
+        % Are set of headers, called CookedHeads are produced by processing
+        % the raw column headers to text that is fit to serve as a set of
+        % field names. Spectral units in .acd files always seem to be
+        % wavenumber per cm.
+      Data = {};
+      ColHeads = {};
+      CookedHeads = {};
+      Units = {};
+      ThisColHeads = '';
+      %% Check input filename and open
+      if ~exist('Filename', 'var') || isempty(Filename)
+        MODTRANPath = '';
+        % Check for default case directory
+        Direc = fileparts(which('Mod5.m'));
+        if exist([Direc '\MODTRANExe.mat'], 'file');
+          load([Direc '\MODTRANExe.mat']);
+        end
+        
+        % Use dialog
+        if isempty(MODTRANPath)
+          [Filename, Pathname] = uigetfile({'*.acd;atmcor.dat', ...
+            'MODTRAN Atmospheric Correction Files (*.acd)'; '*.*', 'All Files'}, 'Select MODTRAN Atmospheric Correction File');
+        else
+          [Filename, Pathname] = uigetfile({'*.acd;atmcor.dat', ...
+            'MODTRAN Atmospheric Correction Files (*.acd)'; '*.*', 'All Files'}, 'Select MODTRAN Atmospheric Correction File', MODTRANPath);
+        end
+        if Filename
+          Filename = [Pathname Filename];
+        else
+          return;
+        end
+      else % Filename is not empty, meaning that an explicit filename was given
+        assert(ischar(Filename), 'Mod5:ReadAcd:FilenameNotString', 'Input Filename must be a string.');
+        if ~exist(Filename, 'file')
+          error('Mod5:ReadAcd:FileDoesNotExist', ...
+            'The file %s does not seem to exist. Provide full path if not in current directory.', Filename);
+        end
+      end
+      try % to read the file
+        fid = fopen(Filename, 'rt');
+        % Processing of this file is conducted line by line at first
+        iBlock = 0;
+        while ~feof(fid)
+          lin = fgetl(fid);
+          % Check if line starts with ----
+          if ischar(lin) && strncmp(strtrim(lin), '----', 4);
+            % Determine the number and position of columns using this line
+            ColStart = regexp([' ' lin], '\s\S'); % transitions from space to non-space
+            ColEnd = regexp(deblank(lin), '\S\s'); % Transitions from non-space to space
+            [ThisCookedHeads, ThisUnits] = Mod5.CookAcdHeaders(ThisColHeads, ColStart, ColEnd);
+            % All but the last column is numeric data
+            TheFormat = repmat('%f ', 1, length(ColStart) - 1);
+            % Read in the block of data
+            % First Increment the block counter
+            iBlock = iBlock + 1;
+            % Assign the ColHeads
+            ColHeads{iBlock} = ThisColHeads;
+            % Assign the Cooked headers and units
+            CookedHeads{iBlock} = ThisCookedHeads;
+            Units{iBlock} = ThisUnits;
+            ThisColHeads = '';
+            iChan = 0; % Filter channel counter
+            while ~feof(fid)
+              lin = fgetl(fid);
+              [A,count] = sscanf(lin, TheFormat);
+              if count ~= length(ColStart)
+                break; % out of the while loop reading the current block
+              end
+              iChan = iChan + 1;
+              % Put the data into the block
+              Data{iBlock}(iChan,:) = A';
+            end
+          elseif ischar(lin) && ~isempty(strtrim(lin))
+            % Process as header data
+            ThisColHeads = strvcat(ThisColHeads, lin); 
+          end
+        end
+        fclose(fid);
+      catch FileReadFailed
+        fclose(fid);
+        rethrow(FileReadFailed);
+      end
+    end % ReadAcd
     function [PlotData, SepLin] = ReadPlt(Filename)
       % ReadPlt : Read MODTRAN plot data (.plt, .psc, plotout, plotout.scn)
       %
@@ -3934,6 +4034,68 @@ classdef Mod5
        CookedHeads = strrep(CookedHeads, ' ', '_');
        % The cooked headers should now make eminent fieldnames
     end % CookChnHeaders
+    function [CookedHeads, Units] = CookAcdHeaders(Heads, Start, Stop)
+       % CookAcdHeaders : Try to cook up some reasonable headers for acd
+       % Devise headers that are easily converted to fieldnames
+       % Extract units in a form that will look pretty on plots
+       Start(1) = 1; % Force start of first header at start of line 
+       for iLine = 1:size(Heads,1)
+            beststart = Start;
+            beststart(beststart > length(Heads(iLine, :))) = length(Heads(iLine, :)); % constrain to maximum of Heads(iLine, :) 
+            if numel(Start) == numel(Stop)
+                beststop = Stop;
+            elseif numel(Stop) == numel(Start)-1
+                beststop = [Stop length(Heads(iLine, :))];
+            else
+                error('Mod5:CookChnHeaders','Number of Start positions must be the same as, or one more than Stop positions.')
+            end
+            beststop(end) = length(Heads(iLine, :));
+            beststop(beststop > length(Heads(iLine, :))) = length(Heads(iLine, :));
+            % Attempt to expand the headers
+            [beststart, beststop] = Mod5.DilateHeaders(beststart, beststop, Heads(iLine, :));
+            for iBit = 1:numel(Start)
+                HeadBits{iLine, iBit} = strtrim(Heads(iLine, beststart(iBit):beststop(iBit))); 
+            end
+       end
+       % Compile the bits from mutiple header lines in the file
+       CookedHeads = repmat({''},1,numel(Start));
+       for iBit = 1:numel(Start)
+           CookedHeads{iBit} = HeadBits{1, iBit};
+           for iLine = 2:size(Heads,1)
+               CookedHeads{iBit} = [CookedHeads{iBit} ' ' HeadBits{iLine, iBit}];
+           end
+       end
+       CookedHeads = strtrim(CookedHeads); % Remove leading and trailing blanks
+       % Fix a few specific problems, including headers that span multiple
+       % columns
+       % Want all headers to be alpha only, possibly with units in trailing
+       % set of parentheses
+       CookedHeads = strrep(CookedHeads, '->', 'to');
+       % Now also try to get consistency in unit expression
+       CookedHeads = strrep(CookedHeads, 'CM-1', 'cm^{-1}');
+       % Run through the headers and strip out the units
+       Units = repmat({''}, 1, numel(CookedHeads));
+       for iHead = 1:numel(CookedHeads)
+           if CookedHeads{iHead}(end) == ']'
+               % Find the last opening bracket
+               iOpenParens = strfind(CookedHeads{iHead}, '[');
+               Units{iHead} = CookedHeads{iHead}(iOpenParens(end)+1:end-1);
+               CookedHeads{iHead} = deblank(CookedHeads{iHead}(1:iOpenParens(end)-1));
+           end
+           % If there is anything else in parentheses, dump it
+           [iOpenParens, iCloseParens] = regexp(CookedHeads{iHead}, '\[.*])');
+           for iParens = numel(iOpenParens):-1:1
+               CookedHeads{iHead}(iOpenParens(iParens):iCloseParens(iParens)) = [];
+           end
+           CookedHeads{iHead} = strrep(CookedHeads{iHead}, '  ', ' '); % Remove any double spaces remaining
+       end
+       % And for a final dramatic gesture, replace all spaces with
+       % underscores and remaining - with to
+       CookedHeads = strrep(CookedHeads, ' ', '_');
+       CookedHeads = strrep(CookedHeads, '-', 'to');
+       
+       % The cooked headers should now make eminent fieldnames
+    end % CookAcdHeaders
     function Goodness = GoodFit(NewWv)
       % GoodFit : Experiment, leave well alone
       global OldRefl OldWv NewRefl
