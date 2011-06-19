@@ -450,7 +450,7 @@ classdef Mod5
     SURREF  % Controls reflectance or BRDF at H2
     DIS     % Controls use of DISORT multiple scatter algorithm
     DISAZM  % Controls whether azimuthal dependency of DISORT is used
-    DISALB  % Controls computation of atmospheric correction data
+    DISALB = ' ' % Controls computation of atmospheric correction data
     NSTR    % Controls number of streams for DISORT
     SFWHM   % FWHM of triangular scanning filter for TOA solar irradiance smoothing 
 %     LSUN    % Flag selecting spectral resolution of solar TOA database 
@@ -458,19 +458,19 @@ classdef Mod5
     CO2MX   % CO2 mixing ratio in ppmv. 2010 value is about 380 ppmv
     H2OSTR  % Allows scaling of water vapor profile
     O3STR   % Allows scaling of ozone profile
-    C_PROF  % Controls scaling of vertical profiles of various species
+    C_PROF = ' ' % Controls scaling of vertical profiles of various species
     LSUNFL  % Flag to control reading of solar TOA irradiance data
     LBMNAM  % Flag to control reading of band model
     LFLTNM  % Flag to control reading of spectral channel filters
     H2OAER  % Allows control of water vapor scaling effects on aerosols
-    CDTDIR  % Directory where MODTRAN will search for data files
+    CDTDIR = ' '  % Controls directory where MODTRAN will search for data files
     SOLCON  % Scaling of solar constant
-    CDASTM  % Controls application of aerosol angstrom law inputs
+    CDASTM = ' ' % Controls application of aerosol angstrom law inputs
     ASTMC   % Angstrom law coefficient for boundary layer and troposphere
     ASTMX   % Angstrom law offset for the boundary layer and troposphere
     ASTMO   % Angstrom law offset for the boundary layer and troposphere
     AERRH   % Relative humidity for the boundary layer aerosol
-    NSSALB  % Controls aerosol single scattering albedo
+    NSSALB = 0 % Controls aerosol single scattering albedo
     USRSUN  % File from which to read solar TOA irradiance (if LSUNFL set true)
     BMNAME  % File from white to read band model (if LBMNAM set true)
     FILTNM  % File (.flt) from which to read spectral channel filters (if LFLTNM set true)
