@@ -326,8 +326,9 @@ Sat2 = Sat2.Set('MODTRN', 'M','SPEED','S','BINARY', 'F', 'LYMOLC', ' ','MODEL', 
                 'MDEF', 0, 'I_RD2C', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', 'LAMBER');
               
 % Set up Card 1A (mandatory - main radiative transport continued)
-Sat2 = Sat2.Set('DIS', 'f', 'DISAZM', 'f', 'NSTR', 2, 'LSUN', 'f', 'ISUN', 0, 'CO2MX', 380, 'H2OSTR', '0.', ...
-                'O3STR', '0.', 'LSUNFL', 'f', 'LBMNAM', 'f', 'LFLTNM', 't', 'H2OAER', 'f', 'SOLCON', -1);
+Sat2 = Sat2.Set('DIS', 'f', 'DISAZM', 'f', 'DISALB', ' ', 'NSTR', 2, 'SFWHM', 0, 'CO2MX', 380, 'H2OSTR', '0.', ...
+                'O3STR', '0.', 'C_PROF', ' ', 'LSUNFL', 'f', 'LBMNAM', 'f', 'LFLTNM', 't', ...
+                'H2OAER', 'f', 'CDTDIR',' ','SOLCON', -1, 'CDASTM', ' ','ASTMC',0, 'ASTMX',0,'ASTMO',0,'AERRH',0, 'NSSALB', 0);
               
 % Deal with MERIS camera band filters
 % Read the filters from the SensorML description of MERIS
@@ -410,6 +411,6 @@ Sat2 = Sat2.AttachAlb(OcTreeAlb, [1 2]); % 1 means ocean, 2 means tree
 Sat2 = Sat2.Run;
 
 % Plot the spectral channel output for ocean and tree ...
-Sat2.PlotChn;
+Sat2.PlotChn('SPECTRAL_RADIANCE');
 
 %----------End Example 6--------------
