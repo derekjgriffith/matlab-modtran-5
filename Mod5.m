@@ -6637,6 +6637,8 @@ classdef Mod5
       iP.addRequired('MC', @isscalar);
       iP.addOptional('MODTRN', 'M');
       iP.addOptional('SPEED','M', @(x)isscalar(x) && ischar(x));
+      iP.addOptional('BINARY', ' ', @(x)isscalar(x) && ischaR(x));
+      iP.addOptional('LYMOLC', ' ', @(x)isscalar(x) && ischaR(x));      
       iP.addOptional('MODEL', 'S');
       iP.addOptional('ITYPE', 2);
       iP.addOptional('IEMSCT', 0);
@@ -6656,6 +6658,8 @@ classdef Mod5
       MC.MODTRN = MODTRN;
       MC.SPEED = SPEED;
       MC.MODEL = MODEL;
+      MC.BINARY = BINARY;
+      MC.LYMOLC = LYMOLC;
       MC.TYPE = ITYPE;
       MC.IEMSCT = IEMSCT;
       MC.IMULT = IMULT;
