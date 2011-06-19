@@ -5432,6 +5432,8 @@ classdef Mod5
           end
           % Process any .chn (spectral channel output) data
           MODCase = MODCase.ProcessChn;
+          % Process any .acd (atmospheric correction) data
+          MODCase = MODCase.ProcessAcd;
           cd(CurrentDir);
         catch MODTRANError
           cd(CurrentDir); % Change back to current directory prior to run
@@ -6295,8 +6297,7 @@ classdef Mod5
                 plothandles = [plothandles Mod5.PlotFlxImg(MODCase(iCase).flx, varargin{:})];
             end
         end
-    end % PlotIrradImg
-    
+    end % PlotIrradImg    
     function MC = AttachFlt(MC, Flt, iSubCases)
       % AttachFlt : Attach a filter to a Mod5
       %
@@ -9077,6 +9078,43 @@ classdef Mod5
         end
       end
     end % ProcessChn
+    function MODCase = ProcessAcd(MODCase)
+      % ProcessAcd : Process any .acd (atmospheric correction data)
+      % This function should deal correctly with radiance, transmittance
+      % and irradiance cases.
+      ResultFile = dir([MODCase(1).CaseName '.acd']); % The acd output
+      if isempty(ResultFile) % nothing to do
+        return;
+      end
+      OneSecond = 1/24/60/60;
+      if ResultFile.datenum - MODCase(1).RunStartSerTime < -OneSecond
+        warning('Mod5:ProcessAcd:ResultFileOld',...
+          'The %s.acd output file found for this case appears to precede the start time of the run and has therefore been ignored.', ...
+          MODCase(1).CaseName);
+      else % Read the data from the .acd file and distribute to the sub-cases
+        [Data, ColHeads, CookedHeads, Units] = Mod5.ReadAcd([MODCase(1).CaseName '.acd']);
+        iBlock = 0;
+        for iCase = 1:numel(MODCase)
+          % Assign a block of data only if DISALB is true and DISORT is enabled in multiple shortwave scatter   
+          if upper(MODCase(iCase).DISALB) == 'T' && upper(MODCase(iCase).DIS) == 'T' && any(MODCase(iCase).IEMSCT == [2 4])
+            iBlock = iBlock + 1;
+            if iBlock > numel(Data)
+              warning('Mod5:ProcessAcd:InsufficientData', ...
+                'There were insufficient data blocks in %s.acd to distribute to qualifying sub-cases.', MODCase(1).CaseName);
+              return; % Abandon acd data distribution
+            end
+            MODCase(iCase).acd.ColHeads = ColHeads{iBlock};
+            MODCase(iCase).acd.CookedHeads = CookedHeads{iBlock};
+            MODCase(iCase).acd.Units = Units{iBlock};
+            theData = Data{iBlock};
+            MODCase(iCase).acd.Data = theData; % Numeric data that is
+            for iCol = 1:size(theData,2)
+                MODCase(iCase).acd.(genvarname(CookedHeads{iBlock}{iCol})) = theData(:,iCol);
+            end
+          end
+        end
+      end
+    end % ProcessAcd
     function MODCase = ProcessFlx(MODCase)
         % ProcessFlx : Reads and attaches .flx irradiance data
         % This is spectrally convolved data, not raw (tape8) fluxes.
