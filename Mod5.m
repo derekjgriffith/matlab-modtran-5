@@ -925,6 +925,8 @@ classdef Mod5
           case 'TOTAL TRANS', FixedHeaders{iHead} = 'TRANS';
           case 'CO2+ TRANS', FixedHeaders{iHead} = 'CO2PTRANS';
           case 'SOL T', FixedHeaders{iHead} = 'SOLTR';
+          case 'SOL', FixedHeaders{iHead} = 'SOLTR';
+          case 'TR  SOLAR', FixedHeaders{iHead} = 'SOLAR';              
           case 'OLAR', FixedHeaders{iHead} = 'SOLAR';
           case 'EQ -1', FixedHeaders{iHead} = 'FREQ';
           case 'REQ M-1', FixedHeaders{iHead} = 'FREQ';            
