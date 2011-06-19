@@ -210,7 +210,7 @@ Sol1 = Sol1.Set('MODTRN', 'M','SPEED','S','BINARY', 'F', 'LYMOLC', ' ', 'MODEL',
                 'MDEF', 0, 'I_RD2C', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', '0.0');
 
 % Set up Card 1A (mandatory - supplementary radiative transport parameters)
-Sol1 = Sol1.Set('DIS', 'f', 'DISAZM', 'f', 'NSTR', 2, 'LSUN', 'f', 'ISUN', 5, ...
+Sol1 = Sol1.Set('DIS', 'f', 'DISAZM', 'f', 'DISALB', ' ', 'NSTR', 2, 'SFWHM', 5, ...
                 'CO2MX', 370, 'H2OSTR', '', 'O3STR', '', 'LSUNFL', 'f', ...
                 'LBMNAM', 'f', 'LFLTNM', 'f', 'H2OAER', 'f', 'SOLCON', 0);
 
@@ -243,7 +243,7 @@ Sol1 = Sol1.Run;
 Sol1.PlotSc7('SOLTR');
 
 % Compute the integrated transmitted solar irradiance in the band (350 to 1000 nm)
-TotalSolar = trapz(Sol1.sc7.FREQNM, Sol1.sc7.SOLTR);
+TotalSolar = trapz(Sol1.sc7.WAVLNM, Sol1.sc7.SOLTR);
 
 % Create a series of cases based on Sol1 with solar zenith angles of 0 and 40 deg,
 % and with visibilities of 10 and 20 km
