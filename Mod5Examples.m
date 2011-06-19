@@ -303,7 +303,7 @@ Ex5 = Mod5([MCDir '\CaseUSS.ltn']);
 % Run the case
 Ex5 = Ex5.Run;
 % Plot transmittance
-Ex5.PlotTp7('TRANS');
+Ex5.PlotTp7('COMBINTRANS');
 
 %% Example 6 : Downward looking EO radiance case
 % This example reads SensorML (Sensor Markup Language) spectral channel
