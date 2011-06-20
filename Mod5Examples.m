@@ -261,7 +261,7 @@ Sol1.PlotSc7('SOLTR');
 % Sol1(3) :  0 deg zenith angle, 20 km visibility
 % Sol1(4) : 40 deg zenith angle, 20 km visibility
 %% Example 4 : Thermal Spectrum Transmittance Case with Partially User-Defined Atmosphere
-% H1 = 0, H2 = 3 km, RANGE = 200 km
+% H1 = 0, H2 = 3 km, RANGE = 5 km to 40 km
 % Spectral range is 800 cm^-1 to 4000 cm^-1 (12.5 µm down to 2.5 µm)
 % This case could be for calculating transmission to an airborne platform
 % at a specific altitude (H2 = 3 km), at various slant ranges from the observer,
@@ -271,12 +271,11 @@ clear classes
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % Load the case
-Ex4 = Mod5([MCDir '\Ex4.ltn']);
-
+Ex4 = Mod5([MCDir '\Ex4.tp5']);
 % Plot all user-defined atmospheric data for this case
 Ex4.PlotAtm('all');
 
-% Create a sensitivity series with path length of 5 km, 20 km and 80 km
+% Create a sensitivity series with path length of 5 km, 20 km and 40 km
 % and with scaling of water vapor to 50% and 100% of specified amount.
 Ex4 = Ex4.CreateSeries('RANGE', {5 20 40}, 'H2OSTR', {'0.5', '1.0'});
 
@@ -284,7 +283,7 @@ Ex4 = Ex4.CreateSeries('RANGE', {5 20 40}, 'H2OSTR', {'0.5', '1.0'});
 Ex4 = Ex4.Run;
 
 % Plot total transmission
-Ex4.PlotTp7('TRANS');
+Ex4.PlotTp7('COMBINTRANS');
 % The combinations plotted are as follows
 % Ex4(1) is RANGE =  5 km and H2OSTR = '0.5'
 % Ex4(2) is RANGE = 20 km and H2OSTR = '0.5'
