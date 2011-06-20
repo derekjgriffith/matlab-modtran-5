@@ -917,6 +917,7 @@ classdef Mod5
           case 'FREQ(CM-1)', FixedHeaders{iHead} = 'FREQ';
           case 'FREQ NANOMETER', FixedHeaders{iHead} = 'WAVLNM';
           case 'WAVLEN(NM)', FixedHeaders{iHead} = 'WAVLNM';
+          case 'WAVLEN (NM)', FixedHeaders{iHead} = 'WAVLNM';              
           case 'WAVLEN (uM)', FixedHeaders{iHead} = 'WAVLUM';
           case 'WAVLEN(MCRN)', FixedHeaders{iHead} = 'WAVLUM';
           case 'FREQMCRN', FixedHeaders{iHead} = 'WAVLUM';
@@ -929,8 +930,11 @@ classdef Mod5
           case 'TR  SOLAR', FixedHeaders{iHead} = 'SOLAR';              
           case 'OLAR', FixedHeaders{iHead} = 'SOLAR';
           case 'EQ -1', FixedHeaders{iHead} = 'FREQ';
-          case 'REQ M-1', FixedHeaders{iHead} = 'FREQ';            
+          case 'REQ M-1', FixedHeaders{iHead} = 'FREQ'; 
           case '', FixedHeaders{iHead} = 'DEPTH';
+          % The 7sc file headers are sometimes in bad shape
+          % This is only one fix of many problems - see Ex17sc in Mod5Examples.m
+          case 'COMBIN', FixedHeaders{iHead} = 'COMBINTRANS';
           % Probably others I don't know about yet  
           otherwise
             % Remove anything that is not a letter or a number (including blanks)
@@ -973,7 +977,7 @@ classdef Mod5
           'N2OOD', 'Nitrous Oxide Optical Depth'; 'O2OD', 'Oxygen Optical Depth'; 'NH3OD','Ammonia Optical Depth'; ...
           'NOOD', 'Nitric Oxide Optical Depth'; 'NO2OD','Nitrogen Dioxide Optical Depth'; ...
           'SO2OD', 'Sulphur Dioxide Optical Depth'; 'COMBINTRANS', 'Total Transmittance'; 'LOGCOMBIN', 'Total Optical Depth'; ...
-          'AERCLDTRANS', 'Aerosol and Cloud Transmittance'; 'AERCLDABTRNS', 'Aerosol and Cloud Unabsorbed Transmittance'; ...
+          'AERCLDTRANS', 'Aerosol and Cloud Transmittance'; 'AERCLDABTRNS', 'Aerosol and Cloud Absorption Transmittance'; ...
           'CLOUDTRANS', 'Cloud Transmittance'; 'CLOUDOD', 'Cloud Optical Depth'; ...
           'CFC11TRANS', 'CFC11 Transmittance'; 'CFC11OD', 'CFC11 Optical Depth'; ...
           'CFC12TRANS', 'CFC12 Transmittance'; 'CFC12OD', 'CFC12 Optical Depth'; ...
