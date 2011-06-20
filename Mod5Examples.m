@@ -18,11 +18,12 @@ clear classes
 MCDir = fileparts(which('Mod5'));
 % Load the case
 Ex1 = Mod5([MCDir '\Ex1.ltn']);
+Ex1.CaseDescr = '5 km Horizontal Path at Sea Level';
 % Run the case
 Ex1 = Ex1.Run;
 % Plot total transmission and water transmission
-Ex1.PlotTp7({'TRANS', 'H2OTRANS'}); 
-
+Ex1.PlotTp7({'COMBINTRANS', 'H2OTRANS'});
+Ex1.PlotSc7; % Plot the convolved total transmittance on a wavelength scale 
 %% Example 2 : Create a simple satellite EO case from scratch
 % This is a downward-looking radiance calculation.
 close all
