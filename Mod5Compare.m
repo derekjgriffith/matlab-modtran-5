@@ -4,12 +4,30 @@ function Result = Mod5Compare(Filespecs, OutputDir, CompareDir)
 % This function reads files of the given files types (specifications) and
 % presents the files in kdiff3 (must be installed e.g. by installing
 % TortoiseHg).
+%
+% Usage :
+%   Mod5Compare(Filespecs, OutputDir, CompareDir);
+%
+% If the input and output directories are not given, a directory selection
+% dialog will be presented. Filespecs is either a single file specification
+% or a cell array of file specifications.
+%
+% Example : 
+%   Mod5Compare('*.tp5', 'TESTA', 'TEST/COMPARE');
+%
+% Compares all .tp5 files found in the selected output directory to files of
+% the same name in the comparison directory.
+%
+% Paths are relative to the MODTRAN executable directory if they do not
+% start with a slash or backslash.
+%
+% See also : Mod5Test, Mod5TestRun
 
 % Copyright 2011, DPSS, CSIR, $Author:$
 % $Id:$
 % This software is subject to the terms and conditions of the BSD licence.
 
-Result = 0;
+Result = [];
 persistent MODTRANPath MODTRANExe
 %% Deal with location of the MODTRAN executable
 if isempty(MODTRANExe)
@@ -29,14 +47,33 @@ if ~exist('OutputDir', 'var') || isempty(OutputDir)
     if OutputDir(1) == 0
         return;
     end
+else
+    assert(ischar(OutputDir), 'Mod5Compare:BadOutputDir',...
+        'The input InputDir must be a string.');
+    if ~any(OutputDir(1) == '/\')
+        OutputDir = [MODTRANPath OutputDir];
+    end
+    
 end
+% The directory must exist
+assert(exist(OutputDir, 'dir') == 7, 'Mod5Compare:OutputDirNotExist', ...
+    'The output directory %s does not exist.', OutputDir)
 
 if ~exist('CompareDir', 'var') || isempty(CompareDir)
     CompareDir = uigetdir(MODTRANPath, 'Select the Directory for the Comparison Output');
     if CompareDir(1) == 0
         return;
+    end
+else
+    assert(ischar(OutputDir), 'Mod5Compare:BadCompareDir',...
+        'The input CompareDir must be a string.');
+    if ~any(CompareDir(1) == '/\')
+        CompareDir = [MODTRANPath CompareDir];
     end    
 end
+% The directory must exist
+assert(exist(CompareDir, 'dir') == 7, 'Mod5Compare:CompareDirNotExist', ...
+    'The Compare directory %s does not exist.', CompareDir)
 
 if exist('Filespecs', 'var') && ~isempty(Filespecs)
     assert(ischar(Filespecs) || iscellstr(Filespecs), 'Mod5Compare:BadFilespecs',...
@@ -57,7 +94,7 @@ for iSpec = 1:numel(Filespecs)
       SourceTargFile = [OutputDir '\' Fname Ext];      
       ComparisonTargFile = [CompareDir '\' Fname Ext];
       if exist(ComparisonTargFile, 'file')
-          system(['kdiff3 "' SourceTargFile '" "' ComparisonTargFile '"']);
+          Result(iFile) = system(['kdiff3 "' SourceTargFile '" "' ComparisonTargFile '"']);
       else
           warning('Mod5Compare:NoTargetFile','No target comparison file was found for file %s.', SourceTargFile); 
       end
