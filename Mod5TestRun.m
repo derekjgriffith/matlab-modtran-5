@@ -87,6 +87,8 @@ if exist(OutputDir, 'dir') ~= 7
       if ~Success
           error('Mod5TestRun:FolderCreateFailed', 'Unable to create folder %s. %s.', OutputDir, Message);
       end
+    else
+        return;
     end
 end
 %% Read and run all cases
