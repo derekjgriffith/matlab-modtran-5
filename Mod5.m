@@ -463,14 +463,14 @@ classdef Mod5
     LBMNAM  % Flag to control reading of band model
     LFLTNM  % Flag to control reading of spectral channel filters
     H2OAER  % Allows control of water vapor scaling effects on aerosols
-    CDTDIR = ' '  % Controls directory where MODTRAN will search for data files
+    CDTDIR  % Controls directory where MODTRAN will search for data files
     SOLCON  % Scaling of solar constant
-    CDASTM = ' ' % Controls application of aerosol angstrom law inputs
+    CDASTM  % Controls application of aerosol angstrom law inputs
     ASTMC   % Angstrom law coefficient for boundary layer and troposphere
     ASTMX   % Angstrom law offset for the boundary layer and troposphere
     ASTMO   % Angstrom law offset for the boundary layer and troposphere
     AERRH   % Relative humidity for the boundary layer aerosol
-    NSSALB = 0 % Controls aerosol single scattering albedo
+    NSSALB  % Controls aerosol single scattering albedo
     USRSUN  % File from which to read solar TOA irradiance (if LSUNFL set true)
     BMNAME  % File from white to read band model (if LBMNAM set true)
     FILTNM  % File (.flt) from which to read spectral channel filters (if LFLTNM set true)
@@ -764,7 +764,7 @@ classdef Mod5
   end % Properties (Hidden)
   properties (Hidden, Transient)
               DebugFlag = 0; % if set true, debug printing of case file reading is provided.
-              % Parameters that sepend on MODTRAN compile time options
+              % Parameters that depend on MODTRAN compile time options
               parmNYMOLC = 16;
   end % Properties (Hidden, Transient)
   methods (Access = public, Static)
@@ -4383,7 +4383,278 @@ classdef Mod5
         AlbName = AlbName(1:CommStart(1)-1);
       end
       AlbName = strtrim(AlbName); % Trim any white space
-    end % AlbedoName        
+    end % AlbedoName 
+    function lin = WriteSimpleCard(Card, fid, FF, varargin)
+        % WriteSimpleCard : Write a card with fixed format
+        %
+        % Adds a layer of processing over a straight fprintf, including the
+        % following
+        % 1) Replacing empty inputs with blanks
+        % 2) Checking for loss of precision in floating point outputs
+        % 3) Dealing with the exponent problem - on Windows, exponents are 3
+        % digits, while on other platforms they are 2 digits for the %e format.
+        
+        [Start, Stop] = regexp(FF, '%{1,1}[0-9]*\.?[0-9]*[dfeEgGsc]');
+        
+        % Firstly, the number of matches must equal the number of varargs
+        try
+            if numel(Start) ~= numel(varargin)
+                error('Mod5:WriteSimpleCard', ...
+                    'Mismatch in number of format specifiers and number of output arguments.')
+            end
+            lin = '';
+            % Start building up the output string
+            if Start(1) > 1
+                lin = FF(1:(Start(1) - 1));
+            end
+            % Process the fields one at a time
+            for iF = 1:(numel(Start)-1)
+                Format = FF(Start(iF):Stop(iF));
+                Output = Mod5.OptimalFormat(Format, varargin{iF}, Card, iF);
+                lin = [lin Output];
+                lin = [lin FF((Stop(iF)+1):(Start(iF+1)-1))];
+            end
+            % Do the last one
+            Format = FF(Start(end):Stop(end));
+            Output = Mod5.OptimalFormat(Format, varargin{end}, Card, numel(Start));
+            lin = [lin Output];
+            if Stop(end) < numel(FF)
+                lin = [lin FF((Stop(end)+1):end)];
+            end
+            fprintf(fid, lin);
+        catch WriteSimpleCardFailed
+            warning('Mod5:WriteSimpleCard:Failed', 'Card write failed while processing Card %s.', Card);
+            rethrow(WriteSimpleCardFailed);
+        end
+    end % WriteSimpleCard
+    function Output = OptimalFormat(Format, Data, Card, iF)
+        % OptimalFormat : Put maximal precision into available field width
+        % This code also ensures that the fieldwidth constraint is met, and if it
+        % cannot be met, an error is generated. fprintf will happily just
+        % increase the fieldwidth and trash the tape5 rules.
+        %
+        % The problem that Windows platforms produce 3 digits in %e format
+        % outputs is also solved by this code. It does not rely on a call to the
+        % ispc function.
+        % First analyse the format
+        Tokens = regexp(Format, '%{1,1}([0-9]*)\.?([0-9]*)[dfeEgGsc]', 'tokens', 'once');
+        if ~isempty(Tokens{1})
+            FieldWidth = str2double(Tokens{1});
+        else
+            FieldWidth = [];
+        end
+        if ~isempty(Tokens{2})
+            Precision = str2double(Tokens{2});
+        else
+            Precision = 6; % This is the default precision
+        end
+        % First do basic verification, depending on the format
+        switch Format(end)
+            case 'd' % integers
+                % All numeric data passed must have a specified field width
+                if isempty(FieldWidth) || FieldWidth < 1
+                    error('Mod5:WriteSimpleCard:BadNumericFieldWidth', ...
+                        'Numeric data for field %d on Card %s must have a specified field width greater than zero.', iF, Card);
+                end
+                % If an empty value is passed for a numeric field, return blanks
+                % in the whole field width
+                if isempty(Data) % Deliver blanks
+                    Output = blanks(FieldWidth);
+                    return; % The work is done
+                end
+                if ~isnumeric(Data) || ~isscalar(Data)
+                    error('Mod5:WriteSimpleCard:TypeMismatch', ...
+                        'Input for numeric type specifier at field %d on Card %s was either not numeric or not scalar.', iF, Card);
+                end
+                if Data ~= round(Data)
+                    error('Mod5:WriteSimpleCard:NotInteger',...
+                        'Numeric data for field %d on Card %s must be an integer if the format specifier is d.', iF, Card);
+                end
+            case {'f','e','E','g','G'}
+                % All numeric data passed must have a specified field width
+                if isempty(FieldWidth) || FieldWidth < 1
+                    error('Mod5:WriteSimpleCard:BadNumericFieldWidth', ...
+                        'Numeric data for field %d passed to WriteSimpleCard must have a specified field width greater than zero.', iF);
+                end
+                % If an empty value is passed for a numeric field, return blanks
+                % in the whole field width
+                if isempty(Data) % Deliver blanks
+                    Output = blanks(FieldWidth);
+                    return; % The work is done
+                end
+                if ~isnumeric(Data) || ~isscalar(Data)
+                    error('Mod5:WriteSimpleCard:TypeMismatch', ...
+                        'Input for numeric type specifier at field %d was either not numeric or not scalar.', iF);
+                end
+            case 'c'
+                if ~isempty(FieldWidth)
+                    error('Mod5:WriteSimpleCard:BadCharFieldWidth', ...
+                        'Characters passed to WriteSimpleCard must not have a specified field width. Failed at Card %s, field number %d.', Card, iF);
+                end
+                if isempty(Data)
+                    Output = ' ';
+                    return;
+                end
+                if ~ischar(Data)
+                    error('Mod5:WriteSimpleCard:TypeMismatch', ...
+                        'Input data for character format specifier was not of type char for field %d on Card %s', iF, Card);
+                end
+                if numel(Data) > 1
+                    error('Mod5:WriteSimpleCard:SingleChar', ...
+                        'Input data for character format specifier was not a single character for field %d on Card %s.', iF, Card);
+                end
+                Output = Data;
+                return; % Finish dealing with the %c specifier right here.
+            case 's'
+                if isempty(FieldWidth) || FieldWidth < 1
+                    error('Mod5:WriteSimpleCard:BadStringFieldWidth', ...
+                        'Strings passed to WriteSimpleCard must have a specified field width greater than 0. Failed at Card %s, field number %d.', Card, iF);
+                end
+                if isempty(Data)
+                    Output = blanks(FieldWidth);
+                    return;
+                end
+                if ~ischar(Data)
+                    error('Mod5:WriteSimpleCard:TypeMismatch', ...
+                        'Input data for string format specifier was not of type char for field %d on Card %s', iF, Card);
+                end
+            otherwise
+                error('Mod5:WriteSimpleCard:BadTypeSpecifier', ...
+                    'Illegal type specifier %c encountered at field %d on Card %s.', Format(end), iF, Card);
+        end
+        % Basic verifications completed, now produce non-trivial output
+        switch Format(end)
+            case 'd'
+                % Just check than the given fieldwidth is sufficient
+                Output = sprintf(Format, Data);
+                if str2double(Output) ~= Data || numel(Output) > FieldWidth
+                    error('Mod5:WriteSimpleCard:FieldTooSmall', ...
+                        'The field width specified for field %d on Card %s is too small to contain the data.', iF, Card);
+                end
+            case {'f','e','E','g','G'} % Handle these uniformly
+                Format(end) = 'f'; % Current approach is to just switch to f
+                % The FieldWidth in the output must not be exceeded
+                % First calculate the available field width
+                % If the Data is negative, a column is lost for the negative sign
+                if Data < 0
+                    AvailableWidth = FieldWidth - 1;
+                else
+                    AvailableWidth = FieldWidth;
+                end
+                Output1 = sprintf(Format, Data); % Render the output with the original given format
+                Retrieve1 = str2double(Output1); % Retrieve the output from the string
+                if Retrieve1 ~= Data || numel(Output1) > FieldWidth % The representation can possibly be improved
+                    % Now determine if it is even possible to use the %f format
+                    Log10AbsData = log10(abs(Data));
+                    if Log10AbsData < AvailableWidth && Log10AbsData > -1
+                        % Try manipulating the precision
+                        Precision2 = AvailableWidth - ceil(Log10AbsData) - 1;
+                        Precision2 = min(Precision2, AvailableWidth - 2);
+                        if Precision2 < 0
+                            Precision2 = 0;
+                        end
+                        Format2 = ['%' num2str(FieldWidth, '%d') '.' num2str(Precision2, '%d') 'f'];
+                        Output2 = sprintf(Format2, Data);
+                        % Clobber trailing zeros
+                        for iPrecision = 1:Precision2
+                            if Output2(end) == '0'
+                                Output2(end) = [];
+                            end
+                        end
+                        Retrieve2 = str2double(Output2);
+                        % Is this any better ? First see if the alternative meets the
+                        % fieldwidth requirement in which case it has to be taken
+                        if numel(Output2) <= FieldWidth && numel(Output1) > FieldWidth
+                            Output1 = Output2; % Replace original
+                            Retrieve1 = Retrieve2;
+                        elseif numel(Output2) <= FieldWidth && numel(Output1) <= FieldWidth
+                            if abs(Data - Retrieve2) < abs(Data - Retrieve1)
+                                Output1 = Output2; % Replace original
+                                Retrieve1 = Retrieve2;
+                            end
+                        end
+                        
+                    end
+                end
+                % Run the same test again - if it was false the first time, it
+                % will be false again and we fall through, but changing the
+                % precision may have helped at least to obtain output of the
+                % correct fieldwidth
+                if Retrieve1 ~= Data || numel(Output1) > FieldWidth % The representation can possibly be improved
+                    % Try switching to the %e format
+                    Exponent = floor(Log10AbsData);
+                    if abs(Exponent) > 99 % Actually cannot handle such large or small numbers
+                        error('Mod5:WriteSimpleCard:ExponentTooLarge',...
+                            'Exponent exceeding 99 encountered on Card %s field number %d.', Card, iF)
+                    elseif abs(Exponent) > 9 % Need a two digit exponent
+                        AvailableWidth = AvailableWidth - 3; % e.g. e20
+                    else
+                        AvailableWidth = AvailableWidth - 2; % e.g. e6
+                    end
+                    if Exponent < 0 % Lose another position to the minus sign
+                        AvailableWidth = AvailableWidth - 1; % e.g. e-6 or e-21
+                    end
+                    % Compensation for pc output no longer required
+                    % if ispc % The PC produces 3 digit exponents
+                    %     AvailableWidth = AvailableWidth + 1;
+                    % end
+                    % The precision is just the AvailableWidth - 2
+                    Precision2 = AvailableWidth - 2;
+                    if Precision2 >= 0
+                        Format2 = ['%' num2str(FieldWidth, '%d') '.' num2str(Precision2, '%d') 'e'];
+                        Output2 = sprintf(Format2, Data);
+                        % Clobber unnecessary digits in the exponent
+                        Output2 = strrep(Output2, 'e+','e');
+                        Output2 = strrep(Output2, 'e0','e');
+                        Output2 = strrep(Output2, 'e0','e');
+                        Output2 = strrep(Output2, 'e-0','e-');
+                        Output2 = strrep(Output2, 'e-0','e-');
+                        for iPrecision = 1:Precision2
+                            Output2 = strrep(Output2, '0e','e'); % Clobber trailing zeroes in the mantissa
+                        end
+                        Output2 = strrep(Output2, '.e','e');
+                        Retrieve2 = str2double(Output2);
+                        % Is this any better ? First see if the alternative meets the
+                        % fieldwidth requirement in which case it has to be taken
+                        if numel(Output2) <= FieldWidth && numel(Output1) > FieldWidth
+                            Output1 = Output2; % Replace original
+                            Retrieve1 = Retrieve2;
+                        elseif numel(Output2) <= FieldWidth && numel(Output1) <= FieldWidth
+                            if abs(Data - Retrieve2) < abs(Data - Retrieve1)
+                                Output1 = Output2; % Replace original
+                                Retrieve1 = Retrieve2;
+                            end
+                        end
+                    end
+                end
+                Output = Output1;
+                % Issue a warning if there was a significant loss of precision
+                if Retrieve1 ~= Data
+                    PrecisionLossPercent = 100 * abs(Data - Retrieve1) / abs(Data);
+                    if PrecisionLossPercent > 0.001
+                        warning('Mod5:WriteSimpleCard:PrecisionLoss', ...
+                            'Loss of precision amounting to %.4f%% encountered while writing tape 5 at field number %d on Card %s.', PrecisionLossPercent, iF, Card);
+                    end
+                end
+                if numel(Output) < FieldWidth
+                    Output = [blanks(FieldWidth - numel(Output)) Output];
+                elseif numel(Output) > FieldWidth
+                    error('Mod5:WriteSimpleCard:FieldExceeded', ...
+                        'Representation of numeric data at field %d on Card %s exceeded allowable field width when writing tape 5.', iF, Card);
+                end
+            case 's' % s format specifiers must have a column width if passed to this routine
+                Output = Data;
+                if numel(Output) < FieldWidth % Pad it out to the given fieldwidth
+                    Output = [blanks(FieldWidth - numel(Output)) Output]; % Use leading blanks
+                elseif numel(Output) > FieldWidth
+                    error('Mod5:WriteSimpleCard:FieldExceeded', ...
+                        'Representation of string data at field %d on Card %s exceeded allowable field width when writing tape 5.', iF, Card);
+                end
+            otherwise
+                error('Mod5:WriteSimpleCard:BadTypeSpecifier', ...
+                    'Illegal type specifier %c encountered at field %d on Card %s.', Format(end), iF, Card);
+        end
+    end % OptimalFormat
   end % Private static methods
   methods (Access = public)  
     function MC = Mod5(Filename, DebugFlag)
@@ -4483,9 +4754,9 @@ classdef Mod5
           MC(iCase) = MC(iCase).ReadCard1A7(fid);  
         end
         %% Card 1B or Alternative Card Alt1B
-        if MC(iCase).NSSALB > 0
+        if ~isempty(MC(iCase).NSSALB) && MC(iCase).NSSALB > 0
             MC(iCase) = MC(iCase).ReadCard1B(fid);
-        elseif MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
+        elseif ~isempty(MC(iCase).NSSALB) && MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
             MC(iCase) = MC(iCase).ReadCardAlt1B(fid);
         end
         
@@ -4705,9 +4976,9 @@ classdef Mod5
           MC(iCase) = MC(iCase).WriteCard1A7(fid);  
         end
         %% Card 1B or Alternative Card Alt1B
-        if MC(iCase).NSSALB > 0
+        if ~isempty(MC(iCase).NSSALB) && MC(iCase).NSSALB > 0
             MC(iCase) = MC(iCase).WriteCard1B(fid);
-        elseif MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
+        elseif ~isempty(MC(iCase).NSSALB) && MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
             MC(iCase) = MC(iCase).WriteCardAlt1B(fid);
         end
         %% Card 2 - Main Aerosol and Cloud Options
@@ -4960,9 +5231,9 @@ classdef Mod5
           MC(iCase) = MC(iCase).DescribeCard1A7(fid, OFormat);  
         end
         %% Card 1B or Alternative Card Alt1B
-        if MC(iCase).NSSALB > 0
+        if ~isempty(MC(iCase).NSSALB) && MC(iCase).NSSALB > 0
             MC(iCase) = MC(iCase).DescribeCard1B(fid, OFormat);
-        elseif MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
+        elseif ~isempty(MC(iCase).NSSALB) && MC(iCase).NSSALB < 0 && MC(iCase).ASTMX > 0
             MC(iCase) = MC(iCase).DescribeCardAlt1B(fid, OFormat);
         end
         
@@ -7765,19 +8036,19 @@ classdef Mod5
     %% Card 1A set methods
     function MC = set.DIS(MC, newDIS)
       MC.ScalarChar(newDIS, 'tTfFsS ', 'DIS');
-      if any(newDIS == 'tT') && MC.IMULT == 0
-        warning('Mod5:setDISAZM:CheckIMULT', ...
-          'DISORT can only be used if multi-scatter is enabled. Check the IMULT parameter.')
-      end      
+%       if any(newDIS == 'tT') && MC.IMULT == 0
+%         warning('Mod5:setDISAZM:CheckIMULT', ...
+%           'DISORT can only be used if multi-scatter is enabled. Check the IMULT parameter.')
+%       end      
       MC.DIS = newDIS;
     end % set.DIS
     function MC = set.DISAZM(MC, newDISAZM)
       MC.ScalarChar(newDISAZM, 'tTfF ', 'DISAZM');
       % Issue a warning if IMULT not set
-      if any(newDISAZM == 'tT') && (MC.IMULT == 0 || ~any(MC.DIS == 'tT'))
-        warning('Mod5:setDISAZM:CheckIMULT', ...
-          'Azimuthal dependence of multi-scattering only valid if DISORT is requested in multi-scatter mode. Check IMULT and DIS parameters.')
-      end
+%       if any(newDISAZM == 'tT') && (MC.IMULT == 0 || ~any(MC.DIS == 'tT'))
+%         warning('Mod5:setDISAZM:CheckIMULT', ...
+%           'Azimuthal dependence of multi-scattering only valid if DISORT is requested in multi-scatter mode. Check IMULT and DIS parameters.')
+%       end
       MC.DISAZM = newDISAZM;
     end % set.DISAZM
     function MC = set.DISALB(MC, newDISALB)
@@ -7785,11 +8056,11 @@ classdef Mod5
       MC.DISALB = newDISALB;
     end % set.DISALB
     function MC = set.NSTR(MC, newNSTR) % number of streams in DISORT
-      MC.ScalarIntNumeric(newNSTR, [0 2 4 8 16], 'NSTR');
-      if ~any(newNSTR == [0 2]) && (MC.IMULT == 0 || any(MC.DIS == 'fF '))
-        warning('Mod5:setDISAZM:CheckIMULT', ...
-          'Setting number of streams (NSTR ~= 0 or 2) only effective if DISORT is requested in multi-scatter mode. Check IMULT and DIS parameters.')
-      end
+      MC.ScalarIntNumeric(newNSTR, [0 2 4 8 16 32], 'NSTR');
+%       if ~any(newNSTR == [0 2]) && (MC.IMULT == 0 || any(MC.DIS == 'fF '))
+%         warning('Mod5:setDISAZM:CheckIMULT', ...
+%           'Setting number of streams (NSTR ~= 0 or 2) only effective if DISORT is requested in multi-scatter mode. Check IMULT and DIS parameters.')
+%       end
       MC.NSTR = newNSTR;
     end % set.NSTR
 %     function MC = set.LSUN(MC, newLSUN)
@@ -8252,7 +8523,7 @@ classdef Mod5
     end % set.RO
     function MC = set.LENN(MC, newLENN)
       if isempty(newLENN)
-        LENN = 0;
+        newLENN = 0;
       end
       MC.ScalarIntNumeric(newLENN, [0 1], 'LENN');
       MC.LENN = newLENN;
@@ -9258,7 +9529,7 @@ classdef Mod5
     lin = Mod5.fgetlN(fid, 0); % Get a line, don't pad or truncate
     % Print the card name if in debug mode
     if C.DebugFlag
-      fprintf(1,'Reading Free Format Card %s - ', CardName)
+      fprintf(1,'Reading Free Format Card %s - ', CardName);
       % Find the card name in the list
       iMatch = strmatch(CardName, C.CardNames, 'exact');
       if length(iMatch) ~= 1
@@ -9291,9 +9562,12 @@ classdef Mod5
    
     end % ReadCard1
     function C = WriteCard1(C, fid)
-      fprintf(fid, '%c%c%c%c%1d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d %4d%8.3f%7s\n', ...
+     % fprintf(fid, '%c%c%c%c%1d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d %4d%8.3f%7s\n', ...
+     %   C.MODTRN, C.SPEED, C.BINARY, C.LYMOLC, C.MODEL, C.ITYPE, C.IEMSCT, C.IMULT, C.M1, C.M2, ...
+     %   C.M3, C.M4, C.M5, C.M6, C.MDEF, C.I_RD2C, C.NOPRNT, C.TPTEMP, C.SURREF);
+      Mod5.WriteSimpleCard('1', fid, '%c%c%c%c%1d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d%5d %4d%8.3f%7s\n', ...
         C.MODTRN, C.SPEED, C.BINARY, C.LYMOLC, C.MODEL, C.ITYPE, C.IEMSCT, C.IMULT, C.M1, C.M2, ...
-        C.M3, C.M4, C.M5, C.M6, C.MDEF, C.I_RD2C, C.NOPRNT, C.TPTEMP, C.SURREF);
+        C.M3, C.M4, C.M5, C.M6, C.MDEF, C.I_RD2C, C.NOPRNT, C.TPTEMP, C.SURREF);   
     end % WriteCard1
     function C = DescribeCard1(C, fid, OF)
       % OF is the format
@@ -9475,10 +9749,14 @@ classdef Mod5
     end % ReadCard1A
     function C = WriteCard1A(C, fid)
      % fprintf(fid, '%c%c%c%3d%4.0f%10.5f%10s%10s%c%c %c %c %c %c%10.3f%c%9.4f%10.5f%10.5f%10.5f%10d\n', ...
-      fprintf(fid, '%c%c%c%3d%4.0f%10g%10s%10s%c%c %c %c %c %c%10.3f%c%9.4f%10.5f%10.5f%10.5f%10d\n', ...          
-        C.DIS, C.DISAZM, C.DISALB, C.NSTR, C.SFWHM, C.CO2MX, C.H2OSTR, C.O3STR, C.C_PROF, ...
+     % fprintf(fid, '%c%c%c%3d%4.0f%10g%10s%10s%c%c %c %c %c %c%10.3f%c%9.4f%10.5f%10.5f%10.5f%10d\n', ...          
+     %   C.DIS, C.DISAZM, C.DISALB, C.NSTR, C.SFWHM, C.CO2MX, C.H2OSTR, C.O3STR, C.C_PROF, ...
+     %  C.LSUNFL, C.LBMNAM, C.LFLTNM, C.H2OAER, C.CDTDIR, C.SOLCON, ...
+     %  C.CDASTM, C.ASTMC, C.ASTMX, C.ASTMO, C.AERRH, C.NSSALB);  
+      Mod5.WriteSimpleCard('1A', fid, '%c%c%c%3d%4.0f%10.5f%10s%10s%c%c %c %c %c %c%10.3f%c%9.4f%10.5f%10.5f%10.5f%10d\n', ...
+       C.DIS, C.DISAZM, C.DISALB, C.NSTR, C.SFWHM, C.CO2MX, C.H2OSTR, C.O3STR, C.C_PROF, ...
        C.LSUNFL, C.LBMNAM, C.LFLTNM, C.H2OAER, C.CDTDIR, C.SOLCON, ...
-       C.CDASTM, C.ASTMC, C.ASTMX, C.ASTMO, C.AERRH, C.NSSALB);
+       C.CDASTM, C.ASTMC, C.ASTMX, C.ASTMO, C.AERRH, C.NSSALB);  
     end % WriteCard1A
     function C = DescribeCard1A(C, fid, OF)
       C.printPreCard(fid, OF, '1A')
@@ -9610,7 +9888,10 @@ classdef Mod5
        C.S_UMIX = [A4, A5, A6, A7, A8, A9, A10, A11, A12, A13];
     end % ReadCard1A5
     function C = WriteCard1A5(C, fid)
-        fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_UMIX(4:13));
+       % fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_UMIX(4:13));
+        Mod5.WriteSimpleCard('1A5', fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', ...
+            C.S_UMIX(4),C.S_UMIX(5),C.S_UMIX(6),C.S_UMIX(7),C.S_UMIX(8),...
+            C.S_UMIX(9),C.S_UMIX(10),C.S_UMIX(11),C.S_UMIX(12),C.S_UMIX(13));        
     end % WriteCard1A5
     function C = DescribeCard1A5(C, fid, OF)
       C.printPreCard(fid, OF, '1A5');
@@ -9626,7 +9907,10 @@ classdef Mod5
        C.S_XSEC(1:13) = [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13];
     end % ReadCard1A6
     function C = WriteCard1A6(C, fid)
-        fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_XSEC(1:13));
+       % fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_XSEC(1:13));
+        Mod5.WriteSimpleCard('1A6', fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', ...
+            C.S_XSEC(1),C.S_XSEC(2),C.S_XSEC(3),C.S_XSEC(4),C.S_XSEC(5),C.S_XSEC(6),C.S_XSEC(7),...
+            C.S_XSEC(8),C.S_XSEC(9),C.S_XSEC(10),C.S_XSEC(11),C.S_XSEC(12),C.S_XSEC(13));        
     end % WriteCard1A6
     function C = DescribeCard1A6(C, fid, OF)
       C.printPreCard(fid, OF, '1A6');
@@ -9642,7 +9926,12 @@ classdef Mod5
        C.S_TRAC(1:16) = [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16];
     end % ReadCard1A7
     function C = WriteCard1A7(C, fid)
-        fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_TRAC(1:16));
+      %  fprintf(fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', C.S_TRAC(1:16));
+      %  Mod5.WriteSimpleCard('1A7',fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', ...
+      %      C.S_TRAC(1),C.S_TRAC(2),C.S_TRAC(3),C.S_TRAC(4),C.S_TRAC(5),C.S_TRAC(6),C.S_TRAC(7),C.S_TRAC(8),...
+      %      C.S_TRAC(9),C.S_TRAC(10),C.S_TRAC(11),C.S_TRAC(12),C.S_TRAC(13),C.S_TRAC(14),C.S_TRAC(15),C.S_TRAC(16));
+      tS_TRAC = num2cell(C.S_TRAC(1:16));
+      Mod5.WriteSimpleCard('1A7',fid, '%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f%5.2f\n', tS_TRAC{:});
     end % WriteCard1A7
     function C = DescribeCard1A7(C, fid, OF)
       C.printPreCard(fid, OF, '1A7');
@@ -9703,7 +9992,9 @@ classdef Mod5
                 CardData(iField+1) = C.ASSALB((iLine - 1) * MaxPerLine + (iField+1)/2);
             end
             % Write the line
-            fprintf(fid, [repmat('%10.5f', 1, numel(CardData)) '\n'], CardData);
+            % fprintf(fid, [repmat('%10.5f', 1, numel(CardData)) '\n'], CardData);
+            tCardData = num2cell(CardData);
+            Mod5.WriteSimpleCard('1B', fid, [repmat('%10.5f', 1, numel(CardData)) '\n'], tCardData{:});           
         end             
     end % WriteCard1B
     function C = DescribeCard1B(C, fid, OF)
@@ -9723,7 +10014,8 @@ classdef Mod5
         C.RHASYM = Card{2};
     end % ReadCardAlt1B
     function C = WriteCardAlt1B(C, fid)
-        fprintf(fid, '%10.5f%10.5f\n', C.ACOALB, C.RHASYM);
+       % fprintf(fid, '%10.5f%10.5f\n', C.ACOALB, C.RHASYM);
+        Mod5.WriteSimpleCard('Alt1B', fid, '%10.5f%10.5f\n', C.ACOALB, C.RHASYM);
     end % WriteCardAlt1B
     function C = DescribeCardAlt1B(C, fid, OF)
       C.printPreCard(fid, OF, 'Alt1B');
@@ -9740,9 +10032,12 @@ classdef Mod5
        C.IVSA, C.VIS, C.WSS, C.WHH, C.RAINRT, C.GNDALT] = Card{:};
     end % ReadCard2
     function C = WriteCard2(C, fid)
-      fprintf(fid, '%2s%3d%c%4d%3s%2d%5d%5d%5d%10.5f%10.5f%10.5f%10.5f%10.5f\n', ...
+     % fprintf(fid, '%2s%3d%c%4d%3s%2d%5d%5d%5d%10.5f%10.5f%10.5f%10.5f%10.5f\n', ...
+     %   C.APLUS, C.IHAZE, C.CNOVAM, C.ISEASN, C.ARUSS, C.IVULCN, C.ICSTL, C.ICLD, ...
+     %   C.IVSA, C.VIS, C.WSS, C.WHH, C.RAINRT, C.GNDALT);
+      Mod5.WriteSimpleCard('2', fid, '%2s%3d%c%4d%3s%2d%5d%5d%5d%10.5f%10.5f%10.5f%10.5f%10.5f\n', ...
         C.APLUS, C.IHAZE, C.CNOVAM, C.ISEASN, C.ARUSS, C.IVULCN, C.ICSTL, C.ICLD, ...
-        C.IVSA, C.VIS, C.WSS, C.WHH, C.RAINRT, C.GNDALT);
+        C.IVSA, C.VIS, C.WSS, C.WHH, C.RAINRT, C.GNDALT);    
     end % WriteCard2
     function C = ReadCard2APlus(C, fid) % There are two cards to be read here
       % (3(1X, F9.0), 20X, 3(1X, F9.0)) 2 cards
@@ -9754,10 +10049,14 @@ classdef Mod5
       [C.ZAER31, C.ZAER32, C.SCALE3, C.ZAER41, C.ZAER42, C.SCALE4] = Card{:};
     end % ReadCard2APlus
     function C = WriteCard2APlus(C, fid)
-      fprintf(fid, [' %9.4f %9.4f %9.5f' blanks(20) ' %9.4f %9.4f %9.5f\n' ], ...
+     % fprintf(fid, [' %9.4f %9.4f %9.5f' blanks(20) ' %9.4f %9.4f %9.5f\n' ], ...
+     %   C.ZAER11, C.ZAER12, C.SCALE1, C.ZAER21, C.ZAER22, C.SCALE2);
+     % fprintf(fid, [' %9.4f %9.4f %9.5f' blanks(20) ' %9.4f %9.4f %9.5f\n' ], ...
+     %   C.ZAER31, C.ZAER32, C.SCALE3, C.ZAER41, C.ZAER42, C.SCALE4); 
+      Mod5.WriteSimpleCard('2A+',fid, [' %9.4f %9.4f %9.5f' blanks(20) ' %9.4f %9.4f %9.5f\n' ], ...
         C.ZAER11, C.ZAER12, C.SCALE1, C.ZAER21, C.ZAER22, C.SCALE2);
-      fprintf(fid, [' %9.4f %9.4f %9.5f' blanks(20) ' %9.4f %9.4f %9.5f\n' ], ...
-        C.ZAER31, C.ZAER32, C.SCALE3, C.ZAER41, C.ZAER42, C.SCALE4);      
+      Mod5.WriteSimpleCard('2A+',fid, [' %9.4f %9.4f %9.5f' blanks(20) ' %9.4f %9.4f %9.5f\n' ], ...
+        C.ZAER31, C.ZAER32, C.SCALE3, C.ZAER41, C.ZAER42, C.SCALE4);          
     end % WriteCard2APlus
     function C = ReadCard2A(C, fid)
       % (3F8.3)
@@ -9765,7 +10064,8 @@ classdef Mod5
       [C.CTHIK, C.CALT, C.CEXT] = Card{:};
     end % ReadCard2A
     function C = WriteCard2A(C, fid)
-      fprintf(fid, '%8.3f%8.3f%8.3f\n', C.CTHIK, C.CALT, C.CEXT);
+     % fprintf(fid, '%8.3f%8.3f%8.3f\n', C.CTHIK, C.CALT, C.CEXT);
+      Mod5.WriteSimpleCard('2A',fid, '%8.3f%8.3f%8.3f\n', C.CTHIK, C.CALT, C.CEXT);
     end % WriteCard2A
     function C = ReadCardAlt2A(C, fid)
       % 3F8.3, 2I4, 6F8.3
@@ -9773,8 +10073,10 @@ classdef Mod5
       [C.CTHIK, C.CALT, C.CEXT, C.NCRALT, C.NCRSPC, C.CWAVLN, C.CCOLWD, C.CCOLIP, C.CHUMID, C.ASYMWD, C.ASYMIP] = Card{:};
     end % ReadCardAlt2A
     function C = WriteCardAlt2A(C, fid)
-      fprintf(fid, '%8.3f%8.3f%8.3f%4d%4d%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n', ...
-        C.CTHIK, C.CALT, C.CEXT, C.NCRALT, C.NCRSPC, C.CWAVLN, C.CCOLWD, C.CCOLIP, C.CHUMID, C.ASYMWD, C.ASYMIP);
+     % fprintf(fid, '%8.3f%8.3f%8.3f%4d%4d%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n', ...
+     %   C.CTHIK, C.CALT, C.CEXT, C.NCRALT, C.NCRSPC, C.CWAVLN, C.CCOLWD, C.CCOLIP, C.CHUMID, C.ASYMWD, C.ASYMIP);
+      Mod5.WriteSimpleCard('Alt2A', fid, '%8.3f%8.3f%8.3f%4d%4d%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n', ...
+        C.CTHIK, C.CALT, C.CEXT, C.NCRALT, C.NCRSPC, C.CWAVLN, C.CCOLWD, C.CCOLIP, C.CHUMID, C.ASYMWD, C.ASYMIP);    
     end % WriteCardAlt2A
     function C = ReadCard2B(C, fid)
       % 3F10.3
@@ -9782,7 +10084,8 @@ classdef Mod5
       [C.ZCVSA, C.ZTVSA, C.ZINVSA] = Card{:};
     end % ReadCard2B
     function C = WriteCard2B(C, fid)
-      fprintf(fid, '%10.3f%10.3f%10.3f\n', C.ZCVSA, C.ZTVSA, C.ZINVSA);
+     % fprintf(fid, '%10.3f%10.3f%10.3f\n', C.ZCVSA, C.ZTVSA, C.ZINVSA);
+     Mod5.WriteSimpleCard('2B', fid, '%10.3f%10.3f%10.3f\n', C.ZCVSA, C.ZTVSA, C.ZINVSA);      
     end % WriteCard2B
     function C = ReadCard2C(C, fid)
       % Old FORMAT(3I5, A65)
@@ -9796,7 +10099,10 @@ classdef Mod5
       end
     end % ReadCard2C
     function C = WriteCard2C(C, fid)
-      fprintf(fid, '%5d%5d%5d%20s%10.3f%5d%10.6f%10.5f\n',C.ML, C.IRD1, C.IRD2, C.HMODEL, C.REE, C.NMOLYC, C.E_MASS, C.AIRMWT);
+     % fprintf(fid, '%5d%5d%5d%20s%10.3f%5d%10.6f%10.5f\n', ...
+     %     C.ML, C.IRD1, C.IRD2, C.HMODEL, C.REE, C.NMOLYC, C.E_MASS, C.AIRMWT);
+      Mod5.WriteSimpleCard('2C',fid, '%5d%5d%5d%20s%10.3f%5d%10.6f%10.5f\n', ...
+          C.ML, C.IRD1, C.IRD2, C.HMODEL, C.REE, C.NMOLYC, C.E_MASS, C.AIRMWT);      
     end % WriteCard2C
     function C = DescribeCard2C(C, fid, OF)
       C.printPreCard(fid, OF, '2C');
@@ -9840,11 +10146,11 @@ classdef Mod5
                 nYNAME = MaxPerLine;
             end
             for iName = 1:nYNAME
-                fprintf(fid, '%10s', C.YNAME((iLine - 1) * MaxPerLine + iName,:));
+                % fprintf(fid, '%10s', C.YNAME((iLine - 1) * MaxPerLine + iName,:));
+                Mod5.WriteSimpleCard('2CY',fid, '%10s', C.YNAME((iLine - 1) * MaxPerLine + iName,:));                
             end
             fprintf(fid, '\n');
-        end
-        
+        end      
     end % WriteCard2CY
     function C = DescribeCard2CY(C, fid, OF)
       C.printPreCard(fid, OF, '2CY');
@@ -9868,16 +10174,19 @@ classdef Mod5
     end % ReadCard2C1
     function C = WriteCard2C1(C, fid, iML)
       % Note : Using %E produces three digits in the exponent 0.00E+000 - Will MODTRAN read this correctly ???????
-      if ispc
-        lin = sprintf('%10.3f%11.3E%11.3E%11.3E%11.3E%11.3E%14s %c%c', ...
-          C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1:3), char(C.JCHAR(iML,:)), char(C.JCHARX(iML)), char(C.JCHARY(iML)));
-        lin = strrep(lin, 'E+0', 'E+');
-        lin = strrep(lin, 'E-0', 'E-');
-        fprintf(fid, '%s\n', lin);
-      else
-      fprintf(fid, '%10.3f%10.3E%10.3E%10.3E%10.3E%10.3E%14s %c%c\n', ...
-            C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1:3), char(C.JCHAR(iML,:)), char(C.JCHARX(iML)), char(C.JCHARY(iML)));
-      end
+     % if ispc
+     %   lin = sprintf('%10.3f%11.3E%11.3E%11.3E%11.3E%11.3E%14s %c%c', ...
+     %     C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1:3), char(C.JCHAR(iML,:)), char(C.JCHARX(iML)), char(C.JCHARY(iML)));
+     %   lin = strrep(lin, 'E+0', 'E+');
+     %   lin = strrep(lin, 'E-0', 'E-');
+     %   fprintf(fid, '%s\n', lin);
+     % else
+     % fprintf(fid, '%10.3f%10.3E%10.3E%10.3E%10.3E%10.3E%14s %c%c\n', ...
+     %       C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1:3), char(C.JCHAR(iML,:)), char(C.JCHARX(iML)), char(C.JCHARY(iML)));
+     % end
+      Mod5.WriteSimpleCard('2C1', fid, '%10.3f%10.3E%10.3E%10.3E%10.3E%10.3E%14s %c%c\n', ...
+            C.ZM(iML,1), C.P(iML,1), C.T(iML,1),  C.WMOL(iML,1),  C.WMOL(iML,2),  C.WMOL(iML,3),...
+            char(C.JCHAR(iML,:)), char(C.JCHARX(iML)), char(C.JCHARY(iML)));     
     end % WriteCard2C1
     function C = DescribeCard2C1(C, fid, iML, OF)
       C.printPreCard(fid, OF, ['Alt1B for layer ' num2str(iML)]);
@@ -9897,14 +10206,16 @@ classdef Mod5
       
     end % ReadCard2C2
     function C = WriteCard2C2(C, fid, iML)
-      if ispc
-        lin = sprintf('%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E\n%11.3E', C.WMOL(iML, 4:12)); 
-        lin = strrep(lin, 'E+0', 'E+');
-        lin = strrep(lin, 'E-0', 'E-');
-        fprintf(fid, '%s\n', lin);
-      else
-        fprintf(fid, '%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E\n%10.3E\n', C.WMOL(iML, 4:12));
-      end
+     % if ispc
+     %   lin = sprintf('%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E\n%11.3E', C.WMOL(iML, 4:12)); 
+     %   lin = strrep(lin, 'E+0', 'E+');
+     %   lin = strrep(lin, 'E-0', 'E-');
+     %   fprintf(fid, '%s\n', lin);
+     % else
+     %   fprintf(fid, '%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E\n%10.3E\n', C.WMOL(iML, 4:12));
+     % end
+      tWMOL = num2cell(C.WMOL(iML, 4:12));
+      Mod5.WriteSimpleCard('2C2',fid, '%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E\n%10.3E\n', tWMOL{:});      
     end % WriteCard2C2
     function C = ReadCard2C2X(C, fid, iML)
       %(WMOLX(J), J=1, 13) (If MDEF=2 & IRD1=1)
@@ -9923,14 +10234,16 @@ classdef Mod5
    
     end % ReadCard2C2X
     function C = WriteCard2C2X(C, fid, iML)
-      if ispc
-        lin = sprintf('%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E\n%11.3E%11.3E%11.3E%11.3E%11.3E', C.WMOLX(iML, :));
-        lin = strrep(lin, 'E+0', 'E+');
-        lin = strrep(lin, 'E-0', 'E-');
-        fprintf(fid, '%s\n', lin);
-      else
-        fprintf(fid, '%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E\n%10.3E%10.3E%10.3E%10.3E%10.3E\n', C.WMOLX(iML, :));
-      end
+     % if ispc
+     %   lin = sprintf('%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E%11.3E\n%11.3E%11.3E%11.3E%11.3E%11.3E', C.WMOLX(iML, :));
+     %   lin = strrep(lin, 'E+0', 'E+');
+     %   lin = strrep(lin, 'E-0', 'E-');
+     %   fprintf(fid, '%s\n', lin);
+     % else
+     %   fprintf(fid, '%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E\n%10.3E%10.3E%10.3E%10.3E%10.3E\n', C.WMOLX(iML, :));
+     % end
+     tWMOLX = num2cell(C.WMOLX(iML, :));
+     Mod5.WriteSimpleCard('2C2X',fid, '%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E%10.3E\n%10.3E%10.3E%10.3E%10.3E%10.3E\n', tWMOLX{:});      
     end % WriteCard2C2X
     function C = ReadCard2C2Y(C, fid, iML)
         % (WMOLY(J), J = 1, NMOLYC)
@@ -9965,14 +10278,15 @@ classdef Mod5
                 nYMOLYC = MaxPerLine;
             end
             for iName = 1:nYMOLYC
-                if ispc
-                    mol = sprintf('%11.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                
-                    mol = strrep(mol, 'E+0', 'E+');
-                    mol = strrep(mol, 'E-0', 'E-');
-                else
-                    mol = sprintf('%10.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                
-                end
-               fprintf(fid, '%10s', mol); 
+              %  if ispc
+              %      mol = sprintf('%11.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                
+              %      mol = strrep(mol, 'E+0', 'E+');
+              %      mol = strrep(mol, 'E-0', 'E-');
+              %  else
+              %      mol = sprintf('%10.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                
+              %  end
+              % fprintf(fid, '%10s', mol);
+              Mod5.WriteSimpleCard('2C2Y',fid,'%10.3E', C.WMOLY(iML,(iLine - 1) * MaxPerLine + iName));                   
             end
             fprintf(fid, '\n');
         end       
@@ -9996,9 +10310,12 @@ classdef Mod5
       C.ICHR1(iML,1) = tICHR1;
     end % ReadCard2C3
     function C = WriteCard2C3(C, fid, iML)
-      fprintf(fid, '          %10.3f%10.3f%10.3f%5d%5d%5d%5d%5d\n', ...
+     % fprintf(fid, '          %10.3f%10.3f%10.3f%5d%5d%5d%5d%5d\n', ...
+     %         C.AHAZE(iML,1), C.EQLWCZ(iML,1), C.RRATZ(iML,1), C.IHA1(iML,1), ...
+     %         C.ICLD1(iML,1), C.IVUL1(iML,1), C.ISEA1(iML,1), C.ICHR1(iML,1));
+     Mod5.WriteSimpleCard('2C3',fid, '          %10.3f%10.3f%10.3f%5d%5d%5d%5d%5d\n', ...
               C.AHAZE(iML,1), C.EQLWCZ(iML,1), C.RRATZ(iML,1), C.IHA1(iML,1), ...
-              C.ICLD1(iML,1), C.IVUL1(iML,1), C.ISEA1(iML,1), C.ICHR1(iML,1));
+              C.ICLD1(iML,1), C.IVUL1(iML,1), C.ISEA1(iML,1), C.ICHR1(iML,1));          
     end % WriteCard2C3
     function C = ReadCardAlt2C3(C, fid, iML)
         % FORMAT (10X, F10.0, 10X, 4F10.0)  if IRD2 == 2
@@ -10012,8 +10329,10 @@ classdef Mod5
         C.AHAZE(iML,4) = tAHAZE4;
     end % ReadCardAlt2C3
     function C = WriteCardAlt2C3(C, fid, iML)
-        fprintf(fid, '          %10.3f          %10.3f%10.3f%10.3f%10.3f\n', ...
-            C.AHAZE(iML,1), C.RRATZ(iML,1), C.AHAZE(iML,2), C.AHAZE(iML,3), C.AHAZE(iML,4)); 
+       % fprintf(fid, '          %10.3f          %10.3f%10.3f%10.3f%10.3f\n', ...
+       %     C.AHAZE(iML,1), C.RRATZ(iML,1), C.AHAZE(iML,2), C.AHAZE(iML,3), C.AHAZE(iML,4)); 
+       Mod5.WriteSimpleCard('Alt2C3',fid, '          %10.3f          %10.3f%10.3f%10.3f%10.3f\n', ...
+            C.AHAZE(iML,1), C.RRATZ(iML,1), C.AHAZE(iML,2), C.AHAZE(iML,3), C.AHAZE(iML,4));         
     end % WriteCardAlt2C3
     function C = DescribeCardAlt2C3(C, fid, iML, OF)
       C.printPreCard(fid, OF, ['Alt2C3 for layer ' num2str(iML)]);
@@ -10028,7 +10347,9 @@ classdef Mod5
       
     end % ReadCard2D
     function C = WriteCard2D(C, fid)
-      fprintf(fid, '%5d%5d%5d%5d\n', C.IREG);
+      % fprintf(fid, '%5d%5d%5d%5d\n', C.IREG);
+      Mod5.WriteSimpleCard('2D',fid, '%5d%5d%5d%5d\n', ...
+          C.IREG(1),C.IREG(2),C.IREG(3),C.IREG(4));      
     end % WriteCard2D
     function C = ReadCard2D1(C, fid, iNREG)
       % FORMAT (E10.3, A70)
@@ -10038,14 +10359,15 @@ classdef Mod5
       C.TITLE = strvcat(C.TITLE, char(tTITLE));
     end % ReadCard2D1
     function C = WriteCard2D1(C, fid, iNREG)
-      if ispc
-        lin = sprintf('%11.3E%70s', C.AWCCON(iNREG,1), C.TITLE(iNREG,:));
-        lin = strrep(lin, 'E+0', 'E+');
-        lin = strrep(lin, 'E-0', 'E-');
-        fprintf(fid, '%s\n', lin);
-      else
-        fprintf(fid, '%10.3E%70s\n', C.AWCCON(iNREG,1), C.TITLE(iNREG,:));
-      end
+     % if ispc
+     %   lin = sprintf('%11.3E%70s', C.AWCCON(iNREG,1), C.TITLE(iNREG,:));
+     %   lin = strrep(lin, 'E+0', 'E+');
+     %   lin = strrep(lin, 'E-0', 'E-');
+     %   fprintf(fid, '%s\n', lin);
+     % else
+     %   fprintf(fid, '%10.3E%70s\n', C.AWCCON(iNREG,1), C.TITLE(iNREG,:));
+     % end
+      Mod5.WriteSimpleCard('2D1', fid, '%10.3E%70s\n', C.AWCCON(iNREG,1), char(C.TITLE(iNREG,:)));    
     end % WriteCard2D1
     function C = ReadCard2D2(C, fid, iNREG, nSets)
       % CARD 2D2: (VARSPC(I), EXTC(N, I), ABSC(N, I), ASYM(N, I), I=l, 2, ...,)
@@ -10081,19 +10403,22 @@ classdef Mod5
       nCards = ceil(nSets/3); % Total number of cards to write
       iSet = 1;
       for iCard = 1:nCards
-        fprintf(fid, '%6.2f%7.5f%7.5f%6.4f',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));
+        % fprintf(fid, '%6.2f%7.5f%7.5f%6.4f',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));
+        Mod5.WriteSimpleCard('2D2',fid, '%6.2f%7.5f%7.5f%6.4f',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));        
         iSet = iSet + 1;
         if iSet > nSets
           fprintf(fid, '\n');
           break; 
         end
-        fprintf(fid, '%6.2f%7.5f%7.5f%6.4f',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));
+        % fprintf(fid, '%6.2f%7.5f%7.5f%6.4f',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));
+        Mod5.WriteSimpleCard('2D2',fid, '%6.2f%7.5f%7.5f%6.4f',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));        
         iSet = iSet + 1;
         if iSet > nSets
           fprintf(fid, '\n');
           break; 
         end
-        fprintf(fid, '%6.2f%7.5f%7.5f%6.4f\n',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));
+        % fprintf(fid, '%6.2f%7.5f%7.5f%6.4f\n',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));
+        Mod5.WriteSimpleCard('2D2',fid, '%6.2f%7.5f%7.5f%6.4f\n',C.VARSPC(iNREG, iSet), C.EXTC(iNREG, iSet), C.ABSC(iNREG, iSet), C.ASYM(iNREG, iSet));                
         iSet = iSet + 1;
       end
     end % WriteCard2D2    
@@ -10109,7 +10434,8 @@ classdef Mod5
       C.RR(iNCRALT,1)= tRR;
     end % ReadCard2E1
     function C = WriteCard2E1(C, fid, iNCRALT)
-      fprintf(fid, '%10.5f%10.5f%10.5f%10.5f\n', C.ZCLD(iNCRALT,1), C.CLD(iNCRALT,1), C.CLDICE(iNCRALT,1), C.RR(iNCRALT,1));
+     % fprintf(fid, '%10.5f%10.5f%10.5f%10.5f\n', C.ZCLD(iNCRALT,1), C.CLD(iNCRALT,1), C.CLDICE(iNCRALT,1), C.RR(iNCRALT,1));
+     Mod5.WriteSimpleCard('2E1',fid, '%10.5f%10.5f%10.5f%10.5f\n', C.ZCLD(iNCRALT,1), C.CLD(iNCRALT,1), C.CLDICE(iNCRALT,1), C.RR(iNCRALT,1));     
     end % WriteCard2E
     function C = DescribeCard2E1(C, fid, iNCRALT, OF)
        C.printPreCard(fid, OF, '2E1');
@@ -10130,7 +10456,8 @@ classdef Mod5
       C.RR(iNCRALT,1)= tRR;
     end % ReadCardAlt2E1
     function C = WriteCardAlt2E1(C, fid, iNCRALT)
-      fprintf(fid, '%10.5f%10.5f%10.5f%10.5f\n', C.PCLD(iNCRALT,1), C.CLD(iNCRALT,1), C.CLDICE(iNCRALT,1), C.RR(iNCRALT,1));
+      % fprintf(fid, '%10.5f%10.5f%10.5f%10.5f\n', C.PCLD(iNCRALT,1), C.CLD(iNCRALT,1), C.CLDICE(iNCRALT,1), C.RR(iNCRALT,1));
+      Mod5.WriteSimpleCard('Alt2E1',fid, '%10.5f%10.5f%10.5f%10.5f\n', C.PCLD(iNCRALT,1), C.CLD(iNCRALT,1), C.CLDICE(iNCRALT,1), C.RR(iNCRALT,1));      
     end % WriteCardAlt2E1
     function C = DescribeCardAlt2E1(C, fid, iNCRALT, OF)
        C.printPreCard(fid, OF, 'Alt2E1');
@@ -10152,8 +10479,10 @@ classdef Mod5
         C.ASYM(7, iNCRSPC) = ASYM7;
     end % ReadCard2E2
     function C = WriteCard2E2(C, fid, iNCRSPC)
-      fprintf(fid, '%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f\n', C.WAVLEN(iNCRSPC), C.EXTC(6, iNCRSPC), C.ABSC(6, iNCRSPC), ...
-        C.ASYM(6, iNCRSPC), C.EXTC(7, iNCRSPC), C.ABSC(7, iNCRSPC), C.ASYM(7, iNCRSPC));
+     % fprintf(fid, '%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f\n', C.WAVLEN(iNCRSPC), C.EXTC(6, iNCRSPC), C.ABSC(6, iNCRSPC), ...
+     %   C.ASYM(6, iNCRSPC), C.EXTC(7, iNCRSPC), C.ABSC(7, iNCRSPC), C.ASYM(7, iNCRSPC));
+     Mod5.WriteSimpleCard('2E2',fid, '%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f\n', C.WAVLEN(iNCRSPC), C.EXTC(6, iNCRSPC), C.ABSC(6, iNCRSPC), ...
+        C.ASYM(6, iNCRSPC), C.EXTC(7, iNCRSPC), C.ABSC(7, iNCRSPC), C.ASYM(7, iNCRSPC));    
     end % WriteCard2E2
     function C = ReadCardAlt2E2(C, fid)
         % CFILE, CLDTYP, CIRTYP
@@ -10170,7 +10499,6 @@ classdef Mod5
       fprintf(fid, '%s\n', C.CFILE);
       fprintf(fid, '%s\n', C.CLDTYP);
       fprintf(fid, '%s\n', C.CIRTYP);
-
     end % WriteCardAlt2E2
     function C = DescribeCardAlt2E2(C, fid, OF)
        C.printPreCard(fid, OF, 'Alt2E2');
@@ -10255,8 +10583,10 @@ classdef Mod5
       [C.H1, C.H2, C.ANGLE, C.RANGE, C.BETA, C.RO, C.LENN, C.PHI] = Card{:};
     end % ReadCard3
     function C = WriteCard3(C, fid)
-      fprintf(fid, '%10.5f%10.5f%10.5f%10.3f%10.3f%10.3f%5d     %10.4f\n', ...
-        C.H1, C.H2, C.ANGLE, C.RANGE, C.BETA, C.RO, C.LENN, C.PHI);
+     % fprintf(fid, '%10.5f%10.5f%10.5f%10.3f%10.3f%10.3f%5d     %10.4f\n', ...
+     %   C.H1, C.H2, C.ANGLE, C.RANGE, C.BETA, C.RO, C.LENN, C.PHI);
+     Mod5.WriteSimpleCard('3',fid, '%10.5f%10.5f%10.5f%10.3f%10.3f%10.3f%5d     %10.4f\n', ...
+        C.H1, C.H2, C.ANGLE, C.RANGE, C.BETA, C.RO, C.LENN, C.PHI);    
     end % WriteCard3
     function C = DescribeCard3(C, fid, OF)
       C.printPreCard(fid, OF, '3');
@@ -10359,8 +10689,10 @@ classdef Mod5
       [C.H1, C.H2, C.ANGLE, C.IDAY, C.RO, C.ISOURC, C.ANGLEM] = Card{:};
     end % ReadCardAlt3
     function C = WriteCardAlt3(C, fid)
-      fprintf(fid, '%10.3f%10.3f%10.3f%5d     %10.3f%5d%10.3f\n', ...
-        C.H1, C.H2, C.ANGLE, C.IDAY, C.RO, C.ISOURC, C.ANGLEM);
+     % fprintf(fid, '%10.3f%10.3f%10.3f%5d     %10.3f%5d%10.3f\n', ...
+     %   C.H1, C.H2, C.ANGLE, C.IDAY, C.RO, C.ISOURC, C.ANGLEM);
+     Mod5.WriteSimpleCard('Alt3',fid, '%10.3f%10.3f%10.3f%5d     %10.3f%5d%10.3f\n', ...
+        C.H1, C.H2, C.ANGLE, C.IDAY, C.RO, C.ISOURC, C.ANGLEM);    
     end % WriteCardAlt3
     function C = DescribeCardAlt3(C, fid, OF)
       % Describe the alternate form of the LOS geometry card
@@ -10409,7 +10741,8 @@ classdef Mod5
       [C.IPARM, C.IPH, C.IDAY, C.ISOURC] = Card{:};
     end % ReadCard3A1
     function C = WriteCard3A1(C, fid)
-      fprintf(fid, '%5d%5d%5d%5d\n', C.IPARM, C.IPH, C.IDAY, C.ISOURC); 
+     % fprintf(fid, '%5d%5d%5d%5d\n', C.IPARM, C.IPH, C.IDAY, C.ISOURC);
+     Mod5.WriteSimpleCard('3A1',fid, '%5d%5d%5d%5d\n', C.IPARM, C.IPH, C.IDAY, C.ISOURC);       
     end % WriteCard3A1
     function C = DescribeCard3A1(C, fid, OF)
       % Describe the solar/lunar scattering geometry card 3A1
@@ -10453,8 +10786,10 @@ classdef Mod5
       [C.PARM1, C.PARM2, C.PARM3, C.PARM4, C.TIME, C.PSIPO, C.ANGLEM, C.G] = Card{:};
     end % ReadCard3A2
     function C = WriteCard3A2(C, fid)
-      fprintf(fid, '%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f\n', ...
-        C.PARM1, C.PARM2, C.PARM3, C.PARM4, C.TIME, C.PSIPO, C.ANGLEM, C.G);
+     % fprintf(fid, '%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f\n', ...
+     %   C.PARM1, C.PARM2, C.PARM3, C.PARM4, C.TIME, C.PSIPO, C.ANGLEM, C.G);
+     Mod5.WriteSimpleCard('3A2',fid, '%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f%10.3f\n', ...
+        C.PARM1, C.PARM2, C.PARM3, C.PARM4, C.TIME, C.PSIPO, C.ANGLEM, C.G);    
     end % WriteCard3A2
     function C = DescribeCard3A2(C, fid, OF)
       % Describe solar/lunar scattering geometry parameters
@@ -10522,7 +10857,8 @@ classdef Mod5
       [C.NANGLS, C.NWLF] = Card{:};
     end % ReadCard3B1
     function C = WriteCard3B1(C, fid)
-      fprintf(fid, '%5d%5d\n', C.NANGLS, C.NWLF);
+      % fprintf(fid, '%5d%5d\n', C.NANGLS, C.NWLF);
+      Mod5.WriteSimpleCard('3B1',fid, '%5d%5d\n', C.NANGLS, C.NWLF);      
     end % WriteCard3B1
     function C = ReadCard3B2(C, fid)
       % (ANGF(I), F(1, I, 1), F(2, I, 1), F(3, I, 1), F(4, I, 1), I=l, NANGLS)
@@ -10541,8 +10877,10 @@ classdef Mod5
     end % ReadCard3B2
     function C = WriteCard3B2(C, fid)
       for I = 1:C.NANGLS
-        fprintf(fid, '%10.3E%10.3E%10.3E%10.3E%10.3E\n', ...
-          C.ANGF(I),C.F(1,I,1),C.F(2,I,1),C.F(3,I,1),C.F(4,I,1));
+        % fprintf(fid, '%10.3E%10.3E%10.3E%10.3E%10.3E\n', ...
+        %  C.ANGF(I),C.F(1,I,1),C.F(2,I,1),C.F(3,I,1),C.F(4,I,1));
+        Mod5.WriteSimpleCard('3B2',fid, '%10.3E%10.3E%10.3E%10.3E%10.3E\n', ...
+          C.ANGF(I),C.F(1,I,1),C.F(2,I,1),C.F(3,I,1),C.F(4,I,1));      
       end
     end % WriteCard3B2
     function C = ReadCard3C1(C, fid)
@@ -10557,7 +10895,8 @@ classdef Mod5
     end % ReadCard3C1
     function C = WriteCard3C1(C, fid)
       for I = 1:C.NANGLS
-        fprintf(fid, ' %9.4f', C.ANGF(I));
+        % fprintf(fid, ' %9.4f', C.ANGF(I));
+        Mod5.WriteSimpleCard('3C1',fid, ' %9.4f', C.ANGF(I));        
       end
       fprintf(fid, '\n');
     end % WriteCard3C1
@@ -10572,7 +10911,8 @@ classdef Mod5
     end % ReadCard3C2
     function C = WriteCard3C2(C, fid)
       for I = 1:C.NWLF
-        fprintf(fid, ' %9.3f', C.WLF(I));
+        % fprintf(fid, ' %9.3f', C.WLF(I));
+        Mod5.WriteSimpleCard('3C2',fid, ' %9.3f', C.WLF(I));        
       end
       fprintf(fid, '\n');
     end % WriteCard3C1    
@@ -10587,14 +10927,15 @@ classdef Mod5
     end % ReadCard3C3
     function C = WriteCard3C3(C, fid, iNANGLS)
       for iNWLF = 1:C.NWLF
-        if ispc
-          lin = sprintf(' %10.3E', C.F(1,iNANGLS,iNWLF));
-          lin = strrep(lin, 'E+0', 'E+');
-          lin = strrep(lin, 'E-0', 'E-');
-          fprintf(fid, '%s', lin);
-        else
-          fprintf(fid, ' %9.3E', C.F(1,iNANGLS,iNWLF));
-        end
+        %if ispc
+        %  lin = sprintf(' %10.3E', C.F(1,iNANGLS,iNWLF));
+        %  lin = strrep(lin, 'E+0', 'E+');
+        %  lin = strrep(lin, 'E-0', 'E-');
+        %  fprintf(fid, '%s', lin);
+        %else
+        %  fprintf(fid, ' %9.3E', C.F(1,iNANGLS,iNWLF));
+        %end
+        Mod5.WriteSimpleCard('3C3',fid, ' %9.3E', C.F(1,iNANGLS,iNWLF));       
       end
       fprintf(fid, '\n');
     end % WriteCard3C3
@@ -10609,14 +10950,15 @@ classdef Mod5
     end % ReadCard3C4
     function C = WriteCard3C4(C, fid, iNANGLS)
       for iNWLF = 1:C.NWLF
-        if ispc
-          lin = sprintf(' %10.3E', C.F(2,iNANGLS,iNWLF));
-          lin = strrep(lin, 'E+0', 'E+');
-          lin = strrep(lin, 'E-0', 'E-');
-          fprintf(fid, '%s', lin);
-        else
-          fprintf(fid, ' %9.3E', C.F(2,iNANGLS,iNWLF));
-        end
+        %if ispc
+        %  lin = sprintf(' %10.3E', C.F(2,iNANGLS,iNWLF));
+        %  lin = strrep(lin, 'E+0', 'E+');
+        %  lin = strrep(lin, 'E-0', 'E-');
+        %  fprintf(fid, '%s', lin);
+        %else
+        %  fprintf(fid, ' %9.3E', C.F(2,iNANGLS,iNWLF));
+        %end
+        Mod5.WriteSimpleCard('3C4', fid, ' %9.3E', C.F(2,iNANGLS,iNWLF));        
       end
       fprintf(fid, '\n');
     end % WriteCard3C4
@@ -10631,14 +10973,15 @@ classdef Mod5
     end % ReadCard3C5
     function C = WriteCard3C5(C, fid, iNANGLS)
       for iNWLF = 1:C.NWLF
-        if ispc
-          lin = sprintf(' %10.3E', C.F(3,iNANGLS,iNWLF));
-          lin = strrep(lin, 'E+0', 'E+');
-          lin = strrep(lin, 'E-0', 'E-');
-          fprintf(fid, '%s', lin);          
-        else
-          fprintf(fid, ' %9.3E', C.F(3,iNANGLS,iNWLF));         
-        end
+        %if ispc
+        %  lin = sprintf(' %10.3E', C.F(3,iNANGLS,iNWLF));
+        %  lin = strrep(lin, 'E+0', 'E+');
+        %  lin = strrep(lin, 'E-0', 'E-');
+        %  fprintf(fid, '%s', lin);          
+        %else
+        %  fprintf(fid, ' %9.3E', C.F(3,iNANGLS,iNWLF));         
+        %end
+        Mod5.WriteSimpleCard('3C5',fid, ' %9.3E', C.F(3,iNANGLS,iNWLF));                 
       end
       fprintf(fid, '\n');
     end % WriteCard3C5
@@ -10653,14 +10996,15 @@ classdef Mod5
     end % ReadCard3C6
     function C = WriteCard3C6(C, fid, iNANGLS)
       for iNWLF = 1:C.NWLF
-        if ispc
-          lin = sprintf(' %10.3E', C.F(4,iNANGLS,iNWLF));
-          lin = strrep(lin, 'E+0', 'E+');
-          lin = strrep(lin, 'E-0', 'E-');
-          fprintf(fid, '%s', lin);          
-        else
-          fprintf(fid, ' %9.3E', C.F(4,iNANGLS,iNWLF));
-        end
+        %if ispc
+        %  lin = sprintf(' %10.3E', C.F(4,iNANGLS,iNWLF));
+        %  lin = strrep(lin, 'E+0', 'E+');
+        %  lin = strrep(lin, 'E-0', 'E-');
+        %  fprintf(fid, '%s', lin);          
+        %else
+        %  fprintf(fid, ' %9.3E', C.F(4,iNANGLS,iNWLF));
+        %end
+        Mod5.WriteSimpleCard('3C6',fid, ' %9.3E', C.F(4,iNANGLS,iNWLF));        
       end
       fprintf(fid, '\n');
     end % WriteCard3C6
@@ -10677,8 +11021,10 @@ classdef Mod5
     function C = WriteCard4(C, fid)
       % Note - all the example cases with PcModWin4 use F10.3 here
       % while the User's manual prescribes F10.0. Using F10.3
-      fprintf(fid, '%10.3f%10.3f%10.3f%10.3f%c%c%8s%7s%3d%10.2f\n', ...
-        C.V1, C.V2, C.DV, C.FWHM, C.YFLAG, C.XFLAG, C.DLIMIT, C.FLAGS, C.MLFLX, C.VRFRAC);
+      % fprintf(fid, '%10.3f%10.3f%10.3f%10.3f%c%c%8s%7s%3d%10.2f\n', ...
+      %  C.V1, C.V2, C.DV, C.FWHM, C.YFLAG, C.XFLAG, C.DLIMIT, C.FLAGS, C.MLFLX, C.VRFRAC);
+      Mod5.WriteSimpleCard('4',fid, '%10.3f%10.3f%10.3f%10.3f%c%c%8s%7s%3d%10.2f\n', ...
+        C.V1, C.V2, C.DV, C.FWHM, C.YFLAG, C.XFLAG, C.DLIMIT, C.FLAGS, C.MLFLX, C.VRFRAC);    
     end % WriteCard4
     function C = DescribeCard4(C, fid, OF)
       % Card 4 is spectral range and control flags
@@ -10836,7 +11182,8 @@ classdef Mod5
       [C.NSURF, C.AATEMP, C.DH2O, C.MLTRFL] = Card{:};
     end % ReadCard4A
     function C = WriteCard4A(C, fid)
-      fprintf(fid, '%1d%9.2f%9.3f%c\n', C.NSURF, C.AATEMP, C.DH2O, C.MLTRFL);
+      % fprintf(fid, '%1d%9.2f%9.3f%c\n', C.NSURF, C.AATEMP, C.DH2O, C.MLTRFL);
+      Mod5.WriteSimpleCard('4A',fid, '%1d%9.2f%9.3f%c\n', C.NSURF, C.AATEMP, C.DH2O, C.MLTRFL);      
     end % WriteCard4A
     function C = DescribeCard4A(C, fid, OF)
          C.printPreCard(fid, OF, '4A');   
@@ -10865,7 +11212,8 @@ classdef Mod5
       C.SURFAZ(iNSURF,1) = tSURFAZ;
     end % ReadCard4B2
     function C = WriteCard4B2(C, fid, iNSURF)
-      fprintf(fid, '%d %f %f\n', C.NWVSRF(iNSURF,1), C.SURFZN(iNSURF,1), C.SURFAZ(iNSURF,1));
+      % fprintf(fid, '%d %f %f\n', C.NWVSRF(iNSURF,1), C.SURFZN(iNSURF,1), C.SURFAZ(iNSURF,1));
+      Mod5.WriteSimpleCard('4B2',fid, '%5d %10.5f %10.5f\n', C.NWVSRF(iNSURF,1), C.SURFZN(iNSURF,1), C.SURFAZ(iNSURF,1));      
     end % WriteCard4B2
     function C = ReadCard4B3(C, fid, iNSURF, iNWVSRF)
       % WVSURF, (PARAMS(I), I = 1, NPARAM)
@@ -10880,8 +11228,10 @@ classdef Mod5
       C.PARAMS4(iNSURF, iNWVSRF) = tPARAMS4;    
     end % ReadCard4B3
     function C = WriteCard4B3(C, fid, iNSURF, iNWVSRF)
-      fprintf(fid, '%f %f %f %f %f\n', ...
-        C.WVSURF(iNSURF,1), C.PARAMS1(iNSURF, iNWVSRF), C.PARAMS2(iNSURF, iNWVSRF), C.PARAMS3(iNSURF, iNWVSRF), C.PARAMS4(iNSURF, iNWVSRF));
+      % fprintf(fid, '%f %f %f %f %f\n', ...
+      %  C.WVSURF(iNSURF,1), C.PARAMS1(iNSURF, iNWVSRF), C.PARAMS2(iNSURF, iNWVSRF), C.PARAMS3(iNSURF, iNWVSRF), C.PARAMS4(iNSURF, iNWVSRF));
+       Mod5.WriteSimpleCard('4B3',fid, '%12.6f %12.6f %12.6f %12.6f %12.6f\n', ...
+        C.WVSURF(iNSURF,1), C.PARAMS1(iNSURF, iNWVSRF), C.PARAMS2(iNSURF, iNWVSRF), C.PARAMS3(iNSURF, iNWVSRF), C.PARAMS4(iNSURF, iNWVSRF));    
     end % WriteCard4B3
     function C = ReadCard4L1(C, fid)
       % SALBFL
@@ -10918,7 +11268,8 @@ classdef Mod5
       C.IRPT = Card{1};
     end % ReadCard5
     function C = WriteCard5(C, fid)
-      fprintf(fid, '%5d\n', C.IRPT);
+      % fprintf(fid, '%5d\n', C.IRPT);
+      Mod5.WriteSimpleCard('5',fid, '%5d\n', C.IRPT);      
     end % WriteCard5
     function C = DescribeCard5(C, fid, OF)
       % Card 5 controls repeat runs
