@@ -4714,7 +4714,7 @@ classdef Mod5
       fid = fopen(Filename, 'rt');
       iCase = 1; % Count the cases in the file
       FileFinished = 0; % This flag is set when IRPT of blank or zero is encountered
-      try % to read the .ltn file
+      try % to read the .ltn or .tp5 file
        while ~FileFinished && ~feof(fid) % Read any number of cases from a single file 
         MC(iCase).OriginFile = Filename;
         MC(iCase).DebugFlag = DebugFlag;
@@ -5606,8 +5606,20 @@ classdef Mod5
         rethrow(modrootFailed);
       end
       try % to delete all output files associated with this run
-        delete([MODTRANPath MODCase(1).CaseName '.*']);
-      catch
+        % If this is a NOVAM run, first rescue the NOVAM.OUT file in case
+        if MODCase(1).CNOVAM ~= ' '
+            if ~exist([MODTRANPath 'NOVAM.OUT'], 'file')
+                warning('Mod5:Run:NOVAMOUTmissing',...
+                    'The NOVAM.OUT file was not found in the MODTRAN executable directory and this is a NOVAM case.');
+            else % Rename NOVAM.OUT temporarily so that the purge does not clobber it
+                movefile([MODTRANPath 'NOVAM.OUT'], [MODTRANPath 'tempNOVAM.OUT']);
+                delete([MODTRANPath MODCase(1).CaseName '.*']);
+                movefile([MODTRANPath 'tempNOVAM.OUT'], [MODTRANPath 'NOVAM.OUT']);
+            end
+        else
+          delete([MODTRANPath MODCase(1).CaseName '.*']);
+        end
+      catch PurgeFailed
         warning('Mod5:Run:PurgeFailed', ...
           'Unable to purge all MODTRAN output files (%s.*) associated with this case. Check status of these files.', ...
           [MODTRANPath MODCase(1).CaseName]);
@@ -8410,7 +8422,7 @@ classdef Mod5
     end % set.IHAZE
     function MC = set.CNOVAM(MC, newCNOVAM)
       MC.ScalarChar(newCNOVAM, 'N ', 'CNOVAM');
-      MC.CNOVAM = newCNOVAM;      
+      MC.CNOVAM = newCNOVAM;
     end % set.CNOVAM
     function MC = set.ISEASN(MC, newISEASN)
       MC.ScalarIntNumeric(newISEASN, [0 1 2], 'ISEASN');
@@ -8684,8 +8696,8 @@ classdef Mod5
       MC.XFLAG = newXFLAG;
     end % set.XFLAG
     function MC = set.DLIMIT(MC, newDLIMIT)
-      if isempty(newDLIMIT)
-        newDLIMIT = '        ';
+      if isempty(newDLIMIT) || all(newDLIMIT == ' ')
+        newDLIMIT = '$       ';
       end
       assert(ischar(newDLIMIT) && size(newDLIMIT, 1) == 1 && size(newDLIMIT,2) <= 8, 'Mod5:setDLIMIT:BadDLIMIT', ...
         'Input DLIMIT (Plot file multiple plot delimiter) must be a character string of 8 or fewer characters.');
@@ -8793,18 +8805,28 @@ classdef Mod5
           return; % Nothing to be done - there is no data in the .7sc file
         end
         % Distribute the data
-        if size(Data,1) ~= numel(MODCase)
+        % First determine how many data blocks there should be
+        theFLAGS = strvcat(MODCase.FLAGS);
+        FLAGS1 = theFLAGS(:,1) ~= ' ';
+        FLAGS2 = theFLAGS(:,2) ~= ' ';
+        ExpectedBlocks = FLAGS1 | FLAGS2;
+        if size(Data,1) ~= sum(ExpectedBlocks) % numel(MODCase)
           warning('Mod5_Run:sc7DataBlocks',...
-            'The number of data blocks in file %s does not match the number of sub-cases.', [MODCase(1).CaseName '.7sc']);
+            'The number of data blocks in file %s does not match the number of qualifying sub-cases.', [MODCase(1).CaseName '.7sc']);
         end
-        for iSubCase = 1:min(numel(MODCase), size(Data,1))
-          if isempty(Heads{iSubCase})
-            continue; % sorry, no convolved data for this sub-case
+        iDataBlock = 0;
+        for iSubCase = 1:numel(MODCase)
+%           if isempty(Heads{iSubCase})
+%             continue; % sorry, no convolved data for this sub-case
+%           end
+          if ~ExpectedBlocks(iSubCase)
+              continue;
           end
+          iDataBlock = iDataBlock + 1;
           % Record the raw headers
-          MODCase(iSubCase).sc7.RawHeaders = Heads{iSubCase};
+          MODCase(iSubCase).sc7.RawHeaders = Heads{iDataBlock};
           % Fix the headers
-          FixedHeads = Mod5.FixHeaders(Heads{iSubCase});
+          FixedHeads = Mod5.FixHeaders(Heads{iDataBlock});
           % Put in the headers
           MODCase(iSubCase).sc7.Headers = FixedHeads;
           % Look up the header descriptions
@@ -8846,9 +8868,9 @@ classdef Mod5
               MODCase(iSubCase).sc7.RadianceUnits = 'W/sr/cm^2/cm^-1';
               MODCase(iSubCase).sc7.RadianceUnits = 'W/cm^2/cm^-1';
           end
-          for iHead = 1:length(Heads{iSubCase}) % Run through the columns of data
+          for iHead = 1:length(Heads{iDataBlock}) % Run through the columns of data
             if isvarname(FixedHeads{iHead})
-              MODCase(iSubCase).sc7.(FixedHeads{iHead}) = Data{iSubCase, iHead};
+              MODCase(iSubCase).sc7.(FixedHeads{iHead}) = Data{iDataBlock, iHead};
             end
           end
         end
