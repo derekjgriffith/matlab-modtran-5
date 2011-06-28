@@ -638,7 +638,7 @@ classdef Mod5
     tp8 = [];     % Radiant spectral fluxes, diffuse and total, unconvolved. There is no method to read this data yet.
     flx = [];     % Radiant spectral fluxes, convolved. 
     clr = [];     % Cooling rates. No method currently exists to read this data yet.
-    acd = [];     % Atmospheric correction data. No methods to read this data yet.
+    acd = [];     % Atmospheric correction data.
   end
   properties (Constant)
     Rev = '$RevisionNode$';         % The revision node of the class
@@ -5238,7 +5238,7 @@ classdef Mod5
         end
         
         %% Card 2 - Main Aerosol and Cloud Options
-        % MC(iCase) = MC(iCase).DescribeCard2(fid);
+        MC(iCase) = MC(iCase).DescribeCard2(fid, OFormat);
         if strcmp(MC(iCase).APLUS, 'A+') % Describe card 2A+ Flexible aerosol Model
           % MC(iCase) = MC(iCase).DescribeCard2APlus(fid);
         end
@@ -7814,6 +7814,8 @@ classdef Mod5
             if ~isempty(MC(iC).tp7)
                 for iH = 1:numel(MC(iC).tp7.Headers)
                     switch MC(iC).tp7.Headers{iH}
+                        case 'COMBINTRANS', MC(iC).tp7.LOGCOMBIN = -log(MC(iC).tp7.COMBINTRANS);
+                            MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'LOGCOMBIN'];
                         case 'H2OTRANS', MC(iC).tp7.H2OOD = -log(MC(iC).tp7.H2OTRANS);
                             MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'H2OOD'];
                         case 'CO2PTRANS', MC(iC).tp7.CO2OD = -log(MC(iC).tp7.CO2PTRANS);
@@ -7860,6 +7862,8 @@ classdef Mod5
             if ~isempty(MC(iC).sc7)
                 for iH = 1:numel(MC(iC).sc7.Headers)
                     switch MC(iC).sc7.Headers{iH}
+                        case 'COMBINTRANS', MC(iC).sc7.LOGCOMBIN = -log(MC(iC).sc7.COMBINTRANS);
+                            MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'LOGCOMBIN'];                        
                         case 'H2OTRANS', MC(iC).sc7.H2OOD = -log(MC(iC).sc7.H2OTRANS);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'H2OOD'];
                         case 'CO2PTRANS', MC(iC).sc7.CO2OD = -log(MC(iC).sc7.CO2PTRANS);
@@ -10061,6 +10065,56 @@ classdef Mod5
         C.APLUS, C.IHAZE, C.CNOVAM, C.ISEASN, C.ARUSS, C.IVULCN, C.ICSTL, C.ICLD, ...
         C.IVSA, C.VIS, C.WSS, C.WHH, C.RAINRT, C.GNDALT);    
     end % WriteCard2
+    function C = DescribeCard2(C, fid, OF)
+      C.printPreCard(fid, OF, '2');
+      C.printCardItem(fid, OF, 'APLUS', '''%s''');
+      switch upper(C.APLUS)
+          case '  ', fprintf(fid, 'Default aerosol layers and levels.\n');
+          case 'A+', fprintf(fid, 'User "Aerosol Plus" (Card 2A+) option to vertically translate and scale aerosol vertical profiles.\n');
+      end
+      C.printCardItem(fid, OF, 'IHAZE', '%d');
+      switch C.IHAZE
+          case -1, fprintf(fid, 'No aerosol attenuation, but the model clouds may be included (i.e., ICLD = 1, 2… 10, 18 and 19).\n');
+          case  0, fprintf(fid, 'No aerosol or cloud attenuation included in the calculation.\n');
+          case  1, fprintf(fid, 'RURAL extinction, default VIS = 23 km.\n');
+          case  2, fprintf(fid, 'RURAL extinction, default VIS = 5 km.\n');
+          case  3, fprintf(fid, 'NAVY MARITIME extinction. Sets VIS based on wind speed and relative humidity.\n');
+          case  4, fprintf(fid, 'MARITIME extinction, default VIS = 23 km (LOWTRAN model).\n');
+          case  5, fprintf(fid, 'URBAN extinction, default VIS = 5 km.\n');
+          case  6, fprintf(fid, 'TROPOSPHERIC extinction, default VIS = 50 km.\n');
+          case  7, fprintf(fid, 'User-defined aerosol extinction coefficients. Triggers reading CARDs 2D, 2Dl and 2D2 for up to 4 altitude regions of user-defined extinction, absorption and asymmetry parameters.\n');
+          case  8, fprintf(fid, 'FOG1 (Advective Fog) extinction, 0.2 km VIS.\n');
+          case  9, fprintf(fid, 'FOG2 (Radiative Fog) extinction, 0.5 km VIS.\n');
+          case 10, fprintf(fid, 'DESERT extinction, sets visibility from wind speed (WSS).\n');
+      end
+      C.printCardItem(fid, OF, 'CNOVAM', '''%c''');
+      switch upper(C.CNOVAM)
+          case ' ', fprintf(fid, 'Navy Oceanic Vertical Aerosol Model (NOVAM) is not used in this run.\n');
+          case 'N', fprintf(fid, 'Navy Oceanic Vertical Aerosol Model (NOVAM) is used in this run. MODTRAN will look for the file NOVAM.OUT.\n');
+      end
+      C.printCardItem(fid, OF, 'ISEASN', '%d');
+      switch C.ISEASN
+          case 0, fprintf(fid, 'Seasonal aerosol modification determined by the value of MODEL; SPRING-SUMMER for MODEL = 0, 1, 2, 4, 6, 7, 8 FALL-WINTER for MODEL = 3, 5.\n');
+          case 1, fprintf(fid, 'Seasonal aerosol modification is SPRING-SUMMER.\n');
+          case 2, fprintf(fid, 'Seasonal aerosol modification is FALL-WINTER.\n');
+      end
+      C.printCardItem(fid, OF, 'ARUSS', '''%s''');
+      switch upper(C.ARUSS)
+          case '   ', fprintf(fid, 'Use built-in aerosol optical properties.\n');
+          case 'USS', fprintf(fid, 'User-defined aerosol optical properties (Cards 2D, 2D1, 2D2).\n');
+      end
+      C.printCardItem(fid, OF, 'IVULCN', '%d');
+      switch C.IVULCN
+          case {0, 1}, fprintf(fid, 'BACKGROUND STRATOSPHERIC aerosol profile and extinction.\n');
+          case 2, fprintf(fid, 'MODERATE VOLCANIC profile and AGED VOLCANIC aerosol extinction.\n');
+          case 3, fprintf(fid, 'HIGH VOLCANIC profile and FRESH VOLCANIC aerosol extinction.\n');
+          case 4, fprintf(fid, 'HIGH VOLCANIC profile and AGED VOLCANIC aerosol extinction.\n');
+          case 5, fprintf(fid, 'MODERATE VOLCANIC profile and FRESH VOLCANIC aerosol extinction.\n');
+          case 6, fprintf(fid, 'MODERATE VOLCANIC profile and BACKGROUND STRATOSPHERIC aerosol extinction.\n');
+          case 7, fprintf(fid, 'HIGH VOLCANIC profile and BACKGROUND STRATOSPHERIC aerosol extinction.\n');
+          case 8, fprintf(fid, 'EXTREME VOLCANIC profile and FRESH VOLCANIC aerosol extinction.\n');
+      end
+    end % DescribeCard2
     function C = ReadCard2APlus(C, fid) % There are two cards to be read here
       % (3(1X, F9.0), 20X, 3(1X, F9.0)) 2 cards
       Card = C.ReadSimpleCard(fid, [1 9 1 9 1 9 20 1 9 1 9 1 9], ...
