@@ -10114,6 +10114,41 @@ classdef Mod5
           case 7, fprintf(fid, 'HIGH VOLCANIC profile and BACKGROUND STRATOSPHERIC aerosol extinction.\n');
           case 8, fprintf(fid, 'EXTREME VOLCANIC profile and FRESH VOLCANIC aerosol extinction.\n');
       end
+      C.printCardItem(fid, OF, 'ICSTL', '%d', 'Air mass aerosol character for IHAZE = 3. Use 1 for open ocean through to 10 for strong continental influence.\n');
+      C.printCardItem(fid, OF, 'ICLD', '%d');
+      switch C.ICLD
+          case 0, fprintf(fid, 'No clouds or rain.\n');
+          case 1, fprintf(fid, 'Cumulus cloud layer: base 0.66 km, top 3.0 km.\n');
+          case 2, fprintf(fid, 'Altostratus cloud layer: base 2.4 km, top 3.0 km.\n');
+          case 3, fprintf(fid, 'Stratus cloud layer: base 0.33 km, top 1.0 km.\n');
+          case 4, fprintf(fid, 'Stratus/stratocumulus layer: base 0.66 km, top 2.0 km.\n');
+          case 5, fprintf(fid, 'Nimbostratus cloud layer: base 0.16 km, top 0.66 km.\n');
+          case 6, fprintf(fid, '2.0 mm/hr ground Drizzle (Modeled with cloud 3 and 0.86 mm / hr at 1.0 km).\n');
+          case 7, fprintf(fid, '5.0 mm/hr ground Light rain (Modeled with cloud 5 and 2.6 mm / hr at 0.66 km).\n');
+          case 8, fprintf(fid, '12.5 mm/hr ground Moderate rain (Modeled with cloud 5 and 6.0 mm / hr at 0.66 km).\n');
+          case 9, fprintf(fid, '25.0 mm/hr ground Heavy rain (Modeled with cloud 1 and to 0.2 mm / hr at 3.0 km).\n');
+          case 10, fprintf(fid, '75.0 mm/hr ground Extreme rain (Modeled with cloud 1 and 1.0 mm / hr at 3.0 km).\n');
+          case 11, fprintf(fid, 'Read in user defined cloud extinction and absorption from Cards 2D, 2D1 and 2D2.\n');
+          case 18, fprintf(fid, 'Standard Cirrus model (64 micron mode radius for ice particles).\n');
+          case 19, fprintf(fid, 'Sub-visual Cirrus model (4 micron mode radius for ice particles).\n');
+      end
+      C.printCardItem(fid, OF, 'IVSA', '%d');
+      switch C.IVSA
+          case 0, fprintf(fid, 'This MODTRAN run does not use the Army Vertical Structure Algorithm (VSA) for aerosols in the boundary layer.\n');
+          case 1, fprintf(fid, 'This MODTRAN run uses the Army Vertical Structure Algorithm (VSA) for aerosols in the boundary layer.\n');
+      end
+      C.printCardItem(fid, OF, 'VIS', '%g');
+      if C.VIS > 0
+          fprintf(fid, 'User specified surface meteorological range (km). Overrides default range set by IHAZE.\n');
+      elseif C.VIS == 0
+          fprintf(fid, 'Uses the default meteorological range set by IHAZE.\n');          
+      else
+          fprintf(fid, 'Negative of the 550 nm vertical aerosol optical depth (AOD).\n');          
+      end
+      C.printCardItem(fid, OF, 'WSS', '%g', 'Current wind speed in m/s, used by maritime (IHAZE = 3) and desert (IHAZE = 10) aerosol models.\n');
+      C.printCardItem(fid, OF, 'WHH', '%g', 'Average wind speed in m/s over 24 hours, used by maritime (IHAZE = 3) aerosol model.\n');
+      C.printCardItem(fid, OF, 'RAINRT', '%g', 'Rain rate (mm/hr). The default value is zero for no rain. Used to top of cloud when cloud is present; when no clouds, rain rate used to 6km.\n');
+      C.printCardItem(fid, OF, 'GNDALT', '%g', 'Altitude of ground surface relative to sea level (km). GNDALT may be negative but may not exceed 6 km.\n');
     end % DescribeCard2
     function C = ReadCard2APlus(C, fid) % There are two cards to be read here
       % (3(1X, F9.0), 20X, 3(1X, F9.0)) 2 cards
