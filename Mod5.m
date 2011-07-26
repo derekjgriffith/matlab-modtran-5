@@ -3963,7 +3963,7 @@ classdef Mod5
         % Move the header stop positions to the right while the
         % adjacent character to the right is non-blank
         for istop = 1:(numel(stop)-1)
-            while headlin(stop(istop)+1) ~= ' ' && (stop(istop)+1) < start(istop + 1)
+            while stop(istop) < numel(headlin) && headlin(stop(istop)+1) ~= ' ' && (stop(istop)+1) < start(istop + 1)
                 stop(istop) = stop(istop) + 1;
             end
         end
@@ -6967,6 +6967,18 @@ classdef Mod5
       
       
     end % SetCard1
+    function MC = SetCardAlt2ADefault(MC)
+        % SetCardAlt2ADefault : Force default values for ICLD = 1..10 models
+        %
+        % Usage :
+        %   MC = MC.SetCardAlt2ADefaults;
+        %
+        % Variables on the alternate Card 2A can be set to their default
+        % values by setting the property to -9. This function sets all
+        % properties on alternate Card 2A to -9.
+        [MC.CTHIK, MC.CALT, MC.CEXT, MC.NCRALT, MC.NCRSPC, MC.CWAVLN, MC.CCOLWD, ...
+         MC.CCOLIP, MC.CHUMID, C.ASYMWD, MC.ASYMIP] = deal(-9);   
+    end % SetCardAlt2ADefault
     function MC = SetRadTransPathGeom(MC, ITYPE, H1, H2, ANGLE, RANGE, BETA, RO, LENN, PHI)
       % SetRadTransPathGeom : Set line-of-sight (path) geometry for radiance/transmittance cases
       %
