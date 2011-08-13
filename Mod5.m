@@ -3047,7 +3047,7 @@ classdef Mod5
           EndHeaderLine2 = ftell(fid);
           % Check to see if this is data
           tok2 = strtok(headlin2, ' ');
-          if isletter(tok2(1)) % The headers comprise 2 lines
+          if isnan(str2double(tok2)) % The headers comprise 2 lines
             % Compose the headers from 2 lines
             % First read a line of data
             lin = [' ' fgetl(fid) ' ']; % make sure it starts and ends with a blank
@@ -10798,6 +10798,11 @@ classdef Mod5
         C.printCardItem(fid, OF, 'RO', '%g', 'Radius of the earth in km at the path latitude. Will default to a value depending on MODEL.\n');
       else
         C.printCardItem(fid, OF, 'RO', '%g', 'Radius of the earth in km at the path latitude.\n');        
+      end
+      if C.LENN == 1
+        C.printCardItem(fid, OF, 'LENN', '%g', 'Path will be "long", extending through the tangent height.\n');          
+      else
+        C.printCardItem(fid, OF, 'LENN', '%g', 'Default short path - not extending through tangent height.\n');          
       end
       if Mandatory(6) % PHI
         C.printCardItem(fid, OF, 'PHI', '%g', 'Zenith angle (in degrees) at H2.\n');
