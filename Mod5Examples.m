@@ -414,3 +414,121 @@ Sat2 = Sat2.Run;
 Sat2.PlotChn('SPECTRAL_RADIANCE');
 
 %----------End Example 6--------------
+
+%% Example 7 : Horizontal Near Ground Path at Pretoria
+% This example computes horizontal path transmittance and radiance over a
+% grassland surface.
+clear all
+close all
+PtaMidSummer = Mod5; % Get a blank case
+PtaMidSummer = PtaMidSummer.SetCaseName('PtaMidSummer');
+%% Card 1 : Main Radiation and Transport Driver, Model, Algorithm, Mode
+PtaMidSummer.MODTRN = 'T'; % The Spectral Band Model is the MODTRAN Band Model.
+PtaMidSummer.SPEED = ' '; % The 'slow' speed Correlated-k algorithm using 33 absorption coefficients (k values) per spectral bin (1 cm^{-1}or 15 cm^{-1}). This option is recommended for upper altitude (> 40 km) cooling-rate and weighting-function calculations only.
+PtaMidSummer.BINARY = ' '; % All MODTRAN outputs will be ASCII text files.
+PtaMidSummer.LYMOLC = ' '; % Atmospheric model excludes 16 auxiliary trace gas species.
+PtaMidSummer.MODEL = 1; % Tropical Atmosphere
+PtaMidSummer.ITYPE = 2; % Slant path between two altitudes
+PtaMidSummer.IEMSCT = 2; % MODTRAN will compute spectral transmittance and radiance of the LOS.
+PtaMidSummer.IMULT = 1; % MODTRAN executes with computation of multiple scattering.
+PtaMidSummer.M1 = 0; % Temperature and Pressure profiles default to whatever is specified by parameter MODEL above.
+PtaMidSummer.M2 = 0; % Water vapour profile defaults to whatever is specified by parameter MODEL above.
+PtaMidSummer.M3 = 0; % Ozone (O_3) profile defaults to whatever is specified by parameter MODEL above.
+PtaMidSummer.M4 = 0; % Methane (CH_4) profile defaults to whatever is specified by parameter MODEL above.
+PtaMidSummer.M5 = 0; % Nitrous Oxide (N_20) profile defaults to whatever is specified by parameter MODEL above.
+PtaMidSummer.M6 = 0; % Carbon Monoxide (C0) profile defaults to whatever is specified by parameter MODEL above.
+PtaMidSummer.MDEF = 0; % Default O2, NO, SO2, NO2, NH3, and HNO3 species profiles as well as default heavy species.
+PtaMidSummer.I_RD2C = 0; % For canned atmospheres or when calculations are to be run with the user-defined atmosphere last read in.
+PtaMidSummer.NOPRNT = 0; % Normal output operation of program; normal tape6 (PtaMidSummer.tp6) output.
+PtaMidSummer.TPTEMP = 0; % No surface emission contributed at H2 (far end from sensor/observer) if H2 is above ground.
+PtaMidSummer.SURREF = 'LAMBER'; % Albedo of the earth is lambertian, set later in the script
+% Card 1A : Main Radiation and Transport Driver, Multi-Scatter, Solar, CO2
+PtaMidSummer.DIS = 't'; % Use the DISORT solver
+PtaMidSummer.DISAZM = 'f'; % DISORT will run with azimuth dependent multiple scattering switched off.
+PtaMidSummer.DISALB = ' '; % Atmospheric correction data will not be computed.
+PtaMidSummer.NSTR = 8; % DISORT will execute with this number of streams.
+PtaMidSummer.SFWHM = 0; % The FWHM (Full Width at Half Maximum) of the triangular scanning function used to smooth the TOA solar irradiance (wavenumbers).
+PtaMidSummer.CO2MX = 380; % The CO_2 mixing ratio in ppmv (parts per million by volume)
+PtaMidSummer.H2OSTR = '    g 2.0 '; % Vertical water vapor column modifier (g/cm^{2}, atm-cm or scaling factor).
+PtaMidSummer.O3STR = '          '; % Vertical ozone column modifier (g/cm^{2}, atm-cm or scaling factor).
+PtaMidSummer.C_PROF = ' '; % There will be no scaling of default molecular profiles.
+PtaMidSummer.LSUNFL = ' '; % If true, read solar irradiance from file named on Card 1A1.
+PtaMidSummer.LBMNAM = ' '; % If true, read band model from file named on Card 1A2.
+PtaMidSummer.LFLTNM = ' '; % If true, read instrument band filter data from file named on Card 1A3.
+PtaMidSummer.H2OAER = ' '; % If true, humidity-based modifications are applied to the aerosols based on water column scaling (H2OSTR).
+PtaMidSummer.SOLCON = 0; % Solar TOA irradiance is not scaled.
+% Card 2 : Main Aerosol and Cloud Options, Turbidity, Rain, Ground Altitude
+PtaMidSummer.APLUS = '  '; % Default aerosol layers and levels.
+PtaMidSummer.IHAZE = 5; % URBAN extinction
+PtaMidSummer.CNOVAM = ' '; % Navy Oceanic Vertical Aerosol Model (NOVAM) is not used in this run.
+PtaMidSummer.ISEASN = 0; % Seasonal aerosol modification determined by the value of MODEL; SPRING-SUMMER for MODEL = 0, 1, 2, 4, 6, 7, 8 FALL-WINTER for MODEL = 3, 5.
+PtaMidSummer.ARUSS = '   '; % Use built-in aerosol optical properties.
+PtaMidSummer.IVULCN = 0; % BACKGROUND STRATOSPHERIC aerosol profile and extinction.
+PtaMidSummer.ICSTL = 0; % Air mass aerosol character for IHAZE = 3. Use 1 for open ocean through to 10 for strong continental influence.
+PtaMidSummer.ICLD = 0; % No clouds or rain.
+PtaMidSummer.IVSA = 0; % This MODTRAN run does not use the Army Vertical Structure Algorithm (VSA) for aerosols in the boundary layer.
+PtaMidSummer.VIS = 18; % User specified surface meteorological range (km). Overrides default range set by IHAZE.
+PtaMidSummer.WSS = 0; % Current wind speed in m/s, used by maritime (IHAZE = 3) and desert (IHAZE = 10) aerosol models.
+PtaMidSummer.WHH = 0; % Average wind speed in m/s over 24 hours, used by maritime (IHAZE = 3) aerosol model.
+PtaMidSummer.RAINRT = 0; % Rain rate (mm/hr). The default value is zero for no rain. Used to top of cloud when cloud is present; when no clouds, rain rate used to 6km.
+PtaMidSummer.GNDALT = 1.4; % Altitude of ground surface relative to sea level (km). GNDALT may be negative but may not exceed 6 km.
+% Card 3 : Line-Of-Sight (LOS) Geometry, Heights, Zenith Angle, Range
+% The Line of Sight (LOS) is a horizontal (constant-pressure) path, i.e., single layer, no refraction calculation.
+PtaMidSummer.H1 = 1.41; % Initial path altitude in km.
+PtaMidSummer.H2 = 0; % Not used, use zenith angle and range
+PtaMidSummer.ANGLE = 90; % Initial zenith angle at H1 in degrees
+PtaMidSummer.RANGE = 0.212; % Path length in km.
+PtaMidSummer.BETA = 0; % Not used in this case. (Earth centre angle in degrees subtended by path from H1 to H2.)
+PtaMidSummer.RO = 0; % Radius of the earth in km at the path latitude. Will default to a value depending on MODEL.
+PtaMidSummer.LENN = 0; % Default short path - not extending through tangent height.
+PtaMidSummer.PHI = 0; % Not used in this case. (Zenith angle in degrees at H2.)
+% Card 3A1 : Solar/Lunar Scattering Geometry
+PtaMidSummer.IPARM = 12; % Will specify relative solar azimuth and zenith angle
+PtaMidSummer.IPH = 2; % Use internal Mie tables for phase functions 
+PtaMidSummer.IDAY = 360; % Mid summer in southern hemisphere
+PtaMidSummer.ISOURC = 0; % Sun
+% Card 3A2 : Solar/Lunar Scattering Geometry cont.
+PtaMidSummer.PARM1 = 52.2; % Relative azimuth of sun at target (target azimuth is 40, solar azimuth is 92.2)
+PtaMidSummer.PARM2 = 28.8; % Solar zenith angle in degrees
+PtaMidSummer.PARM3 = 0; % Not used
+PtaMidSummer.PARM4 = 0; % Not used
+PtaMidSummer.TIME = 0; % Not used
+PtaMidSummer.PSIPO = 0; % Not used
+PtaMidSummer.ANGLEM = 0; % Moon phase, not used
+PtaMidSummer.G = 0; % Assymetry parameter, not used since Mie database specified
+% Card 4 : Spectral Range and Resolution
+PtaMidSummer.V1 = 400; % Starting wavelength in nanometres. (Wavenumber is 25000 cm^-1)
+PtaMidSummer.V2 = 1000; % Final wavelength in nanometres. (Wavenumber is 10000 cm^-1)
+PtaMidSummer.DV = 0.04; % Spectral wavelength increment in nanometres.
+PtaMidSummer.FWHM = 1; % Triangular convolution function width (wavelength in nanometres).
+PtaMidSummer.YFLAG = ' '; % There will be no plot data output to .plt and .psc files.
+PtaMidSummer.XFLAG = ' '; % There will be no plot data output to .plt and .psc files.
+PtaMidSummer.DLIMIT = '$       '; % Delimiter string for multiple plots in single plot file.
+PtaMidSummer.FLAGS = 'N A    '; % Control flags.
+PtaMidSummer.MLFLX = 0; % Number of atmospheric levels for which spectral fluxes [FLAGS(7:7) = 'T' or 'F'] are output, starting from the ground.
+PtaMidSummer.VRFRAC = 0; % Index of refraction profile for spherical refraction is performed at central spectral frequency value for input bandpass.
+% Card 4A : Ground surface reflectance characterization
+PtaMidSummer.NSURF = 1; % Not trying to model adjacency
+PtaMidSummer.AATEMP = 0; % Not used (ground surface temperature)
+PtaMidSummer.DH2O = 0; % Surface water, not used
+PtaMidSummer.MLTRFL = 'f'; % Not used
+% Card 4L1 : Lambertian ground surface reflectance data file specification
+PtaMidSummer.SALBFL = 'DATA/spec_alb.dat'; % File of reflectance data
+% Card 4L2 : Lambertian ground surface reflectance specification
+PtaMidSummer.CSALB = '50'; % Grassland
+% Card 5 : Repeat Run Option
+PtaMidSummer.IRPT = 0; % MODTRAN Terminates.
+
+% Create a series for the three ranges (path lengths)
+PtaMidSummer = PtaMidSummer.CreateSeries('RANGE', {.212 1 5}); % Range Cases for 212 m to 5 km
+
+% Run the case
+PtaMidSummer = PtaMidSummer.Run;
+
+% Plot path transmittance and radiance
+PtaMidSummer.PlotSc7('TRANS');
+title('LOS Spectral Transmittance');
+legend('212 m', '1 km', '5 km', 'Location', 'best');
+PtaMidSummer.PlotSc7('TOTALRAD');
+title('LOS Spectral Path Radiance');
+legend('212 m', '1 km', '5 km', 'Location', 'best');
