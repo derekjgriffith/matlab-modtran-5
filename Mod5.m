@@ -7785,7 +7785,7 @@ classdef Mod5
         %
         % Note that "optical thickness" means the same as "optical depth".
         %
-        % See Also : MODTRAMCase.ComputeOptDepth
+        % See Also : Mod5.ComputeOptDepth
         
         % Switch the case to direct solar irradiance
         for iCase = 1:numel(MC)
@@ -7801,7 +7801,7 @@ classdef Mod5
             MC(iCase).alb = [];
             
             % Make path geometry from ground to space
-            MC(iCase).H1 = 0;
+            MC(iCase).H1 = MC(iCase).GNDALT;
             MC(iCase).H2 = 0;
             MC(iCase).ANGLE = 0;
             MC(iCase).PHI = 0;
@@ -7845,9 +7845,13 @@ classdef Mod5
                         case 'AERTRANS', MC(iC).tp7.AEROD = -log(MC(iC).tp7.AERTRANS);
                             MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'AEROD'];                            
                         case 'HNO3TRANS', MC(iC).tp7.HNO3OD = -log(MC(iC).tp7.HNO3TRANS);
-                            MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'HNO3OD'];                            
+                            MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'HNO3OD'];
                         case 'AERABTRANS', MC(iC).tp7.AERABOD = -log(MC(iC).tp7.AERABTRANS);
-                            MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'AERABOD'];                            
+                            MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'AERABOD'];                                                        
+                        case 'AERCLDTRANS', MC(iC).tp7.AERCLDOD = -log(MC(iC).tp7.AERCLDTRANS);
+                            MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'AERCLDOD'];
+                        case 'CLOUDTRANS', MC(iC).tp7.CLOUDOD = -log(MC(iC).tp7.CLOUDTRANS);
+                            MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'CLOUDOD'];                                                        
                         case 'CO2TRANS', MC(iC).tp7.CO2OD = -log(MC(iC).tp7.CO2TRANS);
                             MC(iC).tp7.Headers = [MC(iC).tp7.Headers 'CO2OD'];                            
                         case 'COTRANS', MC(iC).tp7.COOD = -log(MC(iC).tp7.COTRANS);
@@ -7876,43 +7880,41 @@ classdef Mod5
                     switch MC(iC).sc7.Headers{iH}
                         case 'COMBINTRANS', MC(iC).sc7.LOGCOMBIN = -log(MC(iC).sc7.COMBINTRANS);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'LOGCOMBIN'];                        
-                        case 'H2OTRANS', MC(iC).sc7.H2OOD = -log(MC(iC).sc7.H2OTRANS);
+                        case 'H2O', MC(iC).sc7.H2OOD = -log(MC(iC).sc7.H2O);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'H2OOD'];
-                        case 'CO2PTRANS', MC(iC).sc7.CO2OD = -log(MC(iC).sc7.CO2PTRANS);
+                        case 'CO2', MC(iC).sc7.CO2OD = -log(MC(iC).sc7.CO2);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'CO2OD'];                            
-                        case 'O3TRANS', MC(iC).sc7.O3OD = -log(MC(iC).sc7.O3TRANS);
+                        case 'O3', MC(iC).sc7.O3OD = -log(MC(iC).sc7.O3);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'O3OD'];                            
-                        case 'TRACETRANS', MC(iC).sc7.TRACEOD = -log(MC(iC).sc7.TRACETRANS);
+                        case 'TRACE', MC(iC).sc7.TRACEOD = -log(MC(iC).sc7.TRACE);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'TRACEOD'];                            
                         case 'N2CONT', MC(iC).sc7.N2CONTOD = -log(MC(iC).sc7.N2CONT);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'N2CONTOD'];                            
                         case 'H2OCONT', MC(iC).sc7.H2OCOD = -log(MC(iC).sc7.H2OCONT);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'H2OCOD'];                            
-                        case 'MOLECSCAT', MC(iC).sc7.MOLECOD = -log(MC(iC).sc7.MOLECSCAT);
+                        case 'MOLEC', MC(iC).sc7.MOLECOD = -log(MC(iC).sc7.MOLEC);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'MOLECOD'];                            
-                        case 'AERTRANS', MC(iC).sc7.AEROD = -log(MC(iC).sc7.AERTRANS);
-                            MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'AEROD'];                            
-                        case 'HNO3TRANS', MC(iC).sc7.HNO3OD = -log(MC(iC).sc7.HNO3TRANS);
+                        case 'AERCLD', MC(iC).sc7.AERCLDOD = -log(MC(iC).sc7.AERCLD);
+                            MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'AERCLDOD'];                            
+                        case 'HNO3', MC(iC).sc7.HNO3OD = -log(MC(iC).sc7.HNO3);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'HNO3OD'];                            
-                        case 'AERABTRANS', MC(iC).sc7.AERABOD = -log(MC(iC).sc7.AERABTRANS);
+                        case 'AERAB', MC(iC).sc7.AERABOD = -log(MC(iC).sc7.AERAB);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'AERABOD'];                            
-                        case 'CO2TRANS', MC(iC).sc7.CO2OD = -log(MC(iC).sc7.CO2TRANS);
-                            MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'CO2OD'];                            
-                        case 'COTRANS', MC(iC).sc7.COOD = -log(MC(iC).sc7.COTRANS);
+                        case 'CO', MC(iC).sc7.COOD = -log(MC(iC).sc7.CO);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'COOD'];                            
-                        case 'CH4TRANS', MC(iC).sc7.CH4OD = -log(MC(iC).sc7.CH4TRANS);
+                        case 'CH4', MC(iC).sc7.CH4OD = -log(MC(iC).sc7.CH4);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'CH4OD'];                            
-                        case 'N2OTRANS', MC(iC).sc7.N2OOD = -log(MC(iC).sc7.N2OTRANS);
+                        case 'N2O', MC(iC).sc7.N2OOD = -log(MC(iC).sc7.N2O);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'N2OOD'];                            
-                        case 'O2TRANS', MC(iC).sc7.O2OD = -log(MC(iC).sc7.O2TRANS);
+                        case 'O2', MC(iC).sc7.O2OD = -log(MC(iC).sc7.O2);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'O2OD'];                            
-                        case 'NH3TRANS', MC(iC).sc7.NH3OD = -log(MC(iC).sc7.NH3TRANS);
+                        case 'NH3', MC(iC).sc7.NH3OD = -log(MC(iC).sc7.NH3);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'NH3OD'];                            
-                        case 'NOTRANS', MC(iC).sc7.NOOD = -log(MC(iC).sc7.NOTRANS);
+                        case 'NO', MC(iC).sc7.NOOD = -log(MC(iC).sc7.NO);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'NOOD'];                            
-                        case 'NO2TRANS', MC(iC).sc7.NO2OD = -log(MC(iC).sc7.NO2TRANS);
+                        case 'NO2', MC(iC).sc7.NO2OD = -log(MC(iC).sc7.NO2);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'NO2OD'];                            
-                        case 'SO2TRANS', MC(iC).sc7.SO2OD = -log(MC(iC).sc7.SO2TRANS);
+                        case 'SO2', MC(iC).sc7.SO2OD = -log(MC(iC).sc7.SO2);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'SO2OD'];                            
                     end
                 end    
