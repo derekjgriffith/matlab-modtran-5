@@ -422,7 +422,7 @@ clear all
 close all
 PtaMidSummer = Mod5; % Get a blank case
 PtaMidSummer = PtaMidSummer.SetCaseName('PtaMidSummer');
-%% Card 1 : Main Radiation and Transport Driver, Model, Algorithm, Mode
+% Card 1 : Main Radiation and Transport Driver, Model, Algorithm, Mode
 PtaMidSummer.MODTRN = 'T'; % The Spectral Band Model is the MODTRAN Band Model.
 PtaMidSummer.SPEED = ' '; % The 'slow' speed Correlated-k algorithm using 33 absorption coefficients (k values) per spectral bin (1 cm^{-1}or 15 cm^{-1}). This option is recommended for upper altitude (> 40 km) cooling-rate and weighting-function calculations only.
 PtaMidSummer.BINARY = ' '; % All MODTRAN outputs will be ASCII text files.
@@ -473,7 +473,7 @@ PtaMidSummer.WHH = 0; % Average wind speed in m/s over 24 hours, used by maritim
 PtaMidSummer.RAINRT = 0; % Rain rate (mm/hr). The default value is zero for no rain. Used to top of cloud when cloud is present; when no clouds, rain rate used to 6km.
 PtaMidSummer.GNDALT = 1.4; % Altitude of ground surface relative to sea level (km). GNDALT may be negative but may not exceed 6 km.
 % Card 3 : Line-Of-Sight (LOS) Geometry, Heights, Zenith Angle, Range
-% The Line of Sight (LOS) is a horizontal (constant-pressure) path, i.e., single layer, no refraction calculation.
+% The Line of Sight (LOS) is a horizontal, so zenith ANGLE is set to 90 degrees 
 PtaMidSummer.H1 = 1.41; % Initial path altitude in km.
 PtaMidSummer.H2 = 0; % Not used, use zenith angle and range
 PtaMidSummer.ANGLE = 90; % Initial zenith angle at H1 in degrees
@@ -532,3 +532,4 @@ legend('212 m', '1 km', '5 km', 'Location', 'best');
 PtaMidSummer.PlotSc7('TOTALRAD');
 title('LOS Spectral Path Radiance');
 legend('212 m', '1 km', '5 km', 'Location', 'best');
+%---------------- End Example 7 -------------------
