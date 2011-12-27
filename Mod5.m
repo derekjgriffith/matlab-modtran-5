@@ -11062,12 +11062,20 @@ classdef Mod5
       end      
     end % ReadCard3C2
     function C = WriteCard3C2(C, fid)
-      for I = 1:C.NWLF
-        % fprintf(fid, ' %9.3f', C.WLF(I));
-        Mod5.WriteSimpleCard('3C2',fid, ' %9.3f', C.WLF(I));        
-      end
-      fprintf(fid, '\n');
-    end % WriteCard3C1    
+        nCards = ceil(C.NWLF/8);
+        for iCard = 1:nCards
+            if iCard == nCards % Last Card
+                for I = 1:mod(C.NWLF,8)
+                    Mod5.WriteSimpleCard('3C2',fid, ' %9.3f', C.WLF((iCard-1)*8 + I));
+                end
+            else
+                for I=1:8
+                    Mod5.WriteSimpleCard('3C2',fid, ' %9.3f', C.WLF((iCard-1)*8 + I));
+                end
+            end
+            fprintf(fid, '\n');
+        end
+    end % WriteCard3C1
     function C = ReadCard3C3(C, fid, iNANGLS)
       % (F(1, I, J), J=1, NWLF) (If IPH=1 and NWLF > 0)
       % FORMAT (8(1X, E9.3))
