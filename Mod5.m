@@ -971,6 +971,7 @@ classdef Mod5
           'SO2TRANS', 'Sulphur Dioxide Transmittance'; 'H2OOD', 'Water (Band Model) Optical Depth'; 'CO2POD', 'CO2+ Optical Depth'; ...
           'O3OD', 'Ozone Optical Depth'; 'TRACEOD', 'Trace Gases Optical Depth'; 'N2CONTOD', 'Nitrogen Continuum Optical Depth'; ...
           'H2OCOD', 'Water Continuum Optical Depth'; 'MOLECOD', 'Molecular Scattering Optical Depth'; ...
+          'AERCLDOD', 'Combined Aerosol/Cloud Optical Depth'; ...
           'AEROD', 'Aerosol Optical Depth'; 'HNO3OD', 'Nitric Acid Optical Depth'; 'AERABOD', 'Aerosol Absorption Optical Depth'; ...
           'LOGTOTAL', 'Total Optical Depth'; 'CO2OD', 'Carbon Dioxide Optical Depth'; ...
           'COOD', 'Carbon Monoxide Optical Depth'; 'CH4OD', 'Methane Optical Depth'; ...
@@ -7895,7 +7896,11 @@ classdef Mod5
                         case 'MOLEC', MC(iC).sc7.MOLECOD = -log(MC(iC).sc7.MOLEC);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'MOLECOD'];                            
                         case 'AERCLD', MC(iC).sc7.AERCLDOD = -log(MC(iC).sc7.AERCLD);
-                            MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'AERCLDOD'];                            
+                            MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'AERCLDOD'];
+                        case 'CLOUD', MC(iC).sc7.CLOUDOD = -log(MC(iC).sc7.CLOUD);
+                            MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'CLOUDOD'];                            
+                        case 'AER', MC(iC).sc7.AEROD = -log(MC(iC).sc7.AER);
+                            MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'AEROD'];                                                        
                         case 'HNO3', MC(iC).sc7.HNO3OD = -log(MC(iC).sc7.HNO3);
                             MC(iC).sc7.Headers = [MC(iC).sc7.Headers 'HNO3OD'];                            
                         case 'AERAB', MC(iC).sc7.AERABOD = -log(MC(iC).sc7.AERAB);
@@ -9185,8 +9190,8 @@ classdef Mod5
         hold off;
       end
       if isempty(plothandle)
-        warning('Mod5:Plot7ByCase:NoData', ...
-          'The requested plot data was not available for Plot7. Ensure that your case is correctly configured and that MODTRAN has executed correctly.')
+        warning('Mod5:Plot7ByCase:UnknownData', ...
+          'The requested plot data was not available for Plot7 or the nature of the data could not be determined.')
       end
     end % Plot7ByCase
     function MODCase = ProcessPlt(MODCase)
@@ -10492,7 +10497,16 @@ classdef Mod5
      % else
      %   fprintf(fid, '%10.3E%70s\n', C.AWCCON(iNREG,1), C.TITLE(iNREG,:));
      % end
-      Mod5.WriteSimpleCard('2D1', fid, '%10.3E%70s\n', C.AWCCON(iNREG,1), char(C.TITLE(iNREG,:)));    
+      if numel(C.AWCCON) < iNREG
+          error('Mod5:WriteCard2D1:AWCCONincomplete', ...
+              'Mod5 property AWCCON must be defined for all user-defined aerosol regions.')
+      end
+      if size(C.TITLE, 1) < iNREG
+          error('Mod5:WriteCard2D1:TITLEincomplete', ...
+              'Mod5 property TITLE must be defined for all user-defined aerosol regions.')
+      end
+      
+      Mod5.WriteSimpleCard('2D1', fid, '%10.3E%70s\n', C.AWCCON(iNREG), char(C.TITLE(iNREG,:)));    
     end % WriteCard2D1
     function C = ReadCard2D2(C, fid, iNREG, nSets)
       % CARD 2D2: (VARSPC(I), EXTC(N, I), ABSC(N, I), ASYM(N, I), I=l, 2, ...,)
@@ -11024,11 +11038,19 @@ classdef Mod5
         
     end % ReadCard3C1
     function C = WriteCard3C1(C, fid)
-      for I = 1:C.NANGLS
-        % fprintf(fid, ' %9.4f', C.ANGF(I));
-        Mod5.WriteSimpleCard('3C1',fid, ' %9.4f', C.ANGF(I));        
-      end
-      fprintf(fid, '\n');
+        nCards = ceil(C.NANGLS/8);
+        for iCard = 1:nCards
+            if iCard == nCards % Last Card
+                for I = 1:mod(C.NANGLS,8)
+                    Mod5.WriteSimpleCard('3C1',fid, ' %9.4f', C.ANGF((iCard-1)*8 + I));
+                end
+            else
+                for I = 1:8
+                    Mod5.WriteSimpleCard('3C1',fid, ' %9.4f', C.ANGF((iCard-1)*8 + I));
+                end
+            end
+            fprintf(fid, '\n');
+        end
     end % WriteCard3C1
     function C = ReadCard3C2(C, fid)
       % (WLF(J), J=1, NWLF) (If IPH=1 and NWLF > 0)
