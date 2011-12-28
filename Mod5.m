@@ -10696,8 +10696,14 @@ classdef Mod5
           MC = MC.ReadCard3C2(fid);
           for iNANGLS = 1:MC.NANGLS
             MC = MC.ReadCard3C3(fid, iNANGLS);
+          end
+          for iNANGLS = 1:MC.NANGLS
             MC = MC.ReadCard3C4(fid, iNANGLS);
+          end
+          for iNANGLS = 1:MC.NANGLS
             MC = MC.ReadCard3C5(fid, iNANGLS);
+          end
+          for iNANGLS = 1:MC.NANGLS
             MC = MC.ReadCard3C6(fid, iNANGLS);
           end
         end
@@ -10726,8 +10732,14 @@ classdef Mod5
           MC = MC.WriteCard3C2(fid);
           for iNANGLS = 1:MC.NANGLS
             MC = MC.WriteCard3C3(fid, iNANGLS);
+          end
+          for iNANGLS = 1:MC.NANGLS
             MC = MC.WriteCard3C4(fid, iNANGLS);
+          end
+          for iNANGLS = 1:MC.NANGLS
             MC = MC.WriteCard3C5(fid, iNANGLS);
+          end
+          for iNANGLS = 1:MC.NANGLS
             MC = MC.WriteCard3C6(fid, iNANGLS);
           end
         end
