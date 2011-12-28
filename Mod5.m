@@ -2898,7 +2898,7 @@ classdef Mod5
       end
       % Little bit of input checking
       assert(isstruct(Flt), 'Mod5:PlotFlt:FltNotStruct', ...
-        'Input Flt must be structure with fields FileHeader, UnitsHeader, Units, FilterHeader and Filters.');      
+        'Input Flt must be structure with fields FileHeader, UnitsHeader, Units, FilterHeaders and Filters.');      
       assert(isscalar(Flt),'Mod5:PlotFlt:MustBeScalar','Input Flt to PlotFlt must be scalar.');
       if ~all(isfield(Flt, {'FileHeader','UnitsHeader', 'Units', 'FilterHeaders', 'Filters'}))
         error('Mod5:PlotFlt:BadFlt', ...
@@ -2938,6 +2938,36 @@ classdef Mod5
       hold off;
       
     end % PlotFlt
+    function Mom = MomentFlt(Flt, nth)
+        % MomentFlt : Compute normalised moments of filter functions
+        %
+        % Usage :
+        %    Mom = Mod5.MomentFlt(Flt); % Compute first spectral moment
+        %    Mom = Mod5.MomentFlt(Flt, nth); % Compute nth spectral moment
+        %
+        % The first spectral moment is the best estimate of the central
+        % wavelength (or wavenumber) of the filter function Flt. The filter
+        % function must be read using the function Mod5.ReadFlt or created
+        % with Mod5.CreateFlt.
+        %
+        % Note that this is a normalised moment.
+      assert(isstruct(Flt) && all(isfield(Flt, {'UnitsHeader','Units','FilterHeaders','Filters'})), 'Mod5:MomentFlt:FltBadStruct', ...
+        'Input Flt must be structure with fields FileHeader, UnitsHeader, Units, FilterHeaders and Filters.');
+      assert(isscalar(Flt),'Mod5:MomentFlt:MustBeScalar','Input Flt to PlotFlt must be scalar.');
+      if exist('nth', 'var') && ~isempty(nth)
+          assert(isnumeric(nth), 'Mod5:MomentFlt:Badnth', 'Input nth to MomentFlt must be numeric.')
+      else
+          nth = 1;
+      end
+      Mom = zeros(numel(Flt.Filters, numel(nth)));
+      for iFlt = 1:numel(Flt.Filters)
+          for iMom = 1:numel(nth)
+              Mom(iFlt, iMom) = trapz(Flt.Filters{iFlt}(:,1), (Flt.Filters{iFlt}(:,1).^nth(iMom)) .* Flt.Filters{iFlt}(:,2)) ./ ...
+                                trapz(Flt.Filters{iFlt}(:,1), Flt.Filters{iFlt}(:,2));
+          end
+      end
+        
+    end % MomentFlt
     function [Data, Heads] = Read7(Filename)
       % Read7 : Read MODTRAN Tape 7 format outputs
       %
