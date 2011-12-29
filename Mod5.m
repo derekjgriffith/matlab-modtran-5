@@ -11077,12 +11077,22 @@ classdef Mod5
     function C = ReadCard3C1(C, fid)
       % (ANGF(I), I=1, NANGLS) (IF IPH=1 and NWLF > 0)
       % FORMAT (8(1X, F9.0))
-      Card = C.ReadSimpleCard(fid, [1 9 1 9 1 9 1 9 1 9 1 9 1 9 1 9], ...
-        {'*','f','*','f','*','f','*','f','*','f','*','f','*','f','*','f'}, '3C1');
-      for I = 1:C.NANGLS
-        C.ANGF(I) = Card{I};
+      nCards = ceil(C.NANGLS/8);
+      onLastCard = C.NANGLS - (nCards - 1)*8;
+      for iCard = 1:nCards
+          Card = C.ReadSimpleCard(fid, [1 9 1 9 1 9 1 9 1 9 1 9 1 9 1 9], ...
+              {'*','f','*','f','*','f','*','f','*','f','*','f','*','f','*','f'}, '3C1');
+          if iCard == nCards % Last card
+              for I = 1:onLastCard
+                  C.ANGF((iCard-1)*8 + I) = Card{I};
+              end
+              
+          else
+              for I = 1:8
+                  C.ANGF((iCard-1)*8 + I) = Card{I};
+              end
+          end
       end
-        
     end % ReadCard3C1
     function C = WriteCard3C1(C, fid)
         nCards = ceil(C.NANGLS/8);
@@ -11103,11 +11113,21 @@ classdef Mod5
     function C = ReadCard3C2(C, fid)
       % (WLF(J), J=1, NWLF) (If IPH=1 and NWLF > 0)
       % FORMAT (8(1X, F9.0))
-      Card = C.ReadSimpleCard(fid, [1 9 1 9 1 9 1 9 1 9 1 9 1 9 1 9], ...
-        {'*','f','*','f','*','f','*','f','*','f','*','f','*','f','*','f'}, '3C2');
-      for I = 1:C.NWLF
-        C.WLF(I) = Card{I};
-      end      
+      nCards = ceil(C.NWLF/8);
+      onLastCard = C.NWLF - (nCards - 1)*8;
+      for iCard = 1:nCards
+          Card = C.ReadSimpleCard(fid, [1 9 1 9 1 9 1 9 1 9 1 9 1 9 1 9], ...
+              {'*','f','*','f','*','f','*','f','*','f','*','f','*','f','*','f'}, '3C2');
+          if iCard == nCards
+              for I = 1:onLastCard
+                  C.WLF((iCard - 1)*8 + I) = Card{I};
+              end
+          else
+              for I = 1:8
+                  C.WLF((iCard - 1)*8 + I) = Card{I};
+              end
+          end
+      end
     end % ReadCard3C2
     function C = WriteCard3C2(C, fid)
         nCards = ceil(C.NWLF/8);
