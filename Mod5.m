@@ -7810,6 +7810,9 @@ classdef Mod5
         % ground to space. This is useful for confirmation of the aerosol
         % optical thickness as may be measured by a sunphotometer.
         %
+        % Note that the path is from ground to space and that the original
+        % value of H1 is overwritten.
+        %
         % MC is the input case for which the output spectral optical thicknesses are desired.
         % Generally a new output case will be created. The case name is the
         % same as that of the input case, but with '~OD' appended.
@@ -7823,7 +7826,7 @@ classdef Mod5
             MC(iCase).CaseName = [MC(iCase).CaseName '~OD'];
             MC(iCase).ITYPE = 3; % vertical path from ground to space
             MC(iCase).IEMSCT = 0;
-            MC(iCase).IMULT = 0; % No multiple scattering relevant to direct solar irradiance
+            MC(iCase).IMULT = 0; % No multiple scattering relevant to transmittance
             MC(iCase).DIS = 'f';
             % Remove anything to do with surface albedo
             MC(iCase).SURREF = '';
@@ -7832,9 +7835,11 @@ classdef Mod5
             MC(iCase).alb = [];
             
             % Make path geometry from ground to space
-            MC(iCase).H1 = MC(iCase).GNDALT;
+            MC(iCase).H1 = MC(iCase).GNDALT + 0.001; % 1 m above ground
             MC(iCase).H2 = 0;
             MC(iCase).ANGLE = 0;
+            MC(iCase).RANGE = 0;
+            MC(iCase).BETA = 0;
             MC(iCase).PHI = 0;
             % Clobber outputs
             MC(iCase).tp7 = [];
@@ -11081,9 +11086,10 @@ classdef Mod5
     end % ReadCard3C1
     function C = WriteCard3C1(C, fid)
         nCards = ceil(C.NANGLS/8);
+        onLastCard = C.NANGLS - (nCards - 1)*8;
         for iCard = 1:nCards
             if iCard == nCards % Last Card
-                for I = 1:mod(C.NANGLS,8)
+                for I = 1:onLastCard
                     Mod5.WriteSimpleCard('3C1',fid, ' %9.4f', C.ANGF((iCard-1)*8 + I));
                 end
             else
@@ -11105,9 +11111,10 @@ classdef Mod5
     end % ReadCard3C2
     function C = WriteCard3C2(C, fid)
         nCards = ceil(C.NWLF/8);
+        onLastCard = C.NWLF - (nCards - 1)*8;
         for iCard = 1:nCards
             if iCard == nCards % Last Card
-                for I = 1:mod(C.NWLF,8)
+                for I = 1:onLastCard
                     Mod5.WriteSimpleCard('3C2',fid, ' %9.3f', C.WLF((iCard-1)*8 + I));
                 end
             else
