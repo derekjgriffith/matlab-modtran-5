@@ -2887,7 +2887,7 @@ classdef Mod5
       % iFilters is a vector list of filter numbers to include in the plot
       % If iFilters is missing or empty, all filters are plotted.
       %
-      % If 8 or fewer filters are plotted, the filter descriptions are
+      % If 9 or fewer filters are plotted, the filter descriptions are
       % shown as legends.
       %
       % See Also: ReadFlt, WriteFlt, AttachFlt, ReadFltFromSensorML
@@ -2931,8 +2931,8 @@ classdef Mod5
           xlabel('Unknown')
       end
       ylabel('Filter Transmittance');
-      % If there are less than 6 filters plotted, include the filter description
-      if length(iFilters) < 9
+      % If there are less than 10 filters plotted, include the filter description
+      if length(iFilters) <= 9
         legend(Flt.FilterHeaders{iFilters}, 'Location', 'best')
       end
       hold off;

@@ -483,7 +483,7 @@ PtaMidSummer.RO = 0; % Radius of the earth in km at the path latitude. Will defa
 PtaMidSummer.LENN = 0; % Default short path - not extending through tangent height.
 PtaMidSummer.PHI = 0; % Not used in this case. (Zenith angle in degrees at H2.)
 % Card 3A1 : Solar/Lunar Scattering Geometry
-PtaMidSummer.IPARM = 12; % Will specify relative solar azimuth and zenith angle
+PtaMidSummer.IPARM = 2; % Will specify relative solar azimuth and zenith angle
 PtaMidSummer.IPH = 2; % Use internal Mie tables for phase functions 
 PtaMidSummer.IDAY = 360; % Mid summer in southern hemisphere
 PtaMidSummer.ISOURC = 0; % Sun
