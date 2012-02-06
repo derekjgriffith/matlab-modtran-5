@@ -3980,6 +3980,203 @@ classdef Mod5
         rethrow(pltFileReadFail);
       end
     end % ReadPlt
+    % Functions for working with BRDFs
+    function rho = BRDF(Model, P, ViewZenith, SourceZenith, RelAz)
+        % BRDF : Compute values for various BRDF models associated with MODTRAN
+        %
+        % Usage :
+        %
+        %  rho = Mod5.BRDF(Model, P, ViewZenith, SourceZenith, RelAz);
+        %
+        % Where :
+        %
+        %  Model is the BRDF model number or name. The following are currently supported.
+        %    '2' or 'walthall'
+        %    '4' or 'hapke'
+        %
+        % See the MODTRAN manual and the relevant original model descriptions for
+        %  further details.
+        %
+        %  P is a vector of (typically) 4 numerical parameters of the BRDF model.
+        %
+        %  ViewZenith is the zenith angle (degrees) of the sensor seen from the surface.
+        %
+        %  SourceZenith is the zenith angle (degrees) of the source (sun) seen from the surface.
+        %
+        %  RelAz is the view-to-source relative azimuth angle (degrees).
+        %
+        % If any of the above three angles are vectors, the angles are duplicated
+        %   using meshgrid for all other angles. Singleton dimensions are then
+        %   squeezed out. However, if ViewZenith and RelAz inputs are matrices
+        %   of the same size, then the meshgrid and squeeze steps are omitted.
+        %
+        % Example :
+        %   rho = Mod5.BRDF('walthall', [0.3 0.2 0.5 0.1], 0:5:25, 0:5:25, 0:10:360);
+        %
+        % See Also : PlotBRDF
+        %
+        
+        
+        rho = [];
+        
+        % Do some input checking
+        if isnumeric(Model)
+            Model = num2str(Model);
+        else
+            assert(ischar(Model), 'Mod5:BRDF:BadModel', 'Input Model must be an integer numeric or char array.');
+            Model = lower(Model);
+        end
+        
+        assert(isnumeric(P) && isvector(P), 'Mod5:BRDF:BadP', ...
+            'Input SourceZenith must be a numeric scalar or vector.');
+        
+        assert(isnumeric(ViewZenith), 'Mod5:BRDF:BadViewZenith', ...
+            'Input ViewZenith must be a numeric.');
+        assert(isnumeric(SourceZenith), 'Mod5:BRDF:BadSourceZenith', ...
+            'Input SourceZenith must be a numeric.');
+        assert(isnumeric(RelAz), 'Mod5:BRDF:BadRelAz', ...
+            'Input RelAz must be a numeric.');
+        
+        % Convert all angles to radians
+        ViewZenith = pi * ViewZenith / 180;
+        SourceZenith = pi * SourceZenith / 180;
+        RelAz = pi * RelAz / 180;
+        
+        if isvector(ViewZenith) && isvector(SourceZenith) && isvector(RelAz)
+            % meshgrid all the angles
+            [ViewZenith, SourceZenith, RelAz] = meshgrid(ViewZenith, SourceZenith, RelAz);
+            % Remove singleton dimensions
+            ViewZenith = squeeze(ViewZenith);
+            SourceZenith = squeeze(SourceZenith);
+            RelAz = squeeze(RelAz);
+        end
+        
+        switch lower(Model)
+            case {'2','walthall'}
+                rho = P(1) + P(2) .* ViewZenith .* SourceZenith .* cos(RelAz) + ...
+                    P(3) .* ViewZenith.^2 .* SourceZenith.^2 + ...
+                    P(4) .* (ViewZenith.^2 + SourceZenith.^2);
+            case {'4','hapke'}
+                cosphi = cos(ViewZenith) .* cos(SourceZenith) + sin(ViewZenith) .* sin(SourceZenith) .* cos(RelAz);
+                g = P(2);
+                P_HG = (1 - g.^2) ./ ((1 + g.^2 + 2 * g .* cosphi) .^ (3/2));
+                h = P(3);
+                B = (1-g).* (1 + sqrt((1+cosphi)./(1-cosphi)) ./ h) ./ (1+g).^2;
+                x = cos(ViewZenith);
+                H_v = (1 + 2*x)./(1 + 2*x*sqrt(1 - P(1)));
+                x = cos(SourceZenith);
+                H_s = (1 + 2*x)./(1 + 2*x*sqrt(1 - P(1)));
+                rho = P(1) * ((1 + P(4) ./ (P(1) * B)) .* P_HG + H_v .* H_s -1 ) ./ (4*cos(ViewZenith).*cos(SourceZenith));
+            case {'5', 'rahman'}
+                G = sqrt(tan(ViewZenith).^2 + tan(SourceZenith).^2 - 2*tan(ViewZenith) .* tan(SourceZenith) .* cos(RelAz));
+                cosphi = cos(ViewZenith) .* cos(SourceZenith) + sin(ViewZenith) .* sin(SourceZenith) .* cos(RelAz);                
+                g = P(2);
+                P_HG = (1 - g.^2) ./ ((1 + g.^2 + 2 * g .* cosphi) .^ (3/2));
+                k = P(3);
+                rho = P(1).*(cos(ViewZenith).*cos(SourceZenith).*(cos(ViewZenith)+cos(SourceZenith))).^(k-1).*P_HG.*(1+(1-P(1))./(1+G));
+            otherwise
+                error('Mod5:BRDF:BadModel','Model %s is unknown to this function.', Model);
+        end
+        
+        % Finally, replace any negative values of the BRDF with zero
+        rho(rho < 0) = 0;
+        
+  end % BRDF
+    function [h, rho] = PlotBRDF(Model, Parms, SourceAngles, SampleDensity, ZenithLimit)
+      % PlotBRDF : Plot a MODTRAN BRDF model for a number of source zenith angles
+      %
+      % A 3D (surf) plot is generated to represent the BRDF over all view
+      %   view angles (zenith angles and azimuth angles away from the plane
+      %   of illumination).
+      %
+      % One plot is generated for each source zenith angle.
+      %
+      %
+      % Usage :
+      %   h = PlotBRDF(Model, Parms, ZenithAngles)
+      %     Or
+      %   h = PlotBRDF(Model, Parms, ZenithAngles, SampleDensity, ZenithLimit)
+      %
+      %  Where Model is the MODTRAN BRDF model. See the MODTRAN manual and the
+      %   referenced sources for more details of the models and parameters.
+      %  Parms is a vector of input parameters for the BRDF model. See the
+      %   MODTRAN User's Manual for further details. A set of plots for each
+      %   row of the parameters is produced.
+      %  SourceAngles are the source zenith angles in degrees for which to
+      %   produce plots, one per source zenith angle. Zenith angle is measured
+      %   from the surface.
+      %
+      %  The optional input SampleDensity controls the number of points
+      %   used to create the plot. Higher sample density produces a more detailed
+      %   plot. The default is 20.
+      %  The optional input ZenithLimit, limits the plot to view zenith angles
+      %   less than ZenithLimit (degrees). The default value is 90 degrees.
+      %
+      %  The output h is a vector of plot handles produced by the function.
+      %
+      % See Also : Mod5.BRDF
+      %
+      % Examples :
+      %
+      %  [h, rho] = Mod5.PlotBRDF('hapke', [0.2 -.8 .3 .1], 35, 101,70);
+      
+      % Some input checking
+      assert(isnumeric(Parms), 'Mod5:PlotBRDF:BadParms','Input Parms must be numeric.');
+      assert(isnumeric(SourceAngles) && all(SourceAngles >=0) && all(SourceAngles <= 90), ...
+          'Mod5:PlotBRDF:BadSourceAngles', 'Input SourceAngles must be numeric, >=0 and <= 90 degrees.')
+      if ~exist('SampleDensity', 'var')
+          SampleDensity = 20;
+      end
+      assert(isscalar(SampleDensity) && isnumeric(SampleDensity) && all(SampleDensity == round(SampleDensity)), 'Mod5:PlotBRDF:BadSampleDensity', ...
+          'Input SampleDensity must be scalar, numeric, integer.');
+      
+      if exist('ZenithLimit', 'var')
+          assert(isscalar(ZenithLimit) && isnumeric(ZenithLimit) && ZenithLimit <= 90, 'Mod5:PlotBRDF:BadZenithLimit', ...
+              'Input ZenithLimit must be scalar and numeric and <= 90 degrees.');
+      else
+          ZenithLimit = 90;
+      end
+      h = [];
+      ih = 0;
+      
+      % Create the vectors to the points using the sphere function
+      [x,y,z] = sphere(SampleDensity);
+      % Drop the lower hemisphere
+      UpperHemi = round(SampleDensity/2) + 1;
+      x = x(UpperHemi:end,:);
+      y = y(UpperHemi:end,:);
+      z = z(UpperHemi:end,:);
+      
+      % Compute azimuths and elevations in degrees
+      ViewAzAng = atan2(y, x);
+      ViewAzAng = 180 * ViewAzAng ./ pi;
+      % Elevation angles
+      ViewElAng = atan2(z, sqrt(x.^2 + y.^2));
+      ViewElAng = 180 * ViewElAng ./ pi;
+      % Zenith angle
+      ViewZenAng = 90 - ViewElAng;
+      % Limit the ZenithAngles to ZenithLimit
+      [row,col] = find(ViewZenAng <= ZenithLimit);
+      row = unique(row);
+      col = unique(col);
+      x = x(row,col);
+      y = y(row,col);
+      z = z(row,col);
+      ViewAzAng = ViewAzAng(row,col);
+      ViewZenAng = ViewZenAng(row,col);
+      
+      for iParms = 1:size(Parms, 1)
+          for iSource = 1:numel(SourceAngles)
+              ih = ih + 1;
+              h(ih) = figure;
+              rho = Mod5.BRDF(Model, Parms, ViewZenAng, SourceAngles(iSource), ViewAzAng);
+              % Scale x, y and z according to rho
+              %surf(rho .* x, rho .* y, rho .* z, rho);
+              surf(x, y, z, rho);
+              colorbar;
+          end
+      end
+    end % PlotBRDF
   end % Public static Methods
   methods (Access = private, Static)
     function [start, stop] = DilateHeaders(start, stop, headlin)
