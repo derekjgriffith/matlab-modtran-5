@@ -3993,6 +3993,13 @@ classdef Mod5
         %  Model is the BRDF model number or name. The following are currently supported.
         %    '2' or 'walthall'
         %    '4' or 'hapke'
+        %    '5' or 'rahman' or 'rpv' (Rahman-Pinty-Verstraete model)
+        %    '6' or 'roujean'
+        %    '10' or 'pinty-verstraete'
+        %    '11' or 'sine-walthall'
+        %    '12' or 'ross-li' (This is the MODIS RossThick-LiSparse kernel
+        %                       BRDF)
+        %    
         %
         % See the MODTRAN manual and the relevant original model descriptions for
         %  further details.
@@ -4053,36 +4060,81 @@ classdef Mod5
         
         switch lower(Model)
             case {'2','walthall'}
+                assert(size(P,2) == 4, 'Mod5:BRDF:MissingParameters', 'Input P to Mod5.BRDF must have 4 columns for walthall model.');                
                 rho = P(1) + P(2) .* ViewZenith .* SourceZenith .* cos(RelAz) + ...
                     P(3) .* ViewZenith.^2 .* SourceZenith.^2 + ...
                     P(4) .* (ViewZenith.^2 + SourceZenith.^2);
             case {'4','hapke'}
-                cosphi = cos(ViewZenith) .* cos(SourceZenith) + sin(ViewZenith) .* sin(SourceZenith) .* cos(RelAz);
+                assert(size(P,2) == 4, 'Mod5:BRDF:MissingParameters', 'Input P to Mod5.BRDF must have 4 columns for hapke model.');                                
+                cosphi = Mod5.cosinephi(ViewZenith, SourceZenith, RelAz); 
                 g = P(2);
-                P_HG = (1 - g.^2) ./ ((1 + g.^2 + 2 * g .* cosphi) .^ (3/2));
+                P_HG = Mod5.Henyey_Greenstein(cosphi, g);
                 h = P(3);
                 B = (1-g).* (1 + sqrt((1+cosphi)./(1-cosphi)) ./ h) ./ (1+g).^2;
-                x = cos(ViewZenith);
-                H_v = (1 + 2*x)./(1 + 2*x*sqrt(1 - P(1)));
-                x = cos(SourceZenith);
-                H_s = (1 + 2*x)./(1 + 2*x*sqrt(1 - P(1)));
+                H_v = Mod5.bigH(cos(ViewZenith), P(1));
+                H_s = Mod5.bigH(cos(SourceZenith), P(1));
                 rho = P(1) * ((1 + P(4) ./ (P(1) * B)) .* P_HG + H_v .* H_s -1 ) ./ (4*cos(ViewZenith).*cos(SourceZenith));
-            case {'5', 'rahman'}
-                G = sqrt(tan(ViewZenith).^2 + tan(SourceZenith).^2 - 2*tan(ViewZenith) .* tan(SourceZenith) .* cos(RelAz));
-                cosphi = cos(ViewZenith) .* cos(SourceZenith) + sin(ViewZenith) .* sin(SourceZenith) .* cos(RelAz);                
+            case {'5', 'rahman', 'rpv'}
+                assert(size(P,2) == 3, 'Mod5:BRDF:MissingParameters', 'Input P to Mod5.BRDF must have 3 columns for rahman (RPV) model.');                
+                cosphi = Mod5.cosinephi(ViewZenith, SourceZenith, RelAz);                
                 g = P(2);
-                P_HG = (1 - g.^2) ./ ((1 + g.^2 + 2 * g .* cosphi) .^ (3/2));
+                P_HG = Mod5.Henyey_Greenstein(cosphi, g);
                 k = P(3);
-                rho = P(1).*(cos(ViewZenith).*cos(SourceZenith).*(cos(ViewZenith)+cos(SourceZenith))).^(k-1).*P_HG.*(1+(1-P(1))./(1+G));
+                rho = P(1).*(cos(ViewZenith).*cos(SourceZenith).*(cos(ViewZenith)+cos(SourceZenith))).^(k-1).*P_HG.* ...
+                            (1+(1-P(1))./(1+Mod5.bigG(ViewZenith,SourceZenith,RelAz)));
+            case {'6', 'roujean'}
+                assert(size(P,2) == 3, 'Mod5:BRDF:MissingParameters', 'Input P to Mod5.BRDF must have 3 columns for roujean model.');                
+                
+            case {'10', 'pinty-verstraete'}
+                cosphi = Mod5.cosinephi(ViewZenith, SourceZenith, RelAz);   
+                g = P(2);
+                P_HG = Mod5.Henyey_Greenstein(cosphi, g);
+            case {'11', 'sine-walthall'}
+                assert(size(P,2) == 4, 'Mod5:BRDF:MissingParameters', 'Input P to Mod5.BRDF must have 4 columns for sine-walthall model.');
+                P_1 = P(1);
+                P_2 = 9 * pi^2 * P(2)./64;
+                P_3 = (pi^2/4 - 1)^2*P(3);
+                P_4 = (pi^2/4 - 1)*P(4);
+                rho = P_1 + P_2 .* sin(ViewZenith).*sin(SourceZenith).*cos(RelAz) + ...
+                      P_3 * sin(ViewZenith).^2 .* sin(SourceZenith).^2 + ...
+                      P_4 * (sin(ViewZenith).^2 + sin(SourceZenith).^2);
+            case {'12', 'ross-li'}
+                
+                rho = P(1) + P(2) * K_LSR + P(3) * K_RT;
+                    
             otherwise
-                error('Mod5:BRDF:BadModel','Model %s is unknown to this function.', Model);
+                error('Mod5:BRDF:UnknownModel','Model %s is unknown to this function.', Model);
         end
         
         % Finally, replace any negative values of the BRDF with zero
         rho(rho < 0) = 0;
-        
   end % BRDF
-    function [h, rho] = PlotBRDF(Model, Parms, SourceAngles, SampleDensity, ZenithLimit)
+  function Result = Henyey_Greenstein(cosphi, g)
+      % Henyey-Greenstein Phase Function
+      Result = (1 - g.^2) ./ ((1 + g.^2 + 2 * g .* cosphi) .^ (3/2));
+  end % P_HG
+  function Result = bigG(ViewZen, SourceZen, RelAz)
+      Result = sqrt(tan(ViewZen).^2 + tan(SourceZen).^2 - 2*tan(ViewZen) .* tan(SourceZen) .* cos(RelAz));
+  end % bigG
+  function Result = cosinephi(ViewZen, SourceZen, RelAz)
+      Result = cos(ViewZen) .* cos(SourceZen) + sin(ViewZen) .* sin(SourceZen) .* cos(RelAz);
+  end % cosphi
+  function Result = bigH(x, omega)
+      Result = (1 + 2*x)./(1 + 2*x*sqrt(1 - omega));
+  end % bigH
+  function Result = K_RossThick(ViewZen, SourceZen, RelAz)
+      % RossThick Kernel
+      cosphi = Mod5.cosinephi(ViewZen, SourceZen, RelAz);
+      sinphi = Mod5.sinephi(ViewZen, SourceZen, RelAz); % missing
+      phi = atan2(sinphi, cosphi);
+      Result = ((pi/2 - phi).*cosphi + sinphi)./(cos(ViewZen)+cos(SourceZen)) - pi/4;
+  end % K_RossThick
+  function Result = kappa(xsi, ZenAng)
+      bigPsi = (1.2666 + 0.66.*xsi).*xsi;
+      Result = 1 - bigPsi + 1.754 * bigPsi .* cos(ZenAng);
+  end % kappa
+
+    function [h, rho] = PlotBRDF(Model, Parms, SourceAngles, SampleDensity, ZenithLimit, varargin)
       % PlotBRDF : Plot a MODTRAN BRDF model for a number of source zenith angles
       %
       % A 3D (surf) plot is generated to represent the BRDF over all view
@@ -4099,6 +4151,15 @@ classdef Mod5
       %
       %  Where Model is the MODTRAN BRDF model. See the MODTRAN manual and the
       %   referenced sources for more details of the models and parameters.
+      %   The following models are available :
+      %    '2' or 'walthall'
+      %    '4' or 'hapke'
+      %    '5' or 'rahman' or 'rpv' (Rahman-Pinty-Verstraete model)
+      %    '6' or 'roujean'
+      %    '10' or 'pinty-verstraete'
+      %    '11' or 'sine-walthall'
+      %    '12' or 'ross-li' (This is the MODIS RossThick-LiSparse kernel
+      %                       BRDF)
       %  Parms is a vector of input parameters for the BRDF model. See the
       %   MODTRAN User's Manual for further details. A set of plots for each
       %   row of the parameters is produced.
@@ -4112,6 +4173,11 @@ classdef Mod5
       %  The optional input ZenithLimit, limits the plot to view zenith angles
       %   less than ZenithLimit (degrees). The default value is 90 degrees.
       %
+      % If any additional parameters are passed after ZenithLimit, these
+      % parameters are passed verbatim as additional parameters to the surf
+      % function used to plot the BRDF. For example, if a plot without the
+      % grid lines is desired, add parameters 'EdgeColor', 'flat'.
+      %
       %  The output h is a vector of plot handles produced by the function.
       %
       % See Also : Mod5.BRDF
@@ -4119,18 +4185,26 @@ classdef Mod5
       % Examples :
       %
       %  [h, rho] = Mod5.PlotBRDF('hapke', [0.2 -.8 .3 .1], 35, 101,70);
+      %  [h, rho] = Mod5.PlotBRDF('rahman', [0.718 0.101 0.954], 45, 101,70, ...
+      %  'EdgeColor', 'flat'); % Fagus sylvatica L. leaves at 850 nm
+      %
+      % The second example plots the Rahman-Pinty-Verstraete BRDF model
+      % with parameters for Fagus sylvatica L. leaves at 850 nm as
+      % published by Biliouris et. al. in Remote Sensing (open acess).
+      % http://www.mdpi.com/2072-4292/1/2/92/pdf
+      %
       
       % Some input checking
       assert(isnumeric(Parms), 'Mod5:PlotBRDF:BadParms','Input Parms must be numeric.');
       assert(isnumeric(SourceAngles) && all(SourceAngles >=0) && all(SourceAngles <= 90), ...
           'Mod5:PlotBRDF:BadSourceAngles', 'Input SourceAngles must be numeric, >=0 and <= 90 degrees.')
-      if ~exist('SampleDensity', 'var')
+      if ~exist('SampleDensity', 'var') || isempty(SampleDensity)
           SampleDensity = 20;
       end
       assert(isscalar(SampleDensity) && isnumeric(SampleDensity) && all(SampleDensity == round(SampleDensity)), 'Mod5:PlotBRDF:BadSampleDensity', ...
           'Input SampleDensity must be scalar, numeric, integer.');
       
-      if exist('ZenithLimit', 'var')
+      if exist('ZenithLimit', 'var') && ~isempty(ZenithLimit)
           assert(isscalar(ZenithLimit) && isnumeric(ZenithLimit) && ZenithLimit <= 90, 'Mod5:PlotBRDF:BadZenithLimit', ...
               'Input ZenithLimit must be scalar and numeric and <= 90 degrees.');
       else
@@ -4171,8 +4245,8 @@ classdef Mod5
               h(ih) = figure;
               rho = Mod5.BRDF(Model, Parms, ViewZenAng, SourceAngles(iSource), ViewAzAng);
               % Scale x, y and z according to rho
-              %surf(rho .* x, rho .* y, rho .* z, rho);
-              surf(x, y, z, rho);
+              % surf(rho .* x, rho .* y, rho .* z, rho, varargin{:});
+              surf(x, y, z, rho, varargin{:});
               colorbar;
           end
       end
