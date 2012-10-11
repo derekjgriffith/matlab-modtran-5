@@ -396,11 +396,11 @@ classdef Mod5
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2011, DPSS, CSIR $Author$
+  % Copyright 2009-2011, DPSS, CSIR $Author: Derek Griffith <dgriffith@csir.co.za> $
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
-  % $Id$
+  % $Id: Mod5.m,v bb271460905a 2012/04/19 13:27:01 dgriffith $
   properties (GetAccess = public, SetAccess = private)
     CaseName = 'Matlab'; % The name of the super-case, must be the same across all sub-cases    
     CaseIndex = 1; % This is the sub-case index. Must run from 1 to numel(Mod5Instance).    
@@ -641,7 +641,7 @@ classdef Mod5
     acd = [];     % Atmospheric correction data.
   end
   properties (Constant)
-    Rev = '$RevisionNode$';         % The revision node of the class
+    Rev = '$RevisionNode: bb271460905a $';         % The revision node of the class
     MODTRANExe = 'Mod5.2.0.0_cons.exe'; % This is the version of MODTRAN used by this class
   end
   properties (Hidden)
@@ -795,19 +795,25 @@ classdef Mod5
         return;
       end
     else
-      assert(ischar(MODTRANExe), 'Input MODTRANExe must be a string.')
+      assert(ischar(MODTRANExe), 'Mod5:SetMODTRANExe:BadMODTRANExe', 'Input MODTRANExe must be a string.');
+      [MODTRANPath, MODTRANExe, extension] = fileparts(MODTRANExe);
+      MODTRANPath = [MODTRANPath filesep];
+      if ~isempty(extension)
+          MODTRANExe = [MODTRANExe extension];
+      end
     end
     
     if ~strcmpi(MODTRANExe, ExpectedMODTRAN)
       warning('SetMODTRANEExe:MODTRANVers', ['This class currently supports ' ExpectedMODTRAN ' and may not work with other versions.']);
     end
+    
     MODTRANExe = [MODTRANPath MODTRANExe];
     if ~exist(MODTRANExe, 'file')
       error('MODTRANExe must be an existing MODTRAN executable file.')
     end
     Direc = fileparts(which('Mod5.m'));
     % Save the root directory to a file for later use by other Mod5 functions
-    save([Direc '\MODTRANExe.mat'], 'MODTRANPath', 'MODTRANExe');   
+    save([Direc filesep 'MODTRANExe.mat'], 'MODTRANPath', 'MODTRANExe');   
     
     end % function SetMODTRANExe
     function CasePath = SetCasePath(CaseDirectory)
@@ -833,7 +839,7 @@ classdef Mod5
     CasePath = CaseDirectory; % it exists !
     % Save the root directory to a file for later use by other Mod5 functions
     Direc = fileparts(which('Mod5.m'));
-    save([Direc '\Mod5Dir.mat'], 'CaseDirectory');   
+    save([Direc filesep 'Mod5Dir.mat'], 'CaseDirectory');   
       
     end % SetCasePath
     function [MODExe, MODPath] = WhereIsMODTRAN
@@ -852,7 +858,7 @@ classdef Mod5
       MODExe = 'Unknown';
       MODPath = 'Unknown';
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) filesep 'MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
@@ -867,6 +873,9 @@ classdef Mod5
           fprintf(1, 'Set the location of the executable using Mod5.SetMODTRANExe.\n');
           % [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
+      else
+          MODPath = MODTRANPath;
+          MODExe = MODTRANExe;
       end
       
     end % function WhereIsMODTRAN
@@ -1130,8 +1139,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
         % Use dialog
@@ -2126,8 +2135,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
           % Use dialog
@@ -2232,8 +2241,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
         % Use dialog
@@ -2572,8 +2581,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
         % Use dialog
@@ -2802,8 +2811,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
           % Use dialog
@@ -3034,8 +3043,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
         % Use dialog
@@ -3267,8 +3276,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
         % Use dialog
@@ -3697,8 +3706,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
         % Use dialog
@@ -3808,8 +3817,8 @@ classdef Mod5
         MODTRANPath = '';
         % Check for default case directory
         Direc = fileparts(which('Mod5.m'));
-        if exist([Direc '\MODTRANExe.mat'], 'file');
-          load([Direc '\MODTRANExe.mat']);
+        if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+          load([Direc filesep 'MODTRANExe.mat']);
         end
         
         % Use dialog
@@ -4987,8 +4996,8 @@ classdef Mod5
           CaseDirectory = '';
           % Check for default case directory
           Direc = fileparts(which('Mod5.m'));
-          if exist([Direc '\Mod5Dir.mat'], 'file');
-            load([Direc '\Mod5Dir.mat']);
+          if exist([Direc filesep 'Mod5Dir.mat'], 'file');
+            load([Direc filesep 'Mod5Dir.mat']);
           end
           
           % Use dialog
@@ -5214,8 +5223,8 @@ classdef Mod5
           MODTRANPath = '';
           % Check for default case directory
           Direc = fileparts(which('Mod5.m'));
-          if exist([Direc '\MODTRANExe.mat'], 'file');
-            load([Direc '\MODTRANExe.mat']);
+          if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+            load([Direc filesep 'MODTRANExe.mat']);
           end
         
           % Use dialog
@@ -5448,8 +5457,8 @@ classdef Mod5
           MODTRANPath = '';
           % Check for default case directory
           Direc = fileparts(which('Mod5.m'));
-          if exist([Direc '\MODTRANExe.mat'], 'file');
-            load([Direc '\MODTRANExe.mat']);
+          if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+            load([Direc filesep 'MODTRANExe.mat']);
           end
         
           % Use dialog
@@ -5720,8 +5729,8 @@ classdef Mod5
           MODTRANPath = '';
           % Check for default case directory
           Direc = fileparts(which('Mod5.m'));
-          if exist([Direc '\MODTRANExe.mat'], 'file');
-            load([Direc '\MODTRANExe.mat']);
+          if exist([Direc filesep 'MODTRANExe.mat'], 'file');
+            load([Direc filesep 'MODTRANExe.mat']);
           end
         
           % Use dialog
@@ -5876,7 +5885,7 @@ classdef Mod5
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) filesep 'MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
@@ -6259,8 +6268,8 @@ classdef Mod5
       else
         if isempty(CaseDirectory)
           Direc = fileparts(which('Mod5.m'));
-          if exist([Direc '\Mod5Dir.mat'], 'file');
-            load([Direc '\Mod5Dir.mat']);
+          if exist([Direc filesep 'Mod5Dir.mat'], 'file');
+            load([Direc filesep 'Mod5Dir.mat']);
             Directory = CaseDirectory;
           else
             Directory = pwd; % Use working directory
@@ -6272,7 +6281,7 @@ classdef Mod5
       % OK, should have a directory after all that
       % Obtain the MODTRAN executable directory
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) filesep 'MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
@@ -6285,15 +6294,15 @@ classdef Mod5
       
       % Try to move the files to the directory
       try
-        Filespec = [MODTRANPath '\' MC(1).CaseName '.*'];
+        Filespec = [MODTRANPath filesep MC(1).CaseName '.*'];
         if ~isempty(dir(Filespec))
           movefile(Filespec, Directory, 'f');
         end
-        Filespec = [MODTRANPath '\' MC(1).CaseName '(*).*'];
+        Filespec = [MODTRANPath filesep MC(1).CaseName '(*).*'];
         if ~isempty(dir(Filespec))
           movefile(Filespec, Directory, 'f');
         end
-        save([Directory '\' MC(1).CaseName '.mat'], 'MC');
+        save([Directory filesep MC(1).CaseName '.mat'], 'MC');
         Success = 1;
       catch MoveFailed
         warning('Mod5:Save:SaveFailed','Saving of files for case %s seems to have failed.', MC(1).CaseName);
@@ -6318,7 +6327,7 @@ classdef Mod5
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) filesep 'MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
@@ -8489,7 +8498,7 @@ classdef Mod5
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) filesep 'MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
@@ -8585,7 +8594,7 @@ classdef Mod5
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) filesep 'MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists
@@ -8629,7 +8638,7 @@ classdef Mod5
           end
         else
           % Check existence of the file
-          FullFilespec = strtrim([MODTRANPath 'DATA\' strtrim(newBMNAME) '*.*']);
+          FullFilespec = strtrim([MODTRANPath 'DATA/' strtrim(newBMNAME) '*.*']);
           if isempty(dir(FullFilespec))
             warning('Mod5:setBMNAME:FileNotExist', ...
               'The binary band model file (parameter BMNAME) %s was not found. Check this before running MODTRAN.', FullFilespec);
@@ -8646,7 +8655,7 @@ classdef Mod5
       persistent MODTRANPath MODTRANExe
       %% Deal with location of the MODTRAN executable
       if isempty(MODTRANExe)
-        MODTRANExeFile = [fileparts(which('Mod5.m')) '\MODTRANExe.mat'];
+        MODTRANExeFile = [fileparts(which('Mod5.m')) filesep 'MODTRANExe.mat'];
         if exist(MODTRANExeFile, 'file')
           load(MODTRANExeFile);
           if ~exist(MODTRANExe, 'file') % Check that the MODTRAN executable exists

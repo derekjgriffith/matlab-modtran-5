@@ -1,6 +1,6 @@
 % Mod5 MODTRAN 5 Case Examples
-% $Id$
-% Copyright 2010, $Author$
+% $Id: Mod5Examples.m,v 1c10b1fe8e32 2011/12/30 11:23:48 dgriffith $
+% Copyright 2010, $Author: Derek Griffith <dgriffith@csir.co.za> $
 %
 % Each cell in this script contains a single example. Run examples
 % individually by clicking somewhere in the cell and then clicking on the
@@ -17,7 +17,7 @@ clear classes
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % Load the case
-Ex1 = Mod5([MCDir '\Ex1.ltn']);
+Ex1 = Mod5([MCDir filesep 'Ex1.ltn']);
 Ex1.CaseDescr = '5 km Horizontal Path at Sea Level';
 % Run the case
 Ex1 = Ex1.Run;
@@ -271,7 +271,7 @@ clear classes
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % Load the case
-Ex4 = Mod5([MCDir '\Ex4.tp5']);
+Ex4 = Mod5([MCDir filesep 'Ex4.tp5']);
 % Plot all user-defined atmospheric data for this case
 Ex4.PlotAtm('all');
 
@@ -299,7 +299,7 @@ clear classes
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % Load the case
-Ex5 = Mod5([MCDir '\CaseUSS.ltn']);
+Ex5 = Mod5([MCDir filesep 'CaseUSS.ltn']);
 % Run the case
 Ex5 = Ex5.Run;
 % Plot transmittance
@@ -332,7 +332,7 @@ Sat2 = Sat2.Set('DIS', 'f', 'DISAZM', 'f', 'DISALB', ' ', 'NSTR', 2, 'SFWHM', 0,
               
 % Deal with MERIS camera band filters
 % Read the filters from the SensorML description of MERIS
-Sat2Flt = Mod5.ReadFltFromSensorML([MCDir '\CalVal_ENVISAT_MERIS_v01.xml']);
+Sat2Flt = Mod5.ReadFltFromSensorML([MCDir filesep 'CalVal_ENVISAT_MERIS_v01.xml']);
 % Only want the first 15 filters for camera 1
 Sat2Flt.FilterHeaders = Sat2Flt.FilterHeaders(1:15);
 % Display the channel descriptions
@@ -384,13 +384,13 @@ Sat2.NSURF = 1; % See MODTRAN manual for explanation
 Sat2.AATEMP = 0; % Not used
 
 % Read open ocean albedo from USGS splib06a
-OceanAlb = Mod5.ReadAlbFromUSGS([MCDir '\seawater_open_ocean_sw2.27262.asc']);
+OceanAlb = Mod5.ReadAlbFromUSGS([MCDir filesep 'seawater_open_ocean_sw2.27262.asc']);
 % Reduce the ocean albedo curve to 30 points in the 0.4 micron to 1 micron spectral region
 OceanAlbSparse = Mod5.InterpAlb(OceanAlb, [0.4 1], 30);
 % Plot original and sparse data
 Mod5.PlotAlb([OceanAlb; OceanAlbSparse], [0.4 1 0 0.05]);
 % Read a tree leaf reflectance from ASD data
-TreeAlb = Mod5.ReadAlbFromASD([MCDir '\tree100001.asd.ref.txt']);
+TreeAlb = Mod5.ReadAlbFromASD([MCDir filesep 'tree100001.asd.ref.txt']);
 % Reduce tree albedo to 49 points
 TreeAlbSparse = Mod5.InterpAlb(TreeAlb, [0.4 1], 49);
 % Plot tree albedo to see any difference in reduced set
