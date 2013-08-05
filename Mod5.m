@@ -5144,7 +5144,7 @@ classdef Mod5
         
         if any(MC(iCase).ICLD == 1:10)
             if MC(iCase).NCRSPC >= 2
-                for iNCRSPC = MC(iCase).NCRSPC % Read Card 2E2 NCRSPC times
+                for iNCRSPC = 1:MC(iCase).NCRSPC % Read Card 2E2 NCRSPC times
                     MC(iCase) = MC(iCase).ReadCard2E2(fid, iNCRSPC);
                 end
             elseif MC(iCase).NCRSPC == 1
@@ -5380,7 +5380,7 @@ classdef Mod5
         
         if any(MC(iCase).ICLD == 1:10)
             if MC(iCase).NCRSPC >= 2
-                for iNCRSPC = MC(iCase).NCRSPC % Write Card 2E2 NCRSPC times
+                for iNCRSPC = 1:MC(iCase).NCRSPC % Write Card 2E2 NCRSPC times
                     MC(iCase) = MC(iCase).WriteCard2E2(fid, iNCRSPC);
                 end
             elseif MC(iCase).NCRSPC == 1
@@ -5635,7 +5635,7 @@ classdef Mod5
         
         if any(MC(iCase).ICLD == 1:10)
             if MC(iCase).NCRSPC >= 2
-                for iNCRSPC = MC(iCase).NCRSPC % Describe Card 2E2 NCRSPC times
+                for iNCRSPC = 1:MC(iCase).NCRSPC % Describe Card 2E2 NCRSPC times
                     %MC(iCase) = MC(iCase).DescribeCard2E2(fid, iNCRSPC, OFormat);
                 end
             elseif MC(iCase).NCRSPC == 1
