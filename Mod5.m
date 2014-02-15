@@ -396,11 +396,11 @@ classdef Mod5
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2011, DPSS, CSIR $Author: Derek Griffith <dgriffith@csir.co.za> $
+  % Copyright 2009-2011, DPSS, CSIR $Author$
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
-  % $Id: Mod5.m,v bb271460905a 2012/04/19 13:27:01 dgriffith $
+  % $Id$
   properties (GetAccess = public, SetAccess = private)
     CaseName = 'Matlab'; % The name of the super-case, must be the same across all sub-cases    
     CaseIndex = 1; % This is the sub-case index. Must run from 1 to numel(Mod5Instance).    
@@ -2319,7 +2319,7 @@ classdef Mod5
       
     end % ReadFlt
     function Flt = CreateFlt(Name, FilterDescr, Centre, FWHM, ...
-                        Shape, nSamples, EdgeVal, FlatTopWidth, PeakTrans)
+                        Shape, nSamples, EdgeVal, FlatTopWidth, PeakTrans, WvLimits)
       % CreateFlt : Create a spectral band (channel) filter or filter set
       %
       % CreateFlt is used to generate MODTRAN band (channel) filters for
@@ -2327,7 +2327,7 @@ classdef Mod5
       %
       % Usage :
       %   Flt = Mod5.CreateFlt(Name, FilterDescr, Centre, FWHM, ...
-      %              Shape, nSamples, EdgeVal, FlatTopWidth, PeakTrans)
+      %              Shape, nSamples, EdgeVal, FlatTopWidth, PeakTrans, WvLimits)
       %
       % This function can generate a set of filters having different shapes
       % widths and centre wavelengths. The resulting filter structure can
@@ -2388,6 +2388,11 @@ classdef Mod5
       %     This input must be scalar or have the same number of elements
       %     as the Centre input. If scalar, the same PeakTrans value
       %     is applied to all filters in the set.
+      %
+      %  WvLimits, an optional input which extends the spectral coverage
+      %    of the filter at EdgeVal to the upper and lower extremes given
+      %    in WvLimits. Must be a two element numeric vector of wavelengths,
+      %    which span the wavelength limits for all filters.
       %
       % The returned structure contains the following fields:
       %
@@ -2496,6 +2501,10 @@ classdef Mod5
       if numel(PeakTrans) ~= nFilters
         PeakTrans = repmat(PeakTrans, 1, nFilters);
       end
+      if exist('WvLimits', 'var') && ~isempty(WvLimits)
+          assert(isnumeric(WvLimits) && numel(WvLimits) == 2 && all(WvLimits) > 0, ...
+              'Mod5:CreateFlt:BadWvLimits','Input WvLimits must be 2-element vector of wavelengths (positive).');
+      end
       %% Compute the filters one by one, using srf_generate
       % First put in the file header (Name) and Units
       Flt.FileHeader = Name;
@@ -2510,7 +2519,7 @@ classdef Mod5
       end
       for iFilter = 1:nFilters
         Flt.FilterHeaders{iFilter} = FilterDescr{iFilter};
-        
+        % Note srf_generate only produces valid wavenumbers for input units of nm
         [FilterX, FilterY, FilterW] = Mod5.srf_generate(Centre(iFilter), FWHM(iFilter), Shape{iFilter}, ...
                                                                nSamples(iFilter), EdgeVal(iFilter));
         % Scale to PeakTrans
@@ -2522,9 +2531,19 @@ classdef Mod5
           iUpperHalf = FilterX >= Centre(iFilter);
           FilterX = [FilterX(iLowerHalf) - FlatTopWidth(iFilter)/2; FilterX(iUpperHalf) + FlatTopWidth(iFilter)/2];
           FilterY = [FilterY(iLowerHalf); FilterY(iUpperHalf)];
-          FilterW = 1e7 ./ FilterX;
+          FilterW = 1e7 ./ FilterX; % Needs review, not valid for all units ?
         end
-        Flt.Filters{iFilter} = [FilterX FilterY FilterW];
+        % Finally, if wavelength limits were provided fix the transmission at edgeval
+        if exist('WvLimits', 'var')
+            if WvLimits(1) < min(FilterX) && WvLimits(2) > max(FilterX)
+                FilterX = [WvLimits(1); FilterX; WvLimits(2)];
+                FilterY = [EdgeVal(iFilter); FilterY; EdgeVal(iFilter)];
+                FilterW = 1e7 ./ FilterX; % Requires review - not valid for all units ?
+            else
+                error('Mod5:CreateFlt:BadWvLimits','Input WvLimits does not span all filter passbands.')
+            end
+        end
+        Flt.Filters{iFilter} = [FilterX FilterY FilterW];        
       end
     end % CreateFlt
     function Flt = ReadFltFromSensorML(Filename)
@@ -2699,7 +2718,7 @@ classdef Mod5
       if nargin < 5 yedge = 0.001;   end
       if nargin < 4     n = 65;      end
       if nargin < 3 shape = 'gauss'; end
-      if nargin < 2 error('Give at least band center and fwhm.'); end
+      if nargin < 2 error('Mod5:srf_generate:MissingInputs', 'Give at least band center and fwhm.'); end
       
       if n < 3 error('Need at least 3 samples'); end
       
@@ -2739,7 +2758,7 @@ classdef Mod5
       end
       
       delta = fwhm / nfwhm;			% determine sample delta
-      
+      y(y<yedge) = yedge; % Suppress values dropping below the yedge value
       wl = (ones(n, 1) .* center) + (delta .* x);	% wavelengths (nm)
       wn = 1e7 ./ wl;				% wavenumbers (cm^-1)
     end % srf_generate
@@ -2883,7 +2902,7 @@ classdef Mod5
         rethrow(WriteFltFailed);
       end
     end % WriteFlt
-    function plothandle = PlotFlt(Flt, iFilters)
+    function plothandle = PlotFlt(Flt, iFilters, LogFlag)
       % PlotFlt : Plot one or more filters in the filter structure
       %
       % Usage:
@@ -2911,9 +2930,9 @@ classdef Mod5
       assert(isscalar(Flt),'Mod5:PlotFlt:MustBeScalar','Input Flt to PlotFlt must be scalar.');
       if ~all(isfield(Flt, {'FileHeader','UnitsHeader', 'Units', 'FilterHeaders', 'Filters'}))
         error('Mod5:PlotFlt:BadFlt', ...
-          'The Flt structure input does not have all the correct fields. ')
+          'The Flt structure input does not have all the correct fields. ');
       end
-      if ~exist('iFilters', 'var')
+      if ~exist('iFilters', 'var') || isempty(iFilters)
         iFilters = 1:length(Flt.Filters);
       else
         assert(isnumeric(iFilters) && isvector(iFilters) && all(round(iFilters) == iFilters) && ...
@@ -2922,12 +2941,16 @@ classdef Mod5
       end
       % There will only be a single figure
       plothandle = figure();
-      hold all;
       for iFilt = iFilters
-        plot(Flt.Filters{iFilt}(:,1), Flt.Filters{iFilt}(:,2));
+          if exist('LogFlag', 'var') && LogFlag
+            semilogy(Flt.Filters{iFilt}(:,1), Flt.Filters{iFilt}(:,2));
+          else
+            plot(Flt.Filters{iFilt}(:,1), Flt.Filters{iFilt}(:,2));
+          end
+          hold all;
       end
       grid;
-      title(Flt.FileHeader);
+      title(Flt.FileHeader(3:end));
       switch Flt.UnitsHeader
         case 'W'
           xlabel('Wavenumber (cm^{-1})');
@@ -2940,13 +2963,49 @@ classdef Mod5
           xlabel('Unknown')
       end
       ylabel('Filter Transmittance');
-      % If there are less than 10 filters plotted, include the filter description
-      if length(iFilters) <= 9
-        legend(Flt.FilterHeaders{iFilters}, 'Location', 'best')
+      % If there are less than 11 filters plotted, include the filter description
+      if length(iFilters) <= 10
+          theLegends = Flt.FilterHeaders(iFilters);
+          % Abbreviate the legends if too long
+          for iLeg = 1:numel(theLegends)
+              if length(theLegends{iLeg}) > 10
+                  theLegends{iLeg} = strtok(theLegends{iLeg});
+              end
+          end
+          legend(theLegends, 'Location', 'best');
       end
       hold off;
       
     end % PlotFlt
+    function mFlt = MergeFlt(NewName, FltCell)
+        % MergeFlt : Merge a number of Flt definitions into one
+        %
+        %
+        % Usage :
+        %   >> mFlt = MergeFlt(NewName, FltCell);
+        %
+        % NewName is a new name for the merged set of filters. 
+        % Units must be consistent across the FltCell input, which must
+        % be a cell array of Flt structures, created with CreateFlt, or read 
+        % with ReadFlt.
+        assert(ischar(NewName), 'Mod5:MergeFlt:BadName', 'Input NewName must be char.');
+        assert(iscell(FltCell), 'Mod5.MergeFlt:BadFltCell', 'Input FltCell must be a cell array of Flt structures (see CreateFlt and ReadFlt).');
+        mFlt = FltCell{1};
+        for iFlt = 2:numel(FltCell)
+            mFlt.FilterHeaders = [mFlt.FilterHeaders FltCell{iFlt}.FilterHeaders];
+            mFlt.Filters = [mFlt.Filters FltCell{iFlt}.Filters];
+            if ~strcmpi(FltCell{iFlt}.UnitsHeader, FltCell{1}.UnitsHeader) || ~strcmpi(FltCell{iFlt}.Units, FltCell{1}.Units)
+               error('Mod5:MergFlt:UnitMismatch','Wavelength units for all filters must be the same.');
+            end
+        end
+        % Finally add the new name
+        if any(strncmpi(NewName, {'N ','M ','W '}, 2))
+            % Seems ok
+        else
+            NewName = [mFlt.UnitsHeader ' ' NewName]; % Prepend the units header
+        end
+        mFlt.FileHeader = NewName;
+    end % MergeFlt
     function Mom = MomentFlt(Flt, nth)
         % MomentFlt : Compute normalised moments of filter functions
         %
@@ -6899,7 +6958,7 @@ classdef Mod5
             end
         end
     end % PlotIrradImg    
-    function MC = AttachFlt(MC, Flt, iSubCases)
+    function MC = AttachFlt(MC, Flt, iSubCases, HeadTrunc)
       % AttachFlt : Attach a filter to a Mod5
       %
       % Usage:
@@ -6963,13 +7022,22 @@ classdef Mod5
         error('Mod5:AttachFlt:BadFlt', ...
           'The Flt structure input does not have all the correct fields - FileHeader, UnitsHeader, Units, FilterHeader and Filters. ')
       end
-      if exist('iSubCases', 'var')
+      if exist('iSubCases', 'var') && ~isempty(iSubCases)
         assert(isnumeric(iSubCases) && all(iSubCases >= 1) && all(iSubCases <= numel(MC)),'Mod5:AttachFlt:BadiSubCases', ...
           'Input iSubCases must be a numeric vector of integer indices, all less than or equal to the number of sub-cases in MC.');
       else
         iSubCases = 1:numel(MC);
       end
       % There is no validation besides this for now
+      % If the HeadTruncFlag is set, truncate the headers to the first token
+      if exist('HeadTrunc', 'var') && HeadTrunc
+          for iFlt = 1:numel(Flt.FilterHeaders)
+              FltHeader = Flt.FilterHeaders{iFlt};
+              FltHeader = strsplit(FltHeader, ' ');
+              FltHeader = strjoin(FltHeader(1:min(HeadTrunc, numel(FltHeader))), ' ');
+              Flt.FilterHeaders{iFlt} = [FltHeader ' ...'];
+          end
+      end
       % Attach the filter to the first case listed in iSubCases
       MC(iSubCases(1)).flt = Flt;
       for iCase = iSubCases
