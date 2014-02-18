@@ -2542,6 +2542,9 @@ classdef Mod5
             else
                 error('Mod5:CreateFlt:BadWvLimits','Input WvLimits does not span all filter passbands.')
             end
+        else % Clobber the extreme values to zero - be careful about what this may do
+            FilterY(1) = 0;
+            FilterY(end) = 0;
         end
         Flt.Filters{iFilter} = [FilterX FilterY FilterW];        
       end
