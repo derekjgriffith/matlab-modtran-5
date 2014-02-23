@@ -1125,7 +1125,7 @@ classdef Mod5
       %  Spectral data is entered with one wavelength (in microns)
       %  and one spectral albedo per line, separated by one or more
       %  blanks.  The spectral wavelengths for each surface type must
-      %  be entered in increasing order, and be spectral albedos
+      %  be entered in increasing order, and spectral albedos
       %  should be between 0. and 1., inclusively.
       %  
       %  The first 80 characters of each line is read in.
@@ -1184,7 +1184,12 @@ classdef Mod5
               Alb(iAlb).Header = theHeader;
               Alb(iAlb).title = lin;
               Alb(iAlb).wv = theData{1};
-              Alb(iAlb).refl = theData{2};
+              refl = theData{2};
+              if sum(refl > 1.1) > 0.1 * numel(refl)
+                  warning('Mod5:ReadAlb:IsPercent','Albedos > 1 encountered. Assumed percentage and scaled down by 100.');
+                  refl = refl/100;
+              end
+              Alb(iAlb).refl = refl;
               theHeader = '';
             end
           end
@@ -6402,6 +6407,7 @@ classdef Mod5
       
       try
         delete([MODTRANPath MC(1).CaseName '.*']);
+        delete([MODTRANPath MC(1).CaseName '(*).*'])
         Success = 1;
       catch DeleteFailed
         Success = 0;
@@ -7222,7 +7228,7 @@ classdef Mod5
             AlbLambda2 = max(Alb(iAACSALB(iC)).wv);
             if (AlbLambda1 > Lambda1) || (Lambda2 > AlbLambda2)
               warning('Mod5:AttachAlb:WavelengthOverlap', ...
-                'Albedo wavelength range for sub-case %i does not span the case range (V1 to V2). Albedo data has not been attached.', iC);
+                'Albedo wavelength range for sub-case %i does not span the case range (V1 to V2). Albedo data has been attached anyway.', iC);
             end
           end % Finished checking wavelength range overlap
           MC(iC).SURREF = 'LAMBER';
