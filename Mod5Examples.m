@@ -1,6 +1,6 @@
 % Mod5 MODTRAN 5 Case Examples
-% $Id: Mod5Examples.m,v 1c10b1fe8e32 2011/12/30 11:23:48 dgriffith $
-% Copyright 2010, $Author: Derek Griffith <dgriffith@csir.co.za> $
+% $Id$
+% Copyright 2010, $Author$
 %
 % Each cell in this script contains a single example. Run examples
 % individually by clicking somewhere in the cell and then clicking on the
@@ -533,3 +533,113 @@ PtaMidSummer.PlotSc7('TOTALRAD');
 title('LOS Spectral Path Radiance');
 legend('212 m', '1 km', '5 km', 'Location', 'best');
 %---------------- End Example 7 -------------------
+%% Example 8 : AVIRIS airborne sensor viewing ground - Contributed by Bulent Ayhan
+
+% template.txt, analysis_aviris_reflectance
+% -- MODTRAN Parameters taken from from ENVI AVIRIS case --
+% enviacc.modtran.visvalue = 40.0000                VIS
+% enviacc.modtran.f_resolution = 15.0000            DV
+% enviacc.modtran.day = 3                           DAY
+% enviacc.modtran.month = 4                         DAY
+% enviacc.modtran.year = 1998                       DAY
+% enviacc.modtran.gmt = 20.1581                     TIME
+% enviacc.modtran.latitude = 37.4042                PARM1 for  IPARM = 11
+% -- Remember that MODTRAN uses longitude input positive WEST of Greenwich
+% -- This longitude convention is unusual
+% enviacc.modtran.longitude = 122.2250              PARM2 for  IPARM = 11
+% enviacc.modtran.sensor_altitude = 21.8200         H1
+% enviacc.modtran.ground_elevation = 0.1370         GNDALT
+% enviacc.modtran.view_zenith_angle = 180.0000      PHI
+% enviacc.modtran.view_azimuth = 0.0000             PSIPO
+% enviacc.modtran.atmosphere_model = 2              MODEL
+% enviacc.modtran.aerosol_model = 1                 IHAZE
+% enviacc.modtran.multiscatter_model = 2            IEMSCT
+% enviacc.modtran.disort_streams = 8                NSTR
+% enviacc.modtran.co2mix = 390.0000                 CO2MX
+% enviacc.modtran.water_column_multiplier = 1.0000  H2OSTR
+
+close all
+clear classes
+% Determine the directory in which the Mod5 archive was extracted
+MCDir = fileparts(which('Mod5'));
+% This case is visible/near-infared (VIS/NIR) wavelengths
+Avi = Mod5;    % Get a completely empty case instance
+% Set up name and short description
+Avi = Avi.SetCaseName('AVIRIS case');
+Avi.CaseDescr = 'AVIRIS trial';
+
+% Set up Card 1 (mandatory - main radiative transport)
+Avi = Avi.Set('MODTRN', 'M','SPEED','S','BINARY', 'F', 'LYMOLC', ' ','MODEL', 2, 'ITYPE', 3, 'IEMSCT', 2, ...
+                'IMULT', -1, 'M1', 0, 'M2', 0, 'M3', 0, 'M4', 0, 'M5', 0 , 'M6', 0, ...
+                'MDEF', 0, 'I_RD2C', 0, 'NOPRNT', 1, 'TPTEMP', 0, 'SURREF', 'LAMBER');
+              
+% Set up Card 1A (mandatory - main radiative transport continued)
+Avi = Avi.Set('DIS', 'f', 'DISAZM', 'f', 'DISALB', ' ', 'NSTR', 8, 'SFWHM', 0, 'CO2MX', 390, 'H2OSTR', '1.', ...
+                'O3STR', '0.', 'C_PROF', ' ', 'LSUNFL', 'f', 'LBMNAM', 'f', 'LFLTNM', 't', ...
+                'H2OAER', 'f', 'CDTDIR',' ','SOLCON', -1, 'CDASTM', ' ','ASTMC',0, 'ASTMX',0,'ASTMO',0,'AERRH',0, 'NSSALB', 0);
+
+AvirisFltFile = [MCDir filesep 'aviris.flt']; 
+AvirisFlt = Mod5.ReadFlt(AvirisFltFile);
+            
+% % Display the filter channel descriptions
+disp(strvcat(AvirisFlt.FilterHeaders));
+% % Plot the filters
+Mod5.PlotFlt(AvirisFlt);
+
+% And attach the EO camera filters to the case
+Avi = Avi.AttachFlt(AvirisFlt); % This will automatically set FILTNM (Card 1A3)
+
+% Set up Card 2 (mandatory - main aerosol and cloud options)
+% IHAZE = 1 for rural aerosol character/extinction, VIS = 40 km, no clouds or rain
+% ICSTL = 5 for moderate influence from continental aerosols
+
+Avi = Avi.Set('APLUS', '  ', 'IHAZE', 1, 'CNOVAM', ' ', 'ISEASN', 0, 'ARUSS', '   ', ...
+                'IVULCN', 0, 'ICSTL', 0, 'ICLD', 0, 'IVSA', 0, 'VIS', 40, 'WSS', 0, ...
+                'WHH', 0, 'RAINRT', 0, 'GNDALT', 0.1370);
+              
+% Set up Card 3 (mandatory - Line of sight geometry)
+% To define path (LOS) geometry in this case use PHI, H1 and H2 (combination 3c in manual)
+% H1 is sensor (AVIRIS) altitude and H2 is view path ending altitude - MODTRAN will reset to GNDALT
+Avi = Avi.Set('H1', 21.820, 'H2', 0, 'ANGLE', 180, 'RANGE', 0, 'BETA', 0, 'RO', 0, 'LENN', 0, 'PHI', 0);
+
+% Set up Card 3A1 and 3A2 (Solar scattering geometry, required for IEMSCT = 2) 
+% First set phase function and asymmetry parameter on Card 3A2 to avoid a warning.
+% Phase function IPH = 2 for internal Mie database, G is not used
+Avi = Avi.Set('IPH', 2, 'G', 0);
+% Will use SetScatGeom method, which looks as follows
+%   MC = MC.SetScatGeom(IPARM, IDAY, ISOURC, PARM, TIME, PSIPO, ANGLEM)
+% IPARM = 11 for lat, long, time and path azimuth
+Avi = Avi.SetScatGeom(11, [1998 4 3], 0, [37.4042 122.225], 20.1581, 0, 0);
+% Input PARM(1) (relative solar/lunar azimuth angle at H2) must be 0 to 360 deg, 
+% and PARM(2) (source zenith angle at H2) must be 0 to 90 deg.
+
+% Set up Card 4 (mandatory - spectral range and resolution)
+% Will use SetSpectralRange and the call looks as follows:
+%   MC = MC.SetSpectralRange(V1, V2, DV, FWHM, Units, ConvShape, FWHMisRelative)
+% and in this case would look as follows :
+Avi = Avi.SetSpectralRange(373, 2503, 15, 30, 'N');
+% Note : DV=15 is very coarse spectral resolution, but sensor response is 
+% calculated from full spectral resolution data.
+
+
+% Just need to set FLAGS(4) to get all radiance components in tp7
+Avi.FLAGS(4) = 'A';   % Put ALL radiance components in convolved data (tp7)
+% Must also set the plot-related Card 4 stuff
+Avi = Avi.SetPlot(' ', ' ', ''); % Set XFLAG, YFLAG and DLIMIT blank for no plot files
+
+% Card 4A is required because SURREF was set to 'LAMBER' on Card 1
+Avi.NSURF = 1; % See MODTRAN manual for explanation
+Avi.AATEMP = 0; % Not used
+
+% Read a tree leaf reflectance from ASD data
+TreeAlb = Mod5.ReadAlbFromASD([MCDir filesep 'tree100001.asd.ref.txt']);
+TreeAlbSparse = Mod5.InterpAlb(TreeAlb, [0.373 2.503], 224);
+
+Avi = Avi.AttachAlb(TreeAlbSparse); % 1 means ocean, 2 means tree
+
+% Now run the case
+Avi = Avi.Run;
+
+% Plot the spectral channel output for ocean and tree ...
+Avi.PlotChn('SPECTRAL_RADIANCE');
+%---------------- End Example 8 - AVIRIS -------------------
