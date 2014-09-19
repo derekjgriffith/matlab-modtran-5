@@ -396,11 +396,11 @@ classdef Mod5
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2011, DPSS, CSIR $Author$
+  % Copyright 2009-2011, DPSS, CSIR $Author: DGriffith $
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
-  % $Id$
+  % $Id: Mod5.m,v 2e1ea7be4aae 2014/02/23 07:09:12 DGriffith $
   properties (GetAccess = public, SetAccess = private)
     CaseName = 'Matlab'; % The name of the super-case, must be the same across all sub-cases    
     CaseIndex = 1; % This is the sub-case index. Must run from 1 to numel(Mod5Instance).    
@@ -7205,6 +7205,10 @@ classdef Mod5
             warning('Mod5:AttachAlb:NotRadianceCase','Sub-case %i is not a radiance case. Albedo data has been attached anyway.', iC);
           end
           % Determine limiting wavelengths of the case
+          if isempty(MC(iC).V1) || isempty(MC(iC).V2)
+              error('Mod5:AttachAlb:SetAlbedoLast',...
+                  'Card 4 must be set up before attaching albedo data in order to check case wavelength limits.')
+          end
           switch upper(MC(iC).FLAGS(1))
             case {' ', 'W'} % Wavenumbers
               Lambda1 = 10000/MC(iC).V2; % Convert to wavelength in microns

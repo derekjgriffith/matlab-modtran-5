@@ -1,6 +1,6 @@
 % Mod5 MODTRAN 5 Case Examples
-% $Id$
-% Copyright 2010, $Author$
+% $Id: Mod5Examples.m,v 317a674ee7bf 2014/08/04 08:07:08 dgriffith $
+% Copyright 2010, $Author: dgriffith $
 %
 % Each cell in this script contains a single example. Run examples
 % individually by clicking somewhere in the cell and then clicking on the
@@ -9,6 +9,40 @@
 % WARNING : All examples clear classes and close all plots. You
 %           will lose all workspace variables.
 disp('This script contains one cell per example. Run each cell individually.')
+% For reference, here are some of the definitions of MODTRAN outputs:
+% Original Source : Ontar 
+% http://www.ontar.com/Software/ContentPage.aspx?item=support_faq_pcmodwin_000005 
+%
+% TRANS - Total transmission through defined path. For example one would
+% assume that for a downward looking path from H1 to H2, the transmittance
+% is from H1 to H2. For calculation of reflected solar component, one could
+% always use the layer by layer transmittance to calculate the total
+% attenuation through both the downwelling and upwelling paths.
+
+% PTHTHRML - Radiance component due to the atmosphere received at the
+% observer. This term includes the THRMLSCT component which will be 0.0 if
+% multiple scattering is not running.
+
+% SOLSCAT - Component of scattered solar radiance received at the observer.
+% This term includes the SINGSCAT component.
+
+% GRNDRFLT - GRNDRFLT is the total (direct + diffuse) solar flux impingent
+% on the ground and reflected directly to the sensor from the ground. Thus,
+% GRNDRFLT = DRCTRFLT + Diffuse Reflected. If the downward solar flux is
+% dominated by the direct term, GRND and DRCT will be equal (Lex Burke,
+% email 15-Dec-2003). In practice the Diffuse Reflected term will only be
+% significant (non-zero) if multiple scattering is selected.
+
+% TOTALRAD = PTHTHRML + SURFEMIS + SOLSCAT + GRNDRFLT
+
+% REFSOL - REFSOL is the top-of-atmosphere solar irradiance times the
+% L-shaped path from the sun-to-H2-to-H1. If H2 is the ground, the DRCTRFLT
+% is simply the REFSOL times the surface BRDF over pi steradians (Lex
+% Burke, email 15-Dec-2003).
+
+% SOLOBS - Total Solar irradiance at the observer. Believe this is
+% similar to the REFSOL, but also includes a contribution from the SOLSCAT
+% term.
 return;
 %% Example 1 : Load a Mod5 from a tape5 format file, run it and plot
 % This example is a 5 km horizontal path just above sea level
