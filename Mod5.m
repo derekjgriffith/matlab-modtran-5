@@ -2036,7 +2036,7 @@ classdef Mod5
         AlbOut(iAlb).refl = reshape(NewRefl, numel(NewRefl), 1);
       end
     end % InterpAlb
-    function h = PlotAlb(Alb, AxisLimits)
+    function h = PlotAlb(Alb, AxisLimits, logFlag)
       % PlotAlb : Plot spectral albedo (reflectance) data
       %
       % Usage :
@@ -2046,6 +2046,10 @@ classdef Mod5
       %     Or
       %
       %    plothandles = Mod5.PlotAlb(Alb);
+      %
+      %     Or
+      %
+      %    plothandles = Mod5.PlotAlb(Alb, AxisLimits, logFlag)
       %
       % Where Alb is spectral reflectance (albedo) structure data read using
       %  ReadAlb, ReadAlbFromASD, ReadAlbFromUSGS or created using
@@ -2066,6 +2070,8 @@ classdef Mod5
       % Legends are only plotted if there are 10 or fewer curves to be plotted
       % on each graph.
       %
+      % If the logFlag is set, the SRFs are plotted on a semi-log scale.
+      %
       % A vector of plothandles is returned.
       %
       %
@@ -2076,6 +2082,10 @@ classdef Mod5
       % The input must have the titles, wavelengths, reflectances
       assert(isstruct(Alb) && all(isfield(Alb, {'title','wv','refl'})), 'Mod5:PlotAlb:BadAlb', ...
         'The input structure Alb must have the fields title, wv, and refl.');
+      if exist('logFlag', 'var') && ~isempty(logFlag)
+      else
+          logFlag = 0;
+      end
       
       for iCol = 1:size(Alb, 2)
         h(iCol) = figure;
@@ -2085,7 +2095,11 @@ classdef Mod5
           if isfield(Alb, 'stddev')
             errorbar(Alb(iRow, iCol).wv, Alb(iRow, iCol).refl, Alb(iRow, iCol).stddev);
           else
-            plot(Alb(iRow, iCol).wv, Alb(iRow, iCol).refl);
+              if logFlag
+                semilogy(Alb(iRow, iCol).wv, Alb(iRow, iCol).refl);
+              else
+                plot(Alb(iRow, iCol).wv, Alb(iRow, iCol).refl);  
+              end
           end
           TheLegends = [TheLegends strrep(Alb(iRow, iCol).title, '_', ' ')];
         end
