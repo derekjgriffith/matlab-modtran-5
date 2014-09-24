@@ -396,11 +396,11 @@ classdef Mod5
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2011, DPSS, CSIR $Author: DGriffith $
+  % Copyright 2009-2011, DPSS, CSIR $Author$
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
-  % $Id: Mod5.m,v 2e1ea7be4aae 2014/02/23 07:09:12 DGriffith $
+  % $Id$
   properties (GetAccess = public, SetAccess = private)
     CaseName = 'Matlab'; % The name of the super-case, must be the same across all sub-cases    
     CaseIndex = 1; % This is the sub-case index. Must run from 1 to numel(Mod5Instance).    
@@ -5441,7 +5441,7 @@ classdef Mod5
 %           end
 %         end
         
-        if any(MC(iCase).ICLD == 1:10) && MC(iCase).NCRALT >= 3 % Should this be 2 or 3 ?!!
+        if any(MC(iCase).ICLD == 1:10) && ~isempty(MC(iCase).NCRALT) && (MC(iCase).NCRALT >= 3) % Enter user-defined number of cloud layer boundaries
             if MC(iCase).MODEL < 8
                 for iNCRALT = 1:MC(iCase).NCRALT  % Write a copy of card 2E1 for each altitude
                     MC(iCase) = MC(iCase).WriteCard2E1(fid, iNCRALT);
