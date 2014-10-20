@@ -396,11 +396,11 @@ classdef Mod5
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2011, DPSS, CSIR $Author: dgriffith $
+  % Copyright 2009-2011, DPSS, CSIR $Author$
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
-  % $Id: Mod5.m,v e48adabf60ca 2014/09/24 10:49:16 dgriffith $
+  % $Id$
   properties (GetAccess = public, SetAccess = private)
     CaseName = 'Matlab'; % The name of the super-case, must be the same across all sub-cases    
     CaseIndex = 1; % This is the sub-case index. Must run from 1 to numel(Mod5Instance).    
@@ -2389,8 +2389,8 @@ classdef Mod5
       %     Filters. Shape must be scalar or have the same number of entries
       %     as Centre. If scalar, the same shape is used for all filters
       %     in the set. Valid Shape parameters are 'gauss', 'bartlett', 
-      %     'welch' and 'cosine'. If Shape is missing or empty, the
-      %     default shape is 'gauss'.
+      %     'welch', 'cosine', 'cos^2' or 'box'. 
+      %     If Shape is missing or empty, the default shape is 'gauss'.
       %   nSamples is the number of wavenumber/wavelength samples to
       %     generate in the filter. nSamples must be scalar or have the
       %     same number of elements at the Centre input. If scalar, the
@@ -2472,8 +2472,8 @@ classdef Mod5
         assert(iscellstr(Shape) && any(numel(Shape) == [1 nFilters]), 'Mod5:CreateFlt:BadShape', ...
           'Input Shape must be a cell array of strings with a single entry or the same number of entries as Centre');
         Shape = lower(Shape);
-        ShapeMatch = sort([strmatch('gauss',Shape,'exact') strmatch('bartlett',Shape,'exact') ...
-                           strmatch('welch',Shape,'exact') strmatch('cosine',  Shape,'exact')]);
+        ShapeMatch = sort([strmatch('gauss',Shape,'exact') strmatch('bartlett',Shape,'exact') strmatch('cos^2',  Shape,'exact') ...
+                           strmatch('welch',Shape,'exact') strmatch('cosine',  Shape,'exact') strmatch('box',  Shape,'exact')]);
         if ~all(ShapeMatch(:) == 1:numel(ShapeMatch))
           error('Mod5:CreateFlt:BadShape', ...
                 'Input Shape must be a cell array of strings limited to ''gauss'' ''bartlett'' ''welch'' and ''cosine''');
@@ -2717,7 +2717,8 @@ classdef Mod5
       % Inputs:
       %   center    center wavelength
       %     fwhm    desired full width half max
-      %    shape    'gauss', 'bartlett', 'welch', 'cosine' (default: 'gauss')
+      %    shape    'gauss', 'bartlett', 'welch', 'cosine',
+      %             'box', 'cos^2'                      (default: 'gauss')
       %        n    number of samples                      (default: 65)
       %    yedge    edge values                            (default: 0.001)
       %
@@ -2778,6 +2779,11 @@ classdef Mod5
           nfwhm = (4/3) * alph;			% normalized fwhm
           y = cos((pi .* x) / (2 * alph));	% cos
           y(y<0)=realmin;			% in case of odd samples
+        case 'cos^2'
+          fudge = n2 * (.6365+(yedge*.5));
+          alph = n2 + (yedge * fudge);		% calculate alpha
+          nfwhm = alph;			% normalized fwhm
+          y = cos((pi .* x) / (2 * alph)).^2;	% cos
         case 'box'
           y = ones(size(x));
           y(1) = realmin;
