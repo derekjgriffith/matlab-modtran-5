@@ -1,6 +1,6 @@
 % Mod5 MODTRAN 5 Case Examples
-% $Id: Mod5Examples.m,v 317a674ee7bf 2014/08/04 08:07:08 dgriffith $
-% Copyright 2010, $Author: dgriffith $
+% $Id$
+% Copyright 2010, $Author$
 %
 % Each cell in this script contains a single example. Run examples
 % individually by clicking somewhere in the cell and then clicking on the
@@ -48,6 +48,9 @@ return;
 % This example is a 5 km horizontal path just above sea level
 close all
 clear classes
+% Set parallel friendly mode (allows multiple MODTRAN cases to run in parallel
+% on the same computer without a conflict.
+Mod5.ParallelFriendly(true);
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % Load the case
@@ -62,6 +65,9 @@ Ex1.PlotSc7; % Plot the convolved total transmittance on a wavelength scale
 % This is a downward-looking radiance calculation.
 close all
 clear classes
+% Set parallel friendly mode (allows multiple MODTRAN cases to run in parallel
+% on the same computer without a conflict.
+Mod5.ParallelFriendly(true);
 % This case is visible/near-infared (VIS/NIR) wavelengths
 Sat1 = Mod5;    % Get a completely empty case instance
 % Set up name and short description
@@ -233,6 +239,9 @@ Sat1.PlotChn({'PATH_TOTAL_SCAT_SOLAR','TOTAL_TRANSM_GRND_REFLECT'})
 %% Example 3 : Direct Solar Irradiance Case
 close all
 clear classes
+% Set parallel friendly mode (allows multiple MODTRAN cases to run in parallel
+% on the same computer without a conflict.
+Mod5.ParallelFriendly(true);
 % This case is visible/near-infared (VIS/NIR) wavelengths
 Sol1 = Mod5;    % Get an empty case instance
 % Set up name and short description
@@ -510,7 +519,7 @@ PtaMidSummer.GNDALT = 1.4; % Altitude of ground surface relative to sea level (k
 % The Line of Sight (LOS) is a horizontal, so zenith ANGLE is set to 90 degrees 
 PtaMidSummer.H1 = 1.41; % Initial path altitude in km.
 PtaMidSummer.H2 = 0; % Not used, use zenith angle and range
-PtaMidSummer.ANGLE = 90; % Initial zenith angle at H1 in degrees
+PtaMidSummer.ANGLE = 89.0; % Initial zenith angle at H1 in degrees
 PtaMidSummer.RANGE = 0.212; % Path length in km.
 PtaMidSummer.BETA = 0; % Not used in this case. (Earth centre angle in degrees subtended by path from H1 to H2.)
 PtaMidSummer.RO = 0; % Radius of the earth in km at the path latitude. Will default to a value depending on MODEL.
@@ -642,8 +651,9 @@ Avi = Avi.Set('H1', 21.820, 'H2', 0, 'ANGLE', 180, 'RANGE', 0, 'BETA', 0, 'RO', 
 Avi = Avi.Set('IPH', 2, 'G', 0);
 % Will use SetScatGeom method, which looks as follows
 %   MC = MC.SetScatGeom(IPARM, IDAY, ISOURC, PARM, TIME, PSIPO, ANGLEM)
+% ANGLEM is the lunar phase angle and not included.
 % IPARM = 11 for lat, long, time and path azimuth
-Avi = Avi.SetScatGeom(11, [1998 4 3], 0, [37.4042 122.225], 20.1581, 0, 0);
+Avi = Avi.SetScatGeom(11, [1998 4 3], 0, [37.4042 122.225], 20.1581, 0);
 % Input PARM(1) (relative solar/lunar azimuth angle at H2) must be 0 to 360 deg, 
 % and PARM(2) (source zenith angle at H2) must be 0 to 90 deg.
 

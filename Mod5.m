@@ -811,6 +811,9 @@ classdef Mod5
     if ~exist(MODTRANExe, 'file')
       error('MODTRANExe must be an existing MODTRAN executable file.')
     end
+    if ~exist([MODTRANPath 'DATA'], 'dir')
+      error('The DATA directory for MODTRAN must be present in the same directory as the MODTRAN executable.')        
+    end
     Direc = fileparts(which('Mod5.m'));
     % Save the root directory to a file for later use by other Mod5 functions
     save([Direc filesep 'MODTRANExe.mat'], 'MODTRANPath', 'MODTRANExe');   
@@ -2034,7 +2037,8 @@ classdef Mod5
           NewRefl = interp1(Wv, Refl, NewWv, varargin{:});
         end
         if any(isnan(NewRefl))
-          warning('Mod5:InterpAlb:NaNsFound','NaNs were encountered interpolating Alb(%i). Skipped.', iAlb);
+          warning('Mod5:InterpAlb:NaNsFound','NaNs were encountered interpolating Alb(%i). Replaced with zeros.', iAlb);
+          NewRefl(isnan(NewRefl)) = 0.0;
         end
         % Attempt an optimisation
         %options.MaxIter = 100;
@@ -2843,7 +2847,7 @@ classdef Mod5
       Success = 0;
       %% Perform some input parameter checking
       assert(isstruct(Flt), 'Mod5:WriteFlt:FltNotStruct', ...
-        'Input Flt must be structure with fields FileHeader, UnitsHeader, Units, FilterHeader and Filters.');
+        'Input Flt must be structure with fields FileHeader, UnitsHeader, Units, FilterHeaders and Filters.');
       assert(isscalar(Flt),'Mod5:WriteFlt:MustBeScalar','Input Flt to WriteFlt must be scalar.');      
       if ~all(isfield(Flt, {'FileHeader','UnitsHeader', 'Units', 'FilterHeaders', 'Filters'}))
         error('Mod5:WriteFlt:BadFlt', ...
@@ -4085,6 +4089,38 @@ classdef Mod5
         rethrow(pltFileReadFail);
       end
     end % ReadPlt
+    function Friendly = ParallelFriendly(FriendlyFlag)
+        % ParallelFriendly : Set or get parallel friendly flag
+        %
+        % Usage :
+        %      To set the parallel friendly mode true or false
+        %  >> Mod5.ParallelFriendly(FriendlyFlag)
+        %      or to get the current setting
+        %  >> FriendlyFlag = Mod5.ParallelFriendly
+        %
+        % The Mod5 class normally caters for a single copy of MODTRAN
+        % running on the machine. The main problem is a conflict over 
+        % the file mod5root.in, which is written by the class to the
+        % MODTRAN executable location. If the ParallelFriendly flag is
+        % set, then a sub-directory is created when running the case,
+        % so that each case (provided the case name is different) will
+        % have its own copy of mod5root.in.
+        % See the MODTRAN 5 manual for an explanation of the significance
+        % of mod5root.in.
+        persistent theFriendlyFlag
+        if nargin == 0
+            if ~isempty(theFriendlyFlag)
+                Friendly = theFriendlyFlag;
+            else
+                theFriendlyFlag = false;
+                Friendly = theFriendlyFlag;                
+            end
+        else
+            assert(isscalar(FriendlyFlag) && islogical(FriendlyFlag), 'Mod5:ParallelFriendly:BadFlag', ...
+                'Input FriendlyFlag must be logical scalar.');
+            theFriendlyFlag = FriendlyFlag;
+        end
+    end
     % Functions for working with BRDFs
     function rho = BRDF(Model, P, ViewZenith, SourceZenith, RelAz)
         % BRDF : Compute values for various BRDF models associated with MODTRAN
@@ -5994,19 +6030,52 @@ classdef Mod5
       
       if exist('PlotFlag', 'var')
         assert((isnumeric(PlotFlag) && isscalar(PlotFlag) && any(PlotFlag == [0 1 2 3 4])), ...
-          'Mod5:Run:BadPlotFlag','Input PlotFlag must be 0, 1 or 2.');
+          'Mod5:Run:BadPlotFlag','Input PlotFlag must be 0 to 4.');
       else
         PlotFlag = 1; % Plot data is read but not plotted
       end
       %% Setup and run the case
-      % First write the file mod5root.in in the MODTRANPath
+      % Record current directory to that can change back later
+      CurrentDir = pwd;
       
-      modrootfid = fopen([MODTRANPath 'mod5root.in'], 'wt');
+      % Change directory to the MODTRANPath
+      try
+        cd(MODTRANPath);
+      catch CDError
+        cd(CurrentDir);
+        warning('Mod5:Run:CantCD','Unable to change directory to the MODTRAN path %s.', MODTRANPath);
+        rethrow(CDError);
+      end
+      
+      % Check the ParallelFriendly status and if true,
+      % check existence of case sub-directory.
+      if Mod5.ParallelFriendly
+          if ~exist(MODCase(1).CaseName, 'dir')
+              MDstatus = mkdir(MODCase(1).CaseName);
+              if ~MDstatus
+                  cd(CurrentDir);
+                  error('Mod5:Run:MakeDirFailed', ...
+                      'Failed to create directory for ParalleFriendly mode of operation. Check permissions in %s.', MODTRANPath);
+              end
+          end
+          try % to change to the case directory
+              cd(MODCase(1).CaseName)
+          catch CDError
+              cd(CurrentDir);
+              warning('Mod5:Run:CantCD','Unable to change directory to the case path %s for ParallelFriendly operation.', MODCase(1).CaseName);
+              rethrow(CDError);              
+          end
+      end
+
+          
+      % Write the file mod5root.in in the MODTRANPath/case path ++++++++++
+      
+      modrootfid = fopen('mod5root.in', 'wt');
       if modrootfid < 0
-          error('Mod5:Run:CantOpenmod5root','Cannot open the file mod5root.in. Check that you have write permissions in %s.', MODTRANPath);
+          error('Mod5:Run:CantOpenmod5root','Cannot open the file mod5root.in. Check that you have write permissions in %s.', pwd);
       end
       try
-        fprintf(modrootfid, '%s\n', MODCase(1).CaseName);
+        fprintf(modrootfid, '%s.tp5 %s\n', MODCase(1).CaseName, [MODTRANPath 'DATA' filesep]);
         fclose(modrootfid);
       catch modrootFailed
         fclose(modrootfid);
@@ -6015,29 +6084,28 @@ classdef Mod5
       try % to delete all output files associated with this run
         % If this is a NOVAM run, first rescue the NOVAM.OUT file in case
         if MODCase(1).CNOVAM ~= ' '
-            if ~exist([MODTRANPath 'NOVAM.OUT'], 'file')
+            if ~exist('NOVAM.OUT', 'file')
                 warning('Mod5:Run:NOVAMOUTmissing',...
-                    'The NOVAM.OUT file was not found in the MODTRAN executable directory and this is a NOVAM case.');
+                    'The NOVAM.OUT file was not found in the MODTRAN executable or case directory and this is a NOVAM case.');
             else % Rename NOVAM.OUT temporarily so that the purge does not clobber it
-                movefile([MODTRANPath 'NOVAM.OUT'], [MODTRANPath 'tempNOVAM.OUT']);
-                delete([MODTRANPath MODCase(1).CaseName '.*']);
-                movefile([MODTRANPath 'tempNOVAM.OUT'], [MODTRANPath 'NOVAM.OUT']);
+                movefile('NOVAM.OUT', 'tempNOVAM.OUT');
+                delete([MODCase(1).CaseName '.*']);
+                movefile('tempNOVAM.OUT', 'NOVAM.OUT');
             end
         else
-          delete([MODTRANPath MODCase(1).CaseName '.*']);
+          delete([MODCase(1).CaseName '.*']);
         end
       catch PurgeFailed
         warning('Mod5:Run:PurgeFailed', ...
           'Unable to purge all MODTRAN output files (%s.*) associated with this case. Check status of these files.', ...
-          [MODTRANPath MODCase(1).CaseName]);
+          [pwd filesep MODCase(1).CaseName]);
       end
       % Write the case to the file modroot.tp5
-      Success = MODCase.Write([MODTRANPath MODCase(1).CaseName '.tp5']);
+      Success = MODCase.Write([MODCase(1).CaseName '.tp5']);
       if Success
         % Go ahead and run MODTRAN
-        CurrentDir = pwd;
         try
-          cd(MODTRANPath);
+          % cd(MODTRANPath);
           % Look at sub-cases and write the filter file if attached
           for iCase = 1:numel(MODCase)
             if ~isempty(MODCase(iCase).flt)
@@ -6390,20 +6458,32 @@ classdef Mod5
       
       % Try to move the files to the directory
       try
-        Filespec = [MODTRANPath filesep MC(1).CaseName '.*'];
-        if ~isempty(dir(Filespec))
-          movefile(Filespec, Directory, 'f');
-        end
-        Filespec = [MODTRANPath filesep MC(1).CaseName '(*).*'];
-        if ~isempty(dir(Filespec))
-          movefile(Filespec, Directory, 'f');
-        end
-        save([Directory filesep MC(1).CaseName '.mat'], 'MC');
-        Success = 1;
+          if Mod5.ParallelFriendly
+              FolderSpec = [MODTRANPath filesep MC(1).CaseName];
+              if exist(FolderSpec, 'dir');
+                  movefile(FolderSpec, Directory, 'f');
+                  save([Directory filesep MC(1).CaseName filesep MC(1).CaseName '.mat'], 'MC');
+                  Success = 1;                 
+              else
+                  warning('Mod5:Save:MissingDirectory', ...
+                      'The results directory for case %s does not exist in %s.', MC(1).CaseName, MODTRANPath);
+              end             
+          else
+              Filespec = [MODTRANPath filesep MC(1).CaseName '.*'];
+              if ~isempty(dir(Filespec))
+                  movefile(Filespec, Directory, 'f');
+              end
+              Filespec = [MODTRANPath filesep MC(1).CaseName '(*).*'];
+              if ~isempty(dir(Filespec))
+                  movefile(Filespec, Directory, 'f');
+              end
+              save([Directory filesep MC(1).CaseName '.mat'], 'MC');
+              Success = 1;
+          end
       catch MoveFailed
-        warning('Mod5:Save:SaveFailed','Saving of files for case %s seems to have failed.', MC(1).CaseName);
-        Success = 0;
-        rethrow(MoveFailed);
+          warning('Mod5:Save:SaveFailed','Saving of files/foler for case %s seems to have failed.', MC(1).CaseName);
+          Success = 0;
+          rethrow(MoveFailed);          
       end
       
     end % Save
@@ -6416,6 +6496,9 @@ classdef Mod5
       % Where MC is the case for which to purge the output files.
       % All files of the form [MC(1).CaseName '.*'] are deleted in
       % the MODTRAN executable directory.
+      %
+      % If the Mod5.ParallelFriendly mode has been set true,
+      % then the directory associated with the case is deleted.
       %
       % See Also : Save
       %
@@ -6433,14 +6516,26 @@ classdef Mod5
           [MODTRANExe, MODTRANPath] = Mod5.SetMODTRANExe;
         end
       end
-      
       try
-        delete([MODTRANPath MC(1).CaseName '.*']);
-        delete([MODTRANPath MC(1).CaseName '(*).*'])
-        Success = 1;
-      catch DeleteFailed
-        Success = 0;
+          if Mod5.ParallelFriendly
+              if exist([MODTRANPath MC(1).CaseName], 'dir')
+                  [Success, Message] = rmdir([MODTRANPath MC(1).CaseName], 's');
+                  if ~Success
+                      warning('Mod5:Purge:Failed', ...
+                          'Parallel friendly directory purge failed with message : %s', Message);
+                  end
+              end
+          else
+              delete([MODTRANPath MC(1).CaseName '.*']);
+              delete([MODTRANPath MC(1).CaseName '(*).*'])
+              Success = 1;
+          end
+      catch PurgeFailed
+          warning('Mod5:Purge:Failed', ...
+              'MODTRAN case %s file purge failed.', MC(1).CaseName);
+          Success = 0;
       end
+      
     end % Purge
     function plothandle = Plot(MODCase, PlotFlag)
       % Mod5.Plot : Plot the data (.psc and .plt) for all sub-cases
