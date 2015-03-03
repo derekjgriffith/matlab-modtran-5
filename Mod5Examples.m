@@ -1,6 +1,6 @@
 % Mod5 MODTRAN 5 Case Examples
-% $Id$
-% Copyright 2010, $Author$
+% $Id: Mod5Examples.m,v 853b3a7dbe50 2014/12/11 10:22:33 dgriffith $
+% Copyright 2010, $Author: dgriffith $
 %
 % Each cell in this script contains a single example. Run examples
 % individually by clicking somewhere in the cell and then clicking on the
@@ -353,6 +353,9 @@ Ex5.PlotTp7('COMBINTRANS');
 % filter definitions for a set of MERIS channels
 close all
 clear classes
+% Set parallel friendly mode (allows multiple MODTRAN cases to run in parallel
+% on the same computer without a conflict.
+Mod5.ParallelFriendly(true);
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % This case is visible/near-infared (VIS/NIR) wavelengths
@@ -556,7 +559,8 @@ PtaMidSummer.AATEMP = 0; % Not used (ground surface temperature)
 PtaMidSummer.DH2O = 0; % Surface water, not used
 PtaMidSummer.MLTRFL = 'f'; % Not used
 % Card 4L1 : Lambertian ground surface reflectance data file specification
-PtaMidSummer.SALBFL = 'DATA/spec_alb.dat'; % File of reflectance data
+[~, DataPath] = Mod5.WhereIsMODTRAN;
+PtaMidSummer.SALBFL = [DataPath filesep 'DATA' filesep 'spec_alb.dat']; % File of reflectance data
 % Card 4L2 : Lambertian ground surface reflectance specification
 PtaMidSummer.CSALB = '50'; % Grassland
 % Card 5 : Repeat Run Option
