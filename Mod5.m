@@ -396,11 +396,11 @@ classdef Mod5
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2011, DPSS, CSIR $Author$
+  % Copyright 2009-2011, DPSS, CSIR $Author: dgriffith $
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
-  % $Id$
+  % $Id: Mod5.m,v 853b3a7dbe50 2014/12/11 10:22:33 dgriffith $
   properties (GetAccess = public, SetAccess = private)
     CaseName = 'Matlab'; % The name of the super-case, must be the same across all sub-cases    
     CaseIndex = 1; % This is the sub-case index. Must run from 1 to numel(Mod5Instance).    
@@ -2153,6 +2153,8 @@ classdef Mod5
       %   the Filename is not given or empty, a file/save dialog will be 
       %   presented.
       %
+      % Data in a spectral albedo file must always include a decimal point.
+      %
       % A warning will be issued if there are duplicate title tags (numeric)
       %   or text).
       %
@@ -2216,7 +2218,7 @@ classdef Mod5
           % Write the title
           fprintf(fid, '%s\n', Alb(iAlb).title);
           % Write the data
-          fprintf(fid, ' %10g %10g\n', [Alb(iAlb).wv'; Alb(iAlb).refl']);
+          fprintf(fid, ' %#10g %10g\n', [Alb(iAlb).wv'; Alb(iAlb).refl']);
         end
         fclose(fid);
         Success = 1;
@@ -3077,6 +3079,34 @@ classdef Mod5
       end
         
     end % MomentFlt
+    function SRFs = InterpFltOnto(Flt, NewWvGrid, InterpMethod)
+        % InterpFltOnto : Interpolate a set of Flt SRFs onto a common
+        % wavelength grid
+        % 
+        % Usage :
+        %  >>> SRFsOnCommonWv = InterpFltOnto(Flt, NewWvGrid)
+        %      Or
+        %  >>> SRFsOnCommonWv = InterpFltOnto(Flt, NewWvGrid, InterpMethod)
+        %
+        % Where InterpMethod is any valid interpolation method for 
+        % the function interp1(). Defaults to 'linear'.
+        % This function only interpolates on wavelength, not wavenumbers.
+        % Extrapolated values are set to zero.
+      assert(isstruct(Flt) && all(isfield(Flt, {'UnitsHeader','Units','FilterHeaders','Filters'})), 'Mod5:InterpFltOnto:FltBadStruct', ...
+        'Input Flt must be structure with fields FileHeader, UnitsHeader, Units, FilterHeaders and Filters.');
+      assert(isscalar(Flt),'Mod5:InterFltOnto:MustBeScalar','Input Flt to PlotFlt must be scalar.');
+      if ~exist('InterpMethod', 'var')
+          InterpMethod = 'linear';
+      end
+      NewWvGrid = NewWvGrid(:);  % make into vector
+      SRFs = zeros(numel(NewWvGrid), numel(Flt.Filters));
+      for iFilt = 1:numel(Flt.Filters)
+          OldWv = Flt.Filters{iFilt}(:,1);
+          Filter = Flt.Filters{iFilt}(:,2);
+          SRFs(:, iFilt) = interp1(OldWv, Filter, NewWvGrid, InterpMethod, 0);
+      end
+    end % InterpFltOnto
+    
     function [Data, Heads] = Read7(Filename)
       % Read7 : Read MODTRAN Tape 7 format outputs
       %
