@@ -10575,7 +10575,7 @@ classdef Mod5
             if iLine == ceil(TotalFields/MaxPerLine) % Last line
                 nFields = mod(TotalFields, MaxPerLine); % May read less than MaxPerLine
                 if nFields == 0
-                    nFields = MaxPerline;
+                    nFields = MaxPerLine;
                 end                
             else 
                 nFields = MaxPerLine;
