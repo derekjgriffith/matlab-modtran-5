@@ -2157,6 +2157,9 @@ classdef Mod5
       %
       % A warning will be issued if there are duplicate title tags (numeric)
       %   or text).
+      % If any wavelengths are in excess of 100, a warning is issued and
+      % the wavelengths are assumed to have been given in nm. The
+      % given wavelengths are divided by 1000 to convert to microns.
       %
       % See Also : ReadAlb, WriteAlb, ReadAlbFromASD, ReadAlbFromUSGS,
       %            AttachAlb, MixAlb
@@ -2218,6 +2221,11 @@ classdef Mod5
           % Write the title
           fprintf(fid, '%s\n', Alb(iAlb).title);
           % Write the data
+          if any(Alb(iAlb).wv > 100)  % Check if user may have made units error
+              warning('Mod5:WriteAlb:WavelengthUnitsQuery', ...
+                  'Wavelengths > 100 found. Assumed given in nm and converted to microns.');
+              Alb(iAlb).wv = Alb(iAlb).wv / 1000;
+          end
           fprintf(fid, ' %#10g %10g\n', [Alb(iAlb).wv'; Alb(iAlb).refl']);
         end
         fclose(fid);
@@ -7314,7 +7322,7 @@ classdef Mod5
       %  albedo curve number 2.
       
       % Do some input validation
-      assert(isstruct(Alb) && all(isfield(Alb, {'Header','title','wv','refl'})), 'Mod5:WriteAlb:BadAlb', ...
+      assert(isstruct(Alb) && all(isfield(Alb, {'Header','title','wv','refl'})), 'Mod5:AttachAlb:BadAlb', ...
         'The input structure Alb must have the fields Header, title, wv, and refl.');
             
       if exist('iCSALB', 'var')
