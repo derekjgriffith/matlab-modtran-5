@@ -396,7 +396,7 @@ classdef Mod5
   % .ltn files, Ex1.ltn, Ex4.ltn, CaseUSS.ltn, MERIS .xml
   % Test .zip archive on clean installation - get help from Meena
   
-  % Copyright 2009-2011, DPSS, CSIR $Author: dgriffith $
+  % Copyright 2009-2020, $Author: dgriffith $
   % Dedicated to the memory of Mimi Jansen.
   % This software is subject to the terms and conditions of the BSD licence.
   % For further details, see the file BSDlicence.txt
@@ -642,7 +642,73 @@ classdef Mod5
   end
   properties (Constant)
     Rev = '$RevisionNode: bb271460905a $';         % The revision node of the class
-    MODTRANExe = 'Mod5.2.0.0_cons.exe'; % This is the version of MODTRAN used by this class
+    MODTRANExe = 'Mod5.2.0.0_cons.exe'; % This is the version of MODTRAN used by this class for testing
+    % MODEL atmospheres
+    MODELatmUserHorizontal = 0;
+    MODELatmTropical = 1;
+    MODELatmMidLatSummer = 2;
+    MODELatmMidLatWinter = 3;
+    MODELatmSubArcSummer = 4;
+    MODELatmSubArcWinter = 5;
+    MODELatm1976USstandard = 6;
+    MODELatmUserVsHeight = 7;
+    MODELatmUserVsPressure = 8;
+    % Path types
+    ITYPEpathHorizontal = 1;
+    ITYPEpathSlantFromH1toH2 = 2;
+    ITYPEpathSlantToSpaceOrGround = 3;
+    % Radiative Transport Modes
+    IEMSCTmodeTransmittanceOnly = 0;
+    IEMSCTmodeThermalOnly = 1;
+    IEMSCTmodeThermalPlusSolar = 2;
+    IEMSCTmodeDirectSolarOnly = 3;
+    IEMSCTmodeSolarNoThermalScatter = 4;
+    % Multiple scatter options
+    IMULTscatWithoutMultipleScatter = 0;
+    IMULTscatWithMultipleScatterAtH1 = 1;
+    IMULTscatWithMultipleScatterAtH2 = -1;
+    % Main aerosol options
+    IHAZEaerNoneWithClouds = -1;
+    IHAZEaerNoneNoClouds = 0;
+    IHAZEaerRuralDefaultVIS23km = 1;
+    IHAZEaerRuralDefaultVIS5km = 2;
+    IHAZEaerNavyMaritime = 3; % Sets VIS based on wind speed and relative humidity
+    IHAZEaerMaritimeDefaultVIS23km = 4;
+    IHAZEaerUrbanDefaultVIS5km = 5;
+    IHAZEaerTroposphericDefaultVIS50km = 6;
+    IHAZEaerUser4Region = 7;
+    IHAZEaerAdvectiveFogDefaultVIS200m = 8;
+    IHAZEaerRadiativeFogDefaultVIS500m = 9;
+    IHAZEaerDesert = 10; % Sets visibility from wind speed WSS.
+    % Seasonal modifications for tropospheric and stratospheric aerosols
+    ISEASNaerFromMODEL = 0;
+    ISEASNaerSpringSummer = 1;
+    ISEASNaerFallWinter = 2;
+    % Stratospheric aerosol options
+    IVULCNaerBackground = 0;
+    IVULCNaerBackgroundProfileAndExtinction = 1;
+    IVULCNaerModerateProfileAgedExtinction = 2;
+    IVULCNaerHeavyProfileFreshExtinction = 3;
+    IVULCNaerHeavyProfileAgedExtinction = 4;
+    IVULCNaerModerateProfileFreshExtinction = 5;
+    IVULCNaerModerateProfileBackgroundExtinction = 6;
+    IVULCNaerHeavyProfileBackgroundExtinction = 7;
+    IVULCNaerExtremeProfileFreshExtinction = 8;
+    % Cloud and rain models
+    ICLDcloudNoCloudsNoRain = 0;
+    ICLDcloudCumulusLayer = 1;
+    ICLDcloudAltoStratusLayer = 2;
+    ICLDcloudStratusLayer = 3;
+    ICLDcloudStratoCumulusLayer = 4;
+    ICLDcloudNimboStratusLayer = 5;
+    ICLDrainDrizzle2mmPerHour = 6;
+    ICLDrainLightRain5mmPerHour = 7;
+    ICLDrainModerateRain12point5mmPerHour = 8;
+    ICLDrainHeavyRain25mmPerHour = 9;
+    ICLDrainExtremeRain75mmPerHour = 10;
+    ICLDcloudUser4Region = 11; % Triggers reading of Cards 2D, 2D1, 2D2
+    ICLDcloudCirrus = 18;
+    ICLDcloudSubVisualCirrus = 19;
   end
   properties (Hidden)
     % There are a total of ? possible card formats in MODTRAN 5
