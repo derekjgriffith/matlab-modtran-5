@@ -6,7 +6,7 @@
 % individually by clicking somewhere in the cell and then clicking on the
 % "Evaluate Cell" icon on the toolbar.
 %
-% WARNING : All examples clear classes and close all plots. You
+% WARNING : All examples clear variables and close all plots. You
 %           will lose all workspace variables.
 disp('This script contains one cell per example. Run each cell individually.')
 % For reference, here are some of the definitions of MODTRAN outputs:
@@ -47,7 +47,7 @@ return;
 %% Example 1 : Load a Mod5 from a tape5 format file, run it and plot
 % This example is a 5 km horizontal path just above sea level
 close all
-clear classes
+clear variables
 % Set parallel friendly mode (allows multiple MODTRAN cases to run in parallel
 % on the same computer without a conflict.
 Mod5.ParallelFriendly(true);
@@ -64,7 +64,7 @@ Ex1.PlotSc7; % Plot the convolved total transmittance on a wavelength scale
 %% Example 2 : Create a simple satellite EO case from scratch
 % This is a downward-looking radiance calculation.
 close all
-clear classes
+clear variables
 % Set parallel friendly mode (allows multiple MODTRAN cases to run in parallel
 % on the same computer without a conflict.
 Mod5.ParallelFriendly(true);
@@ -238,7 +238,7 @@ Sat1.PlotChn({'PATH_TOTAL_SCAT_SOLAR','TOTAL_TRANSM_GRND_REFLECT'})
 
 %% Example 3 : Direct Solar Irradiance Case
 close all
-clear classes
+clear variables
 % Set parallel friendly mode (allows multiple MODTRAN cases to run in parallel
 % on the same computer without a conflict.
 Mod5.ParallelFriendly(true);
@@ -310,7 +310,7 @@ Sol1.PlotSc7('SOLTR');
 % at a specific altitude (H2 = 3 km), at various slant ranges from the observer,
 % where the observer is also at a specific altitude (H1 = sea level). 
 close all
-clear classes
+clear variables
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % Load the case
@@ -338,7 +338,7 @@ Ex4.PlotTp7('COMBINTRANS');
 % This example is derived from the case given at the end of
 % Appendix A in the MODTRAN 4 User's Manual.
 close all
-clear classes
+clear variables
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % Load the case
@@ -352,7 +352,7 @@ Ex5.PlotTp7('COMBINTRANS');
 % This example reads SensorML (Sensor Markup Language) spectral channel
 % filter definitions for a set of MERIS channels
 close all
-clear classes
+clear variables
 % Set parallel friendly mode (allows multiple MODTRAN cases to run in parallel
 % on the same computer without a conflict.
 Mod5.ParallelFriendly(true);
@@ -606,7 +606,7 @@ legend('212 m', '1 km', '5 km', 'Location', 'best');
 % enviacc.modtran.water_column_multiplier = 1.0000  H2OSTR
 
 close all
-clear classes
+clear variables
 % Determine the directory in which the Mod5 archive was extracted
 MCDir = fileparts(which('Mod5'));
 % This case is visible/near-infared (VIS/NIR) wavelengths
